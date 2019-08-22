@@ -1,0 +1,3 @@
+# ty
+
+Zero config.
