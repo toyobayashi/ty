@@ -1,3 +1,5 @@
+const { execSync } = require('child_process')
+const { existsSync } = require('fs-extra')
 const { HotModuleReplacementPlugin } = require('webpack')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin')
@@ -29,6 +31,18 @@ function createEslintLoader () {
 
 class WebpackConfig {
   constructor (config) {
+    this._initMain(config)
+    this._initRenderer(config)
+    this._initProductionPackage(config)
+    this._initPackagerConfig(config)
+    if (config.mode === 'production') {
+      this._mergeProduction(config)
+    } else {
+      this._mergeDevelopment(config)
+    }
+  }
+
+  _initMain (config) {
     this.mainConfig = {
       mode: config.mode,
       context: getPath(),
@@ -67,6 +81,17 @@ class WebpackConfig {
       ]
     }
 
+    if (process.platform === 'linux') {
+      this.mainConfig.plugins = [
+        ...(this.mainConfig.plugins || []),
+        new CopyWebpackPlugin([
+          { from: getPath(config.iconSrcDir, '1024x1024.png'), to: getPath(config.resourcesPath, 'icon/app.png') }
+        ])
+      ]
+    }
+  }
+
+  _initRenderer (config) {
     this.rendererConfig = {
       mode: config.mode,
       context: getPath(),
@@ -121,13 +146,7 @@ class WebpackConfig {
         new HtmlWebpackPlugin({
           title: pkg.name,
           template: getPath(config.indexHtml),
-          minify: config.mode === 'production' ? {
-            removeComments: true,
-            collapseWhitespace: true,
-            removeAttributeQuotes: true,
-            collapseBooleanAttributes: true,
-            removeScriptTypeAttributes: true
-          } : false
+          minify: config.mode === 'production' ? config.htmlMinify : false
         })
       ],
       optimization: {
@@ -146,14 +165,6 @@ class WebpackConfig {
       }
     }
 
-    if (process.platform === 'linux') {
-      this.mainConfig.plugins = [
-        ...(this.mainConfig.plugins || []),
-        new CopyWebpackPlugin([
-          { from: getPath(config.iconSrcDir, '1024x1024.png'), to: getPath(config.resourcesPath, 'icon/app.png') }
-        ])
-      ]
-    }
     if (useVue) {
       const { VueLoaderPlugin } = require('vue-loader')
       this.rendererConfig.plugins = [
@@ -161,12 +172,64 @@ class WebpackConfig {
         new VueLoaderPlugin()
       ]
     }
+  }
 
-    if (config.mode === 'production') {
-      this._mergeProduction(config)
-    } else {
-      this._mergeDevelopment(config)
+  _initProductionPackage (config) {
+    const author = typeof pkg.author === 'object' ? pkg.author.name : pkg.author
+
+    const productionPackage = {
+      name: pkg.name,
+      version: pkg.version,
+      main: pkg.main,
+      author,
+      license: pkg.license
     }
+
+    if (pkg.dependencies) {
+      productionPackage.dependencies = pkg.dependencies
+    }
+
+    try {
+      productionPackage._commit = execSync('git rev-parse HEAD').toString().replace(/[\r\n]/g, '')
+      productionPackage._commitDate = new Date((execSync('git log -1').toString().match(/Date:\s*(.*?)\n/))[1]).toISOString()
+    } catch (_) {}
+
+    this.productionPackage = productionPackage
+  }
+
+  _initPackagerConfig (config) {
+    const packagerOptions = {
+      dir: getPath(),
+      out: getPath(config.distPath),
+      arch: config.arch || process.arch,
+      prebuiltAsar: getPath(config.distPath, 'resources/app.asar'),
+      appCopyright: `Copyright (C) ${new Date().getFullYear()} ${this.productionPackage.author}`,
+      overwrite: true
+    }
+
+    if (process.env.npm_config_electron_mirror && process.env.npm_config_electron_mirror.indexOf('taobao') !== -1) {
+      packagerOptions.download = {
+        unsafelyDisableChecksums: true,
+        mirrorOptions: {
+          mirror: process.env.npm_config_electron_mirror.endsWith('/') ? process.env.npm_config_electron_mirror : (process.env.npm_config_electron_mirror + '/'),
+          customDir: pkg.devDependencies.electron
+        }
+      }
+    }
+
+    if (process.platform === 'win32') {
+      const iconPath = getPath(config.iconSrcDir, 'app.ico')
+      if (existsSync(iconPath)) {
+        packagerOptions.icon = iconPath
+      }
+    } else if (process.platform === 'darwin') {
+      const iconPath = getPath(config.iconSrcDir, 'app.icns')
+      if (existsSync(iconPath)) {
+        packagerOptions.icon = iconPath
+      }
+    }
+
+    this.packagerConfig = packagerOptions
   }
 
   _mergeDevelopment (config) {

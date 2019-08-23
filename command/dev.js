@@ -1,16 +1,15 @@
-const config = require('../config/config.js')
 const WebpackConfig = require('../config/webpack.config.js')
 const startDevServer = require('../util/server.js')
 const { watch } = require('../util/webpack.js')
 const start = require('./start.js')
 
-function dev (args) {
+function dev (config) {
   let appProcess = null
 
   function onExit (_code, signal) {
     appProcess = null
     if (signal === 'SIGKILL') {
-      appProcess = start(args)
+      appProcess = start(config)
       appProcess.once('exit', onExit)
     }
   }
@@ -19,7 +18,7 @@ function dev (args) {
     if (appProcess) {
       appProcess.kill('SIGKILL')
     } else {
-      appProcess = start(args)
+      appProcess = start(config)
       appProcess.once('exit', onExit)
     }
   }
@@ -31,9 +30,6 @@ function dev (args) {
 
   const isReady = () => firstLaunch.main && firstLaunch.renderer
 
-  if (args.mode) {
-    process.env.NODE_ENV = config.mode = args.mode
-  }
   const webpackConfig = new WebpackConfig(config)
 
   watch(webpackConfig.mainConfig, function watchHandler (err, stats) {

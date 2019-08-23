@@ -1,10 +1,8 @@
 #!/usr/bin/env node
 
-const ty = require('../index.js')
-
 if (process.argv.length <= 2) {
   console.log('v' + require('../package.json').version)
-  console.log('ty dev|serve|start|build [--mode=production]')
+  console.log('ty dev|serve|start|build|pack [--mode=production]')
   process.exit(0)
 }
 
@@ -13,16 +11,25 @@ if (process.argv[2] === '-v' || process.argv[2] === '--version') {
   process.exit(0)
 }
 
-const args = require('minimist')(process.argv.slice(3))
-
-if (args.v || args.version) {
-  console.log('v' + require('../package.json').version)
-}
-
 const command = process.argv[2]
 
+const args = require('minimist')(process.argv.slice(3))
+const config = require('../config/config.js')
+
+const cliConfig = ['mode', 'arch', 'target', 'devServerHost', 'devServerPort']
+
+cliConfig.forEach((key) => {
+  if (args[key]) {
+    config[key] = args[key]
+    if (key === 'mode') {
+      process.env.NODE_ENV = args[key]
+    }
+  }
+})
+
+const ty = require('../index.js')
 if (ty[command]) {
-  ty[command].run(args)
+  ty[command](config)
 } else {
   throw new Error(`Command "${command}" is not supported.`)
 }

@@ -1,11 +1,7 @@
 const { spawn } = require('child_process')
 const getPath = require('../util/path.js')
-const config = require('../config/config.js')
 
-function start (args) {
-  if (args.mode) {
-    process.env.NODE_ENV = config.mode = args.mode
-  }
+function start (config) {
   if (config.mode === 'production') {
     const cp = spawn(require('electron'), [
       getPath(config.resourcesPath, 'app')

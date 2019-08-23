@@ -29,6 +29,8 @@ const config = {
   distPath: 'dist',
   iconSrcDir: 'icon',
   indexHtml: 'public/index.html',
+
+  arch: process.arch,
   inno: {
     appid: '', // 527DE8CC-F8A6-4ADF-8977-38BEC5BD8F41
     url: ''
@@ -50,6 +52,14 @@ const config = {
         beautify: false
       }
     }
+  },
+
+  htmlMinify: {
+    removeComments: true,
+    collapseWhitespace: true,
+    removeAttributeQuotes: true,
+    collapseBooleanAttributes: true,
+    removeScriptTypeAttributes: true
   }
 }
 
