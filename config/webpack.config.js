@@ -242,7 +242,7 @@ class WebpackConfig {
       publicPath: config.publicPath,
       before (app, server) {
         if (config.serveAsar) {
-          app.use(require('express-serve-asar')(getPath(config.contentBase)))
+          app.use(require('express-serve-asar')(getPath('public')))
         }
         server._watch(config.indexHtml)
       }
