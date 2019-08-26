@@ -126,7 +126,7 @@ async function createAsarApp (root, webpackConfig) {
 }
 
 async function copyExtraResources (root, config) {
-  const ls = (await fs.readdir(getPath(config.resourcesPath))).filter(item => (item !== 'app'))
+  const ls = (await fs.readdir(getPath(config.resourcesPath))).filter(item => (item !== 'app' && item !== '.gitkeep'))
   await Promise.all(ls.map(item => {
     return fs.copy(getPath(config.resourcesPath, item), getPath(config.distPath, 'resources', item))
   }))
