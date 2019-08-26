@@ -115,6 +115,14 @@ class WebpackConfig {
             ]
           },
           {
+            test: /\.jsx$/,
+            exclude: /node_modules/,
+            use: [
+              'babel-loader',
+              createEslintLoader()
+            ]
+          },
+          {
             test: /\.vue$/,
             use: [
               require.resolve('vue-loader'),
