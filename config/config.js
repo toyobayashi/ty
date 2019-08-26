@@ -14,9 +14,9 @@ const config = {
   devServerPort: 8090,
   target: 'electron',
   entry: {
-    web: 'src/index',
-    renderer: 'src/renderer/renderer',
-    main: 'src/main/main'
+    web: null,
+    renderer: null,
+    main: null
   },
   output: {
     web: 'dist',
@@ -29,10 +29,15 @@ const config = {
   distPath: 'dist',
   iconSrcDir: 'icon',
   indexHtml: 'public/index.html',
+  serveAsar: false,
 
   arch: process.arch,
   inno: {
-    appid: '', // 527DE8CC-F8A6-4ADF-8977-38BEC5BD8F41
+    src: '',
+    appid: {
+      ia32: '',
+      x64: ''
+    },
     url: ''
   },
 

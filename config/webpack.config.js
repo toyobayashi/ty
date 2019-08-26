@@ -47,7 +47,7 @@ class WebpackConfig {
       mode: config.mode,
       context: getPath(),
       target: 'electron-main',
-      entry: {
+      entry: config.entry.main ? config.entry.main : {
         main: [getPath('./src/main/main')]
       },
       output: {
@@ -96,7 +96,7 @@ class WebpackConfig {
       mode: config.mode,
       context: getPath(),
       target: 'electron-renderer',
-      entry: {
+      entry: config.entry.renderer ? config.entry.renderer : {
         renderer: [getPath('./src/renderer/renderer')]
       },
       output: {
@@ -190,8 +190,8 @@ class WebpackConfig {
     }
 
     try {
-      productionPackage._commit = execSync('git rev-parse HEAD').toString().replace(/[\r\n]/g, '')
-      productionPackage._commitDate = new Date((execSync('git log -1').toString().match(/Date:\s*(.*?)\n/))[1]).toISOString()
+      productionPackage._commit = execSync('git rev-parse HEAD', { cwd: getPath() }).toString().replace(/[\r\n]/g, '')
+      productionPackage._commitDate = new Date((execSync('git log -1', { cwd: getPath() }).toString().match(/Date:\s*(.*?)\n/))[1]).toISOString()
     } catch (_) {}
 
     this.productionPackage = productionPackage
@@ -238,9 +238,12 @@ class WebpackConfig {
       hot: true,
       host: config.devServerHost,
       inline: true,
-      contentBase: [getPath(config.contentBase || config.output.renderer), getPath('public')],
+      contentBase: [getPath(config.contentBase), getPath('public')],
       publicPath: config.publicPath,
-      before (_app, server) {
+      before (app, server) {
+        if (config.serveAsar) {
+          app.use(require('express-serve-asar')(getPath(config.contentBase)))
+        }
         server._watch(config.indexHtml)
       }
     }
