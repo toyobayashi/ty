@@ -1,0 +1,41 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "attach",
+      "port": 9222,
+      "name": "Attach to Main Process",
+      "processId": "${command:PickProcess}"
+    },
+    {
+      "type": "chrome",
+      "request": "attach",
+      "name": "Attach to Renderer Process",
+      "port": 9222,
+      "webRoot": "${workspaceFolder}/resources/app/renderer",
+      "sourceMaps": true,
+      "sourceMapPathOverrides": {
+        "webpack:///*": "${workspaceFolder}/*",
+        "webpack:///./*": "${workspaceFolder}/*"
+      }
+    },
+    {
+      "name": "Launch Main Process",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron",
+      "console": "integratedTerminal",
+      "windows": {
+        "runtimeExecutable": "${workspaceFolder}\\node_modules\\.bin\\electron.cmd"
+      },
+      "runtimeArgs": [
+        "--remote-debugging-port=9222",
+        "${workspaceFolder}/resources/app"
+      ],
+      "sourceMaps": true,
+      "protocol": "inspector"
+    }
+  ]
+}

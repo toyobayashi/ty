@@ -1,7 +1,7 @@
 const merge = require('deepmerge')
 const getPath = require('../util/path.js')
 
-const tyconfigPath = getPath('./tyconfig.json')
+const tyconfigPath = getPath('./tyconfig.js')
 
 let tyconfig = {}
 try {
