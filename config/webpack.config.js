@@ -7,10 +7,12 @@ const TerserWebpackPlugin = require('terser-webpack-plugin')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
 const webpackNodeExternals = require('webpack-node-externals')
+const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin')
 const getPath = require('../util/path.js')
 
 const pkg = require(getPath('package.json'))
 const useVue = (pkg.devDependencies && pkg.devDependencies.vue) || (pkg.dependencies && pkg.dependencies.vue)
+const useTypeScript = (pkg.devDependencies && pkg.devDependencies.typescript)
 
 function createCssLoader (config) {
   return [
@@ -58,11 +60,24 @@ class WebpackConfig {
       module: {
         rules: [
           {
-            test: /\.js$/,
-            exclude: /node_modules/,
+            test: /\.jsx?$/,
             enforce: 'pre',
+            exclude: /node_modules/,
             use: [
               createEslintLoader()
+            ]
+          },
+          {
+            test: /\.tsx?$/,
+            exclude: /node_modules/,
+            use: [
+              {
+                loader: require.resolve('ts-loader'),
+                options: {
+                  transpileOnly: true,
+                  configFile: getPath('./src/main/tsconfig.json')
+                }
+              }
             ]
           }
         ]
@@ -107,7 +122,7 @@ class WebpackConfig {
       module: {
         rules: [
           {
-            test: /\.js$/,
+            test: /\.jsx?$/,
             enforce: 'pre',
             exclude: /node_modules/,
             use: [
@@ -118,8 +133,21 @@ class WebpackConfig {
             test: /\.jsx$/,
             exclude: /node_modules/,
             use: [
-              'babel-loader',
-              createEslintLoader()
+              require.resolve('babel-loader')
+            ]
+          },
+          {
+            test: /\.tsx?$/,
+            exclude: /node_modules/,
+            use: [
+              {
+                loader: require.resolve('ts-loader'),
+                options: {
+                  appendTsSuffixTo: [/\.vue$/],
+                  transpileOnly: true,
+                  configFile: getPath('./src/renderer/tsconfig.json')
+                }
+              }
             ]
           },
           {
@@ -264,6 +292,25 @@ class WebpackConfig {
     if (config.publicPath) {
       this.rendererConfig.output && (this.rendererConfig.output.publicPath = config.publicPath)
     }
+
+    if (useTypeScript) {
+      this.rendererConfig.plugins = [
+        ...(this.rendererConfig.plugins || []),
+        new ForkTsCheckerWebpackPlugin({
+          eslint: true,
+          tsconfig: getPath('src/renderer/tsconfig.json'),
+          vue: useVue
+        })
+      ]
+
+      this.mainConfig.plugins = [
+        ...(this.mainConfig.plugins || []),
+        new ForkTsCheckerWebpackPlugin({
+          eslint: true,
+          tsconfig: getPath('src/main/tsconfig.json')
+        })
+      ]
+    }
   }
 
   _mergeProduction (config) {
@@ -294,6 +341,31 @@ class WebpackConfig {
     this.mainConfig.optimization = {
       ...(this.mainConfig.optimization || {}),
       minimizer: [terser()]
+    }
+
+    if (useTypeScript) {
+      this.rendererConfig.plugins = [
+        ...(this.rendererConfig.plugins || []),
+        new ForkTsCheckerWebpackPlugin({
+          eslint: true,
+          tsconfig: getPath('src/renderer/tsconfig.json'),
+          vue: useVue,
+          async: false,
+          useTypescriptIncrementalApi: true,
+          memoryLimit: 4096
+        })
+      ]
+
+      this.mainConfig.plugins = [
+        ...(this.mainConfig.plugins || []),
+        new ForkTsCheckerWebpackPlugin({
+          eslint: true,
+          tsconfig: getPath('src/main/tsconfig.json'),
+          async: false,
+          useTypescriptIncrementalApi: true,
+          memoryLimit: 4096
+        })
+      ]
     }
   }
 }
