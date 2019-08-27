@@ -66,6 +66,10 @@ const config = {
    * @type {string}
    */
   indexHtml: 'public/index.html',
+  /**
+   * @type {string}
+   */
+  assetsPath: '',
 
   /**
    * @type {'ia32' | 'x64'}

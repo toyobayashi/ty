@@ -189,6 +189,30 @@ class WebpackConfig {
               ...(this._createCssLoader(config)),
               require.resolve('stylus-loader')
             ]
+          },
+          {
+            test: /\.(png|jpe?g|gif|svg)(\?.*)?$/,
+            loader: 'url-loader',
+            options: {
+              limit: 8192,
+              name: 'assets/[name].[ext]'
+            }
+          },
+          {
+            test: /\.(mp4|webm|ogg|mp3|wav|flac|aac)(\?.*)?$/,
+            loader: 'url-loader',
+            options: {
+              limit: 8192,
+              name: 'assets/[name].[ext]'
+            }
+          },
+          {
+            test: /\.(woff2?|eot|ttf|otf)(\?.*)?$/,
+            loader: 'url-loader',
+            options: {
+              limit: 8192,
+              name: 'assets/[name].[ext]'
+            }
           }
         ]
       },
@@ -240,14 +264,8 @@ class WebpackConfig {
     }
 
     if (this._useESLint) {
-      for (let i = 0; i < this.rendererConfig.module.rules.length; i++) {
-        if (this.rendererConfig.module.rules[i].test.toString().indexOf('vue') !== -1) {
-          this.rendererConfig.module.rules[i].use.push(this._createEslintLoader())
-          break
-        }
-      }
       this.rendererConfig.module.rules.unshift({
-        test: /\.jsx?$/,
+        test: /\.(jsx?|vue)$/,
         enforce: 'pre',
         exclude: /node_modules/,
         use: [this._createEslintLoader()]
