@@ -10,29 +10,37 @@ const webpackNodeExternals = require('webpack-node-externals')
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin')
 const getPath = require('../util/path.js')
 
-const pkg = require(getPath('package.json'))
-const useVue = (pkg.devDependencies && pkg.devDependencies.vue) || (pkg.dependencies && pkg.dependencies.vue)
-const useTypeScript = (pkg.devDependencies && pkg.devDependencies.typescript)
+class WebpackConfig {
+  _createCssLoader (config) {
+    return [
+      config.mode === 'production' ? MiniCssExtractPlugin.loader : (this._useVue ? require.resolve('vue-style-loader') : require.resolve('style-loader')),
+      require.resolve('css-loader')
+    ]
+  }
 
-function createCssLoader (config) {
-  return [
-    config.mode === 'production' ? MiniCssExtractPlugin.loader : (useVue ? require.resolve('vue-style-loader') : require.resolve('style-loader')),
-    require.resolve('css-loader')
-  ]
-}
-
-function createEslintLoader () {
-  return {
-    loader: require.resolve('eslint-loader'),
-    options: {
-      emitWarning: true,
-      emitError: false
+  _createEslintLoader () {
+    return {
+      loader: require.resolve('eslint-loader'),
+      options: {
+        emitWarning: true,
+        emitError: false
+      }
     }
   }
-}
 
-class WebpackConfig {
   constructor (config) {
+    this._pkg = require(getPath('package.json'))
+    this._useVue = (this._pkg.devDependencies && this._pkg.devDependencies.vue) || (this._pkg.dependencies && this._pkg.dependencies.vue)
+    this._useTypeScript = (this._pkg.devDependencies && this._pkg.devDependencies.typescript) || existsSync(getPath('tsconfig.json'))
+    this._useESLint = (this._pkg.devDependencies && this._pkg.devDependencies.eslint) || (
+      existsSync(getPath('.eslintrc.js')) ||
+      existsSync(getPath('.eslintrc.yml')) ||
+      existsSync(getPath('.eslintrc.yaml')) ||
+      existsSync(getPath('.eslintrc.json')) ||
+      existsSync(getPath('.eslintrc')) ||
+      (this._pkg.eslintConfig !== undefined)
+    )
+
     this._initMain(config)
     this._initRenderer(config)
     this._initProductionPackage(config)
@@ -59,14 +67,6 @@ class WebpackConfig {
       node: false,
       module: {
         rules: [
-          {
-            test: /\.jsx?$/,
-            enforce: 'pre',
-            exclude: /node_modules/,
-            use: [
-              createEslintLoader()
-            ]
-          },
           {
             test: /\.tsx?$/,
             exclude: /node_modules/,
@@ -104,6 +104,15 @@ class WebpackConfig {
         ])
       ]
     }
+
+    if (this._useESLint) {
+      this.mainConfig.module.rules.unshift({
+        test: /\.jsx?$/,
+        enforce: 'pre',
+        exclude: /node_modules/,
+        use: [this._createEslintLoader()]
+      })
+    }
   }
 
   _initRenderer (config) {
@@ -121,14 +130,6 @@ class WebpackConfig {
       node: false,
       module: {
         rules: [
-          {
-            test: /\.jsx?$/,
-            enforce: 'pre',
-            exclude: /node_modules/,
-            use: [
-              createEslintLoader()
-            ]
-          },
           {
             test: /\.jsx$/,
             exclude: /node_modules/,
@@ -153,20 +154,19 @@ class WebpackConfig {
           {
             test: /\.vue$/,
             use: [
-              require.resolve('vue-loader'),
-              createEslintLoader()
+              require.resolve('vue-loader')
             ]
           },
           {
             test: /\.css$/,
             use: [
-              ...createCssLoader(config)
+              ...(this._createCssLoader(config))
             ]
           },
           {
             test: /\.styl(us)?$/,
             use: [
-              ...createCssLoader(config),
+              ...(this._createCssLoader(config)),
               require.resolve('stylus-loader')
             ]
           }
@@ -180,7 +180,7 @@ class WebpackConfig {
       },
       plugins: [
         new HtmlWebpackPlugin({
-          title: pkg.name,
+          title: this._pkg.name,
           template: getPath(config.indexHtml),
           minify: config.mode === 'production' ? config.htmlMinify : false
         })
@@ -201,28 +201,43 @@ class WebpackConfig {
       }
     }
 
-    if (useVue) {
+    if (this._useVue) {
       const { VueLoaderPlugin } = require('vue-loader')
       this.rendererConfig.plugins = [
         ...(this.rendererConfig.plugins || []),
         new VueLoaderPlugin()
       ]
     }
+
+    if (this._useESLint) {
+      for (let i = 0; i < this.rendererConfig.module.rules.length; i++) {
+        if (this.rendererConfig.module.rules[i].test.toString().indexOf('vue') !== -1) {
+          this.rendererConfig.module.rules[i].use.push(this._createEslintLoader())
+          break
+        }
+      }
+      this.rendererConfig.module.rules.unshift({
+        test: /\.jsx?$/,
+        enforce: 'pre',
+        exclude: /node_modules/,
+        use: [this._createEslintLoader()]
+      })
+    }
   }
 
   _initProductionPackage (config) {
-    const author = typeof pkg.author === 'object' ? pkg.author.name : pkg.author
+    const author = typeof this._pkg.author === 'object' ? this._pkg.author.name : this._pkg.author
 
     const productionPackage = {
-      name: pkg.name,
-      version: pkg.version,
-      main: pkg.main,
+      name: this._pkg.name,
+      version: this._pkg.version,
+      main: this._pkg.main,
       author,
-      license: pkg.license
+      license: this._pkg.license
     }
 
-    if (pkg.dependencies) {
-      productionPackage.dependencies = pkg.dependencies
+    if (this._pkg.dependencies) {
+      productionPackage.dependencies = this._pkg.dependencies
     }
 
     try {
@@ -248,7 +263,7 @@ class WebpackConfig {
         unsafelyDisableChecksums: true,
         mirrorOptions: {
           mirror: process.env.npm_config_electron_mirror.endsWith('/') ? process.env.npm_config_electron_mirror : (process.env.npm_config_electron_mirror + '/'),
-          customDir: pkg.devDependencies.electron
+          customDir: this._pkg.devDependencies.electron
         }
       }
     }
@@ -293,20 +308,20 @@ class WebpackConfig {
       this.rendererConfig.output && (this.rendererConfig.output.publicPath = config.publicPath)
     }
 
-    if (useTypeScript) {
+    if (this._useTypeScript) {
       this.rendererConfig.plugins = [
         ...(this.rendererConfig.plugins || []),
         new ForkTsCheckerWebpackPlugin({
-          eslint: true,
+          eslint: this._useESLint,
           tsconfig: getPath('src/renderer/tsconfig.json'),
-          vue: useVue
+          vue: this._useVue
         })
       ]
 
       this.mainConfig.plugins = [
         ...(this.mainConfig.plugins || []),
         new ForkTsCheckerWebpackPlugin({
-          eslint: true,
+          eslint: this._useESLint,
           tsconfig: getPath('src/main/tsconfig.json')
         })
       ]
@@ -343,13 +358,13 @@ class WebpackConfig {
       minimizer: [terser()]
     }
 
-    if (useTypeScript) {
+    if (this._useTypeScript) {
       this.rendererConfig.plugins = [
         ...(this.rendererConfig.plugins || []),
         new ForkTsCheckerWebpackPlugin({
-          eslint: true,
+          eslint: this._useESLint,
           tsconfig: getPath('src/renderer/tsconfig.json'),
-          vue: useVue,
+          vue: this._useVue,
           async: false,
           useTypescriptIncrementalApi: true,
           memoryLimit: 4096
@@ -359,7 +374,7 @@ class WebpackConfig {
       this.mainConfig.plugins = [
         ...(this.mainConfig.plugins || []),
         new ForkTsCheckerWebpackPlugin({
-          eslint: true,
+          eslint: this._useESLint,
           tsconfig: getPath('src/main/tsconfig.json'),
           async: false,
           useTypescriptIncrementalApi: true,

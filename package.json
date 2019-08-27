@@ -18,13 +18,7 @@
     "css-loader": "^3.2.0",
     "deepmerge": "^4.0.0",
     "electron-packager": "^14.0.4",
-    "eslint-config-standard": "^14.0.1",
     "eslint-loader": "^3.0.0",
-    "eslint-plugin-html": "^6.0.0",
-    "eslint-plugin-import": "^2.18.2",
-    "eslint-plugin-node": "^9.1.0",
-    "eslint-plugin-promise": "^4.2.1",
-    "eslint-plugin-standard": "^4.0.1",
     "express-serve-asar": "^1.0.2",
     "fork-ts-checker-webpack-plugin": "^1.5.0",
     "fs-extra": "^8.1.0",
@@ -41,5 +35,13 @@
     "webpack": "^4.39.2",
     "webpack-dev-server": "^3.8.0",
     "webpack-node-externals": "^1.7.2"
+  },
+  "devDependencies": {
+    "eslint": "^6.2.2",
+    "eslint-config-standard": "^14.0.1",
+    "eslint-plugin-import": "^2.18.2",
+    "eslint-plugin-node": "^9.1.0",
+    "eslint-plugin-promise": "^4.2.1",
+    "eslint-plugin-standard": "^4.0.1"
   }
 }
