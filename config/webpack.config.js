@@ -31,6 +31,7 @@ class WebpackConfig {
   constructor (config) {
     this._pkg = require(getPath('package.json'))
     this._useVue = (this._pkg.devDependencies && this._pkg.devDependencies.vue) || (this._pkg.dependencies && this._pkg.dependencies.vue)
+    this._electronTarget = (config.target === 'electron')
     this._useTypeScript = (this._pkg.devDependencies && this._pkg.devDependencies.typescript) || existsSync(getPath('tsconfig.json'))
     this._useESLint = (this._pkg.devDependencies && this._pkg.devDependencies.eslint) || (
       existsSync(getPath('.eslintrc.js')) ||
@@ -41,15 +42,34 @@ class WebpackConfig {
       (this._pkg.eslintConfig !== undefined)
     )
 
-    this._initMain(config)
-    this._initRenderer(config)
-    this._initProductionPackage(config)
-    this._initPackagerConfig(config)
+    if (this._electronTarget) {
+      this._initMain(config)
+      this._initRenderer(config)
+      this._initProductionPackage(config)
+      this._initPackagerConfig(config)
+    } else {
+      this._initWeb(config)
+    }
+
     if (config.mode === 'production') {
       this._mergeProduction(config)
     } else {
       this._mergeDevelopment(config)
     }
+
+    if (config.configureWebpack) {
+      if (this._electronTarget) {
+        if (typeof config.configureWebpack.renderer === 'function') config.configureWebpack.renderer(this.rendererConfig)
+        if (typeof config.configureWebpack.main === 'function') config.configureWebpack.main(this.mainConfig)
+      } else {
+        if (typeof config.configureWebpack.web === 'function') config.configureWebpack.web(this.webConfig)
+      }
+    }
+  }
+
+  _initWeb (config) {
+    // TODO
+    this.webConfig = {}
   }
 
   _initMain (config) {
@@ -294,91 +314,99 @@ class WebpackConfig {
   }
 
   _mergeDevelopment (config) {
-    this.rendererConfig.devServer = {
-      stats: config.statsOptions,
-      hot: true,
-      host: config.devServerHost,
-      inline: true,
-      contentBase: [getPath(config.contentBase)],
-      publicPath: config.publicPath,
-      before (app, server) {
-        app.use(require('express-serve-asar')(getPath(config.contentBase)))
-        server._watch(config.indexHtml)
+    if (this._electronTarget) {
+      this.rendererConfig.devServer = {
+        stats: config.statsOptions,
+        hot: true,
+        host: config.devServerHost,
+        inline: true,
+        contentBase: [getPath(config.contentBase)],
+        publicPath: config.publicPath,
+        before (app, server) {
+          app.use(require('express-serve-asar')(getPath(config.contentBase)))
+          server._watch(config.indexHtml)
+        }
       }
-    }
-    this.rendererConfig.devtool = this.mainConfig.devtool = 'eval-source-map'
-    this.rendererConfig.plugins = [
-      ...(this.rendererConfig.plugins || []),
-      new HotModuleReplacementPlugin()
-    ]
-
-    if (config.publicPath) {
-      this.rendererConfig.output && (this.rendererConfig.output.publicPath = config.publicPath)
-    }
-
-    if (this._useTypeScript) {
+      this.rendererConfig.devtool = this.mainConfig.devtool = 'eval-source-map'
       this.rendererConfig.plugins = [
         ...(this.rendererConfig.plugins || []),
-        new ForkTsCheckerWebpackPlugin({
-          eslint: this._useESLint,
-          tsconfig: getPath('src/renderer/tsconfig.json'),
-          vue: this._useVue
-        })
+        new HotModuleReplacementPlugin()
       ]
 
-      this.mainConfig.plugins = [
-        ...(this.mainConfig.plugins || []),
-        new ForkTsCheckerWebpackPlugin({
-          eslint: this._useESLint,
-          tsconfig: getPath('src/main/tsconfig.json')
-        })
-      ]
+      if (config.publicPath) {
+        this.rendererConfig.output && (this.rendererConfig.output.publicPath = config.publicPath)
+      }
+
+      if (this._useTypeScript) {
+        this.rendererConfig.plugins = [
+          ...(this.rendererConfig.plugins || []),
+          new ForkTsCheckerWebpackPlugin({
+            eslint: this._useESLint,
+            tsconfig: getPath('src/renderer/tsconfig.json'),
+            vue: this._useVue
+          })
+        ]
+
+        this.mainConfig.plugins = [
+          ...(this.mainConfig.plugins || []),
+          new ForkTsCheckerWebpackPlugin({
+            eslint: this._useESLint,
+            tsconfig: getPath('src/main/tsconfig.json')
+          })
+        ]
+      }
+    } else {
+      // TODO
     }
   }
 
   _mergeProduction (config) {
     const terser = () => new TerserWebpackPlugin(config.terserPlugin)
-    this.rendererConfig.plugins = [
-      ...(this.rendererConfig.plugins || []),
-      new MiniCssExtractPlugin({
-        filename: '[name].css'
-      })
-    ]
-    this.rendererConfig.optimization = {
-      ...(this.rendererConfig.optimization || {}),
-      minimizer: [
-        terser(),
-        new OptimizeCSSAssetsPlugin({})
-      ]
-    }
-    this.mainConfig.optimization = {
-      ...(this.mainConfig.optimization || {}),
-      minimizer: [terser()]
-    }
-
-    if (this._useTypeScript) {
+    if (this._electronTarget) {
       this.rendererConfig.plugins = [
         ...(this.rendererConfig.plugins || []),
-        new ForkTsCheckerWebpackPlugin({
-          eslint: this._useESLint,
-          tsconfig: getPath('src/renderer/tsconfig.json'),
-          vue: this._useVue,
-          async: false,
-          useTypescriptIncrementalApi: true,
-          memoryLimit: 4096
+        new MiniCssExtractPlugin({
+          filename: '[name].css'
         })
       ]
+      this.rendererConfig.optimization = {
+        ...(this.rendererConfig.optimization || {}),
+        minimizer: [
+          terser(),
+          new OptimizeCSSAssetsPlugin({})
+        ]
+      }
+      this.mainConfig.optimization = {
+        ...(this.mainConfig.optimization || {}),
+        minimizer: [terser()]
+      }
 
-      this.mainConfig.plugins = [
-        ...(this.mainConfig.plugins || []),
-        new ForkTsCheckerWebpackPlugin({
-          eslint: this._useESLint,
-          tsconfig: getPath('src/main/tsconfig.json'),
-          async: false,
-          useTypescriptIncrementalApi: true,
-          memoryLimit: 4096
-        })
-      ]
+      if (this._useTypeScript) {
+        this.rendererConfig.plugins = [
+          ...(this.rendererConfig.plugins || []),
+          new ForkTsCheckerWebpackPlugin({
+            eslint: this._useESLint,
+            tsconfig: getPath('src/renderer/tsconfig.json'),
+            vue: this._useVue,
+            async: false,
+            useTypescriptIncrementalApi: true,
+            memoryLimit: 4096
+          })
+        ]
+
+        this.mainConfig.plugins = [
+          ...(this.mainConfig.plugins || []),
+          new ForkTsCheckerWebpackPlugin({
+            eslint: this._useESLint,
+            tsconfig: getPath('src/main/tsconfig.json'),
+            async: false,
+            useTypescriptIncrementalApi: true,
+            memoryLimit: 4096
+          })
+        ]
+      }
+    } else {
+      // TODO
     }
   }
 }
