@@ -140,8 +140,8 @@ async function zipResourcesDir (webpackConfig, config) {
 
 function inno (sourceDir, config) {
   return new Promise((resolve, reject) => {
-    if (!isUuid4(config.inno.appid)) {
-      reject(new Error('Please specify [config.inno.appid] in script/config.ts to generate windows installer.'))
+    if (!isUuid4(config.inno.appid[config.arch])) {
+      reject(new Error(`Please specify [module.exports.inno.appid.${config.arch}] in tyconfig.js to generate windows installer.`))
       return
     }
     const def = {
