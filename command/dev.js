@@ -4,6 +4,12 @@ const { watch } = require('../util/webpack.js')
 const start = require('./start.js')
 
 function dev (config) {
+  if (config.target !== 'electron') {
+    const chalk = require('chalk')
+    console.error(chalk.redBright('Run "ty serve" instead if your building target is web'))
+    process.exit(1)
+  }
+
   let appProcess = null
 
   function onExit (_code, signal) {

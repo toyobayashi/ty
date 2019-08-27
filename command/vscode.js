@@ -6,7 +6,7 @@ const path = require('path')
 
 module.exports = function (config) {
   const target = getPath('.vscode/launch.json')
-  const launchJson = {
+  const launchJson = config.target === 'electron' ? {
     version: '0.2.0',
     configurations: [
       {
@@ -44,6 +44,35 @@ module.exports = function (config) {
         ],
         sourceMaps: true,
         protocol: 'inspector'
+      }
+    ]
+  } : {
+    version: '0.2.0',
+    configurations: [
+      {
+        type: 'chrome',
+        request: 'attach',
+        name: 'Attach to Chrome',
+        port: 9222,
+        webRoot: path.posix.join('${workspaceFolder}', config.contentBase),
+        sourceMaps: true,
+        sourceMapPathOverrides: {
+          'webpack:///*': '${workspaceFolder}/*',
+          'webpack:///./*': '${workspaceFolder}/*'
+        }
+      },
+      {
+        type: 'chrome',
+        request: 'launch',
+        name: 'Launch Chrome',
+        port: 9222,
+        url: `http://localhost:${config.devServerPort}`,
+        webRoot: path.posix.join('${workspaceFolder}', config.contentBase),
+        sourceMaps: true,
+        sourceMapPathOverrides: {
+          'webpack:///*': '${workspaceFolder}/*',
+          'webpack:///./*': '${workspaceFolder}/*'
+        }
       }
     ]
   }

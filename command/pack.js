@@ -172,6 +172,12 @@ function inno (sourceDir, config) {
 }
 
 async function pack (config) {
+  if (config.target !== 'electron') {
+    const chalk = require('chalk')
+    console.error(chalk.redBright('This command does not support web target'))
+    process.exit(1)
+  }
+
   const webpackConfig = new WebpackConfig(config)
   const start = new Date().getTime()
 
