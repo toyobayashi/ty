@@ -23,13 +23,12 @@ const config = {
     renderer: 'resources/app/renderer',
     main: 'resources/app/main'
   },
-  contentBase: 'resources/app/renderer',
+  contentBase: 'resources',
   resourcesPath: 'resources',
-  publicPath: '/',
+  publicPath: '/app/renderer/',
   distPath: 'dist',
   iconSrcDir: 'icon',
   indexHtml: 'public/index.html',
-  serveAsar: false,
 
   arch: process.arch,
   inno: {

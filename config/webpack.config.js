@@ -183,7 +183,17 @@ class WebpackConfig {
           title: this._pkg.name,
           template: getPath(config.indexHtml),
           minify: config.mode === 'production' ? config.htmlMinify : false
-        })
+        }),
+        new CopyWebpackPlugin([
+          {
+            from: getPath('public'),
+            to: getPath(config.output.renderer),
+            toType: 'dir',
+            ignore: [
+              '.DS_Store'
+            ]
+          }
+        ])
       ],
       optimization: {
         splitChunks: {
@@ -289,12 +299,10 @@ class WebpackConfig {
       hot: true,
       host: config.devServerHost,
       inline: true,
-      contentBase: [getPath(config.contentBase), getPath('public')],
+      contentBase: [getPath(config.contentBase)],
       publicPath: config.publicPath,
       before (app, server) {
-        if (config.serveAsar) {
-          app.use(require('express-serve-asar')(getPath('public')))
-        }
+        app.use(require('express-serve-asar')(getPath(config.contentBase)))
         server._watch(config.indexHtml)
       }
     }
@@ -334,17 +342,7 @@ class WebpackConfig {
       ...(this.rendererConfig.plugins || []),
       new MiniCssExtractPlugin({
         filename: '[name].css'
-      }),
-      new CopyWebpackPlugin([
-        {
-          from: getPath('public'),
-          to: getPath(config.output.renderer),
-          toType: 'dir',
-          ignore: [
-            '.DS_Store'
-          ]
-        }
-      ])
+      })
     ]
     this.rendererConfig.optimization = {
       ...(this.rendererConfig.optimization || {}),
