@@ -24,7 +24,7 @@ const config = {
   /**
    * @type {'electron' | 'web'}
    */
-  target: 'electron',
+  target: '',
   /**
    * @typedef {string | string[] | { [name: string]: string | string[] }} WebpackEntry
    * @type {{ web: WebpackEntry; renderer: WebpackEntry; main: WebpackEntry }}
@@ -122,6 +122,15 @@ const config = {
 }
 
 const mergedConfig = merge(config, tyconfig)
+
+if (!mergedConfig.target) {
+  const pkg = require(getPath('package.json'))
+  if (pkg.devDependencies && pkg.devDependencies.electron) {
+    mergedConfig.target = 'electron'
+  } else {
+    mergedConfig.target = 'web'
+  }
+}
 
 if (mergedConfig.target === 'electron') {
   setDefault(mergedConfig, 'contentBase', mergedConfig.resourcesPath || 'resources')
