@@ -12,7 +12,7 @@ const getPath = require('../util/path.js')
 const path = require('path')
 
 class WebpackConfig {
-  _createCssLoader (config, importLoaders = 0) {
+  _createCssLoaders (config, importLoaders = 0) {
     return [
       config.mode === 'production' ? MiniCssExtractPlugin.loader : (this._useVue ? require.resolve('vue-style-loader') : require.resolve('style-loader')),
       {
@@ -20,6 +20,48 @@ class WebpackConfig {
         options: {
           importLoaders
         }
+      }
+    ]
+  }
+
+  _createStyleLoaders (config) {
+    return [
+      {
+        test: /\.css$/,
+        use: [
+          ...(this._createCssLoaders(config, this._usePostCss ? 1 : 0)),
+          ...(this._usePostCss ? [require.resolve('postcss-loader')] : [])
+        ]
+      },
+      {
+        test: /\.styl(us)?$/,
+        use: [
+          ...(this._createCssLoaders(config, this._usePostCss ? 2 : 1)),
+          ...(this._usePostCss ? [require.resolve('postcss-loader')] : []),
+          require.resolve('stylus-loader')
+        ]
+      },
+      {
+        test: /\.less$/,
+        use: [
+          ...(this._createCssLoaders(config, this._usePostCss ? 2 : 1)),
+          ...(this._usePostCss ? [require.resolve('postcss-loader')] : []),
+          require.resolve('less-loader')
+        ]
+      },
+      {
+        test: /\.s[ac]ss$/i,
+        use: [
+          ...(this._createCssLoaders(config, this._usePostCss ? 2 : 1)),
+          ...(this._usePostCss ? [require.resolve('postcss-loader')] : []),
+          {
+            loader: require.resolve('sass-loader'),
+            options: {
+              sourceMap: false,
+              indentedSyntax: true
+            }
+          }
+        ]
       }
     ]
   }
@@ -34,7 +76,7 @@ class WebpackConfig {
     }
   }
 
-  _createAssetsLoader (config) {
+  _createAssetsLoaders (config) {
     return [
       {
         test: /\.(png|jpe?g|gif|webp)(\?.*)?$/,
@@ -166,29 +208,15 @@ class WebpackConfig {
               require.resolve('vue-loader')
             ]
           },
-          {
-            test: /\.css$/,
-            use: [
-              ...(this._createCssLoader(config, this._usePostCss ? 1 : 0)),
-              ...(this._usePostCss ? [require.resolve('postcss-loader')] : [])
-            ]
-          },
-          {
-            test: /\.styl(us)?$/,
-            use: [
-              ...(this._createCssLoader(config, this._usePostCss ? 2 : 1)),
-              ...(this._usePostCss ? [require.resolve('postcss-loader')] : []),
-              require.resolve('stylus-loader')
-            ]
-          },
-          ...(this._createAssetsLoader(config))
+          ...(this._createStyleLoaders(config)),
+          ...(this._createAssetsLoaders(config))
         ]
       },
       resolve: {
         alias: {
           '@': getPath('src')
         },
-        extensions: ['.ts', '.tsx', '.js', '.vue', '.css', '.styl', '.stylus', '.json']
+        extensions: ['.ts', '.tsx', '.js', '.vue', '.css', '.styl', '.stylus', '.less', '.sass', '.scss', '.json']
       },
       plugins: [
         new HtmlWebpackPlugin({
@@ -346,29 +374,15 @@ class WebpackConfig {
               require.resolve('vue-loader')
             ]
           },
-          {
-            test: /\.css$/,
-            use: [
-              ...(this._createCssLoader(config, this._usePostCss ? 1 : 0)),
-              ...(this._usePostCss ? [require.resolve('postcss-loader')] : [])
-            ]
-          },
-          {
-            test: /\.styl(us)?$/,
-            use: [
-              ...(this._createCssLoader(config, this._usePostCss ? 2 : 1)),
-              ...(this._usePostCss ? [require.resolve('postcss-loader')] : []),
-              require.resolve('stylus-loader')
-            ]
-          },
-          ...(this._createAssetsLoader(config))
+          ...(this._createStyleLoaders(config)),
+          ...(this._createAssetsLoaders(config))
         ]
       },
       resolve: {
         alias: {
           '@': getPath('src')
         },
-        extensions: ['.ts', '.tsx', '.js', '.vue', '.css', '.styl', '.stylus', '.json']
+        extensions: ['.ts', '.tsx', '.js', '.vue', '.css', '.styl', '.stylus', '.less', '.sass', '.scss', '.json']
       },
       plugins: [
         new HtmlWebpackPlugin({

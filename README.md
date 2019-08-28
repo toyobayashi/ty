@@ -243,8 +243,6 @@ No webpack config. Working in progress.
 
 * Use ESLint to check typescript code instead of TSLint.
 
-* SASS/SCSS is not supported yet.
-
 ## Example
 
 * [electron-vue-ts](https://github.com/toyobayashi/webpack-template/tree/master/electron-vue-ts)
