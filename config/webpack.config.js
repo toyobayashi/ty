@@ -151,7 +151,7 @@ class WebpackConfig {
                 options: {
                   appendTsSuffixTo: [/\.vue$/],
                   transpileOnly: true,
-                  configFile: getPath('tsconfig.json')
+                  configFile: getPath(config.tsconfig.web)
                 }
               }
             ]
@@ -269,7 +269,7 @@ class WebpackConfig {
                 loader: require.resolve('ts-loader'),
                 options: {
                   transpileOnly: true,
-                  configFile: getPath('./src/main/tsconfig.json')
+                  configFile: getPath(config.tsconfig.main)
                 }
               }
             ]
@@ -333,7 +333,7 @@ class WebpackConfig {
                 options: {
                   appendTsSuffixTo: [/\.vue$/],
                   transpileOnly: true,
-                  configFile: getPath('./src/renderer/tsconfig.json')
+                  configFile: getPath(config.tsconfig.renderer)
                 }
               }
             ]
@@ -515,7 +515,7 @@ class WebpackConfig {
           ...(this.rendererConfig.plugins || []),
           new ForkTsCheckerWebpackPlugin({
             eslint: this._useESLint,
-            tsconfig: getPath('src/renderer/tsconfig.json'),
+            tsconfig: getPath(config.tsconfig.renderer),
             vue: this._useVue
           })
         ]
@@ -524,7 +524,7 @@ class WebpackConfig {
           ...(this.mainConfig.plugins || []),
           new ForkTsCheckerWebpackPlugin({
             eslint: this._useESLint,
-            tsconfig: getPath('src/main/tsconfig.json')
+            tsconfig: getPath(config.tsconfig.main)
           })
         ]
       }
@@ -555,7 +555,7 @@ class WebpackConfig {
           ...(this.webConfig.plugins || []),
           new ForkTsCheckerWebpackPlugin({
             eslint: this._useESLint,
-            tsconfig: getPath('tsconfig.json'),
+            tsconfig: getPath(config.tsconfig.web),
             vue: this._useVue
           })
         ]
@@ -589,7 +589,7 @@ class WebpackConfig {
           ...(this.rendererConfig.plugins || []),
           new ForkTsCheckerWebpackPlugin({
             eslint: this._useESLint,
-            tsconfig: getPath('src/renderer/tsconfig.json'),
+            tsconfig: getPath(config.tsconfig.renderer),
             vue: this._useVue,
             async: false,
             useTypescriptIncrementalApi: true,
@@ -601,7 +601,7 @@ class WebpackConfig {
           ...(this.mainConfig.plugins || []),
           new ForkTsCheckerWebpackPlugin({
             eslint: this._useESLint,
-            tsconfig: getPath('src/main/tsconfig.json'),
+            tsconfig: getPath(config.tsconfig.main),
             async: false,
             useTypescriptIncrementalApi: true,
             memoryLimit: 4096
@@ -628,7 +628,7 @@ class WebpackConfig {
           ...(this.webConfig.plugins || []),
           new ForkTsCheckerWebpackPlugin({
             eslint: this._useESLint,
-            tsconfig: getPath('tsconfig.json'),
+            tsconfig: getPath(config.tsconfig.web),
             vue: this._useVue,
             async: false,
             useTypescriptIncrementalApi: true,

@@ -121,6 +121,18 @@ No webpack config. Working in progress.
     }
     ```
 
+* `tsconfig` - For TypeScript project. Default:
+
+    ``` js
+    module.exports = {
+      tsconfig: {
+        web: 'tsconfig.json',
+        renderer: 'src/renderer/tsconfig.json',
+        main: 'src/main/tsconfig.json'
+      }
+    }
+    ```
+
 * `statsOptions` - For webpack output. Default: 
 
     ``` js

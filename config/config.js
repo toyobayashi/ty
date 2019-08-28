@@ -87,6 +87,14 @@ const config = {
     },
     url: ''
   },
+  /**
+   * @type {{ web: string; renderer: string; main: string }}
+   */
+  tsconfig: {
+    web: 'tsconfig.json',
+    renderer: 'src/renderer/tsconfig.json',
+    main: 'src/main/tsconfig.json'
+  },
 
   statsOptions: {
     colors: true,
