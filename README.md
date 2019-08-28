@@ -4,22 +4,38 @@ No webpack config. Working in progress.
 
 ## Usage
 
-1. Install
+* Local
 
-    ``` bash
-    $ npm install -D toyobayashi/ty
-    ```
+    1. Install
 
-2. Writing scripts in package.json
+        ``` bash
+        $ npm install -D toyobayashi/ty
+        ```
 
-    ``` json
-    {
-      "scripts": {
-        "serve": "ty serve",
-        "build": "ty build"
-      }
-    }
-    ```
+    2. Writing scripts in package.json
+
+        ``` json
+        {
+          "scripts": {
+            "serve": "ty serve",
+            "build": "ty build"
+          }
+        }
+        ```
+
+*  Global
+
+    1. Install
+
+        ``` bash
+        $ npm install -g toyobayashi/ty
+        ```
+
+    2. Run in project root directory
+
+        ``` bash
+        $ ty build
+        ```
 
 ## Commands
 

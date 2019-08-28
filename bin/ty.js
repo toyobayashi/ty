@@ -11,6 +11,8 @@ if (process.argv[2] === '-v' || process.argv[2] === '--version') {
   process.exit(0)
 }
 
+require('../util/module.js')
+
 const args = require('minimist')(process.argv.slice(3))
 for (const key in args) {
   if ((/-[a-z]/).test(key)) {
