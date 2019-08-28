@@ -192,6 +192,23 @@ No webpack config. Working in progress.
     }
     ```
 
+* `command` - Your custom command. Default: `undefined`
+
+    ``` js
+    module.exports = {
+      command: {
+        // [command: string]: (
+        //   tyconfig: TyConfig,
+        //   args: minimist.ParsedArgs,
+        //   getCommand: (command: string) => undefined | ((tyconfig: TyConfig) => void)
+        // ) => void
+        hello (tyconfig, args, getCommand) {
+          console.log('hello.')
+        }
+      }
+    }
+    ```
+
 ## Options
 
 * `--mode`

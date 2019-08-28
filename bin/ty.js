@@ -36,4 +36,4 @@ cliConfig.forEach((key) => {
   }
 })
 
-require('../index.js')(command, config)
+require('../index.js')(command, config, args)
