@@ -219,15 +219,15 @@ No webpack config. Working in progress.
 
 ## Other
 
-* ESLint and Babel will be loaded in webpack if there are config files such as `.eslintrc.js` and `babel.config.js` in your project root directory.
+* ESLint / Babel / PostCSS will be loaded in webpack if there are config files such as `.eslintrc.js` / `babel.config.js` / `postcss.config.js` in your project root directory.
 
-* In most cases you don't need to config anything except ESLint and Babel.
+* In most cases you don't need to config anything except ESLint / Babel / PostCSS.
 
 * TypeScript support is out of box. Just write your `tsconfig.json` in project root directory. But in electron project, you should write different `tsconfig.json` for main process and renderer process, default in `src/renderer/tsconfig.json` and `src/main/tsconfig.json`.
 
 * Use ESLint to check typescript code instead of TSLint.
 
-* PostCSS is not supported yet.
+* SASS/SCSS is not supported yet.
 
 ## Example
 

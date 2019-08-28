@@ -12,10 +12,15 @@ const getPath = require('../util/path.js')
 const path = require('path')
 
 class WebpackConfig {
-  _createCssLoader (config) {
+  _createCssLoader (config, importLoaders = 0) {
     return [
       config.mode === 'production' ? MiniCssExtractPlugin.loader : (this._useVue ? require.resolve('vue-style-loader') : require.resolve('style-loader')),
-      require.resolve('css-loader')
+      {
+        loader: require.resolve('css-loader'),
+        options: {
+          importLoaders
+        }
+      }
     ]
   }
 
@@ -94,6 +99,7 @@ class WebpackConfig {
       existsSync(getPath('babel.config.js')) ||
       existsSync(getPath('.babelrc'))
     ))
+    this._usePostCss = existsSync(getPath('postcss.config.js')) || existsSync(getPath('.postcssrc.js'))
 
     if (this._electronTarget) {
       this._initMain(config)
@@ -163,13 +169,15 @@ class WebpackConfig {
           {
             test: /\.css$/,
             use: [
-              ...(this._createCssLoader(config))
+              ...(this._createCssLoader(config, this._usePostCss ? 1 : 0)),
+              ...(this._usePostCss ? [require.resolve('postcss-loader')] : [])
             ]
           },
           {
             test: /\.styl(us)?$/,
             use: [
-              ...(this._createCssLoader(config)),
+              ...(this._createCssLoader(config, this._usePostCss ? 2 : 1)),
+              ...(this._usePostCss ? [require.resolve('postcss-loader')] : []),
               require.resolve('stylus-loader')
             ]
           },
@@ -341,13 +349,15 @@ class WebpackConfig {
           {
             test: /\.css$/,
             use: [
-              ...(this._createCssLoader(config))
+              ...(this._createCssLoader(config, this._usePostCss ? 1 : 0)),
+              ...(this._usePostCss ? [require.resolve('postcss-loader')] : [])
             ]
           },
           {
             test: /\.styl(us)?$/,
             use: [
-              ...(this._createCssLoader(config)),
+              ...(this._createCssLoader(config, this._usePostCss ? 2 : 1)),
+              ...(this._usePostCss ? [require.resolve('postcss-loader')] : []),
               require.resolve('stylus-loader')
             ]
           },
