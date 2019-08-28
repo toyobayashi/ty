@@ -125,9 +125,7 @@ class WebpackConfig {
       mode: config.mode,
       context: getPath(),
       target: 'web',
-      entry: config.entry.web ? config.entry.web : {
-        app: [getPath('./src/index')]
-      },
+      entry: config.entry.web,
       output: {
         filename: '[name].js',
         path: getPath(config.output.web)
@@ -251,9 +249,7 @@ class WebpackConfig {
       mode: config.mode,
       context: getPath(),
       target: 'electron-main',
-      entry: config.entry.main ? config.entry.main : {
-        main: [getPath('./src/main/main')]
-      },
+      entry: config.entry.main,
       output: {
         filename: '[name].js',
         path: getPath(config.output.main)
@@ -314,9 +310,7 @@ class WebpackConfig {
       mode: config.mode,
       context: getPath(),
       target: 'electron-renderer',
-      entry: config.entry.renderer ? config.entry.renderer : {
-        renderer: [getPath('./src/renderer/renderer')]
-      },
+      entry: config.entry.renderer,
       output: {
         filename: '[name].js',
         path: getPath(config.output.renderer)

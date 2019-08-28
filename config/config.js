@@ -148,6 +148,26 @@ if (mergedConfig.target === 'electron') {
   setDefault(mergedConfig, 'publicPath', '/')
 }
 
+if (!mergedConfig.entry) {
+  mergedConfig.entry = {
+    web: { app: [getPath('./src/index')] },
+    renderer: { renderer: [getPath('./src/renderer/renderer')] },
+    main: { main: [getPath('./src/main/main')] }
+  }
+}
+
+if (!mergedConfig.entry.web) {
+  mergedConfig.entry.web = { app: [getPath('./src/index')] }
+}
+
+if (!mergedConfig.entry.renderer) {
+  mergedConfig.entry.renderer = { renderer: [getPath('./src/renderer/renderer')] }
+}
+
+if (!mergedConfig.entry.main) {
+  mergedConfig.entry.main = { main: [getPath('./src/main/main')] }
+}
+
 module.exports = mergedConfig
 
 function setDefault (config, key, value) {
