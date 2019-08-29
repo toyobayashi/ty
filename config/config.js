@@ -3,25 +3,6 @@ const chalk = require('chalk')
 const { existsSync } = require('fs-extra')
 const getPath = require('../util/path.js')
 
-const tyconfigPath = getPath('./tyconfig.js')
-const tyconfigTsPath = getPath('./tyconfig.ts')
-
-let tyconfig = {}
-
-if (existsSync(tyconfigPath)) {
-  tyconfig = require(tyconfigPath)
-} else if (existsSync(tyconfigTsPath)) {
-  let tsnode
-  try {
-    tsnode = require('ts-node')
-  } catch (err) {
-    console.log(chalk.redBright('Please install ts-node first if you want to use typescript config file.'))
-    process.exit(1)
-  }
-  tsnode.register({})
-  tyconfig = require(tyconfigTsPath).default
-}
-
 const defaultConfig = {
   /**
    * @type {'production' | 'development'}
@@ -143,57 +124,6 @@ const defaultConfig = {
   }
 }
 
-checkObject(tyconfig, `tyconfig.js should export an object.`)
-const mergedConfig = merge(defaultConfig, tyconfig);
-
-(['output', 'tsconfig', 'inno']).forEach(key => {
-  checkObject(mergedConfig[key], `module.exports.${key} should be an object.`)
-})
-
-if (!mergedConfig.target) {
-  let pkg
-  try {
-    pkg = require(getPath('package.json'))
-  } catch (_) {
-    pkg = {}
-  }
-  if (pkg.devDependencies && pkg.devDependencies.electron) {
-    mergedConfig.target = 'electron'
-  } else {
-    mergedConfig.target = 'web'
-  }
-}
-
-if (mergedConfig.target === 'electron') {
-  setDefault(mergedConfig, 'contentBase', mergedConfig.resourcesPath || 'resources')
-  setDefault(mergedConfig, 'publicPath', '/app/renderer/')
-} else if (mergedConfig.target === 'web') {
-  setDefault(mergedConfig, 'contentBase', mergedConfig.output.web || 'dist')
-  setDefault(mergedConfig, 'publicPath', '/')
-}
-
-if (!mergedConfig.entry) {
-  mergedConfig.entry = {
-    web: { app: [getPath('./src/index')] },
-    renderer: { renderer: [getPath('./src/renderer/renderer')] },
-    main: { main: [getPath('./src/main/main')] }
-  }
-}
-
-if (!mergedConfig.entry.web) {
-  mergedConfig.entry.web = { app: [getPath('./src/index')] }
-}
-
-if (!mergedConfig.entry.renderer) {
-  mergedConfig.entry.renderer = { renderer: [getPath('./src/renderer/renderer')] }
-}
-
-if (!mergedConfig.entry.main) {
-  mergedConfig.entry.main = { main: [getPath('./src/main/main')] }
-}
-
-module.exports = mergedConfig
-
 function setDefault (config, key, value) {
   if (!config[key]) {
     config[key] = value
@@ -206,3 +136,77 @@ function checkObject (o, msg) {
     process.exit(1)
   }
 }
+
+function readTyConfig () {
+  const tyconfigPath = getPath('./tyconfig.js')
+  const tyconfigTsPath = getPath('./tyconfig.ts')
+
+  let tyconfig = {}
+
+  if (existsSync(tyconfigPath)) {
+    tyconfig = require(tyconfigPath)
+  } else if (existsSync(tyconfigTsPath)) {
+    let tsnode
+    try {
+      tsnode = require('ts-node')
+    } catch (err) {
+      console.log(chalk.redBright('Please install ts-node first if you want to use typescript config file.'))
+      process.exit(1)
+    }
+    tsnode.register({})
+    tyconfig = require(tyconfigTsPath).default
+  }
+
+  checkObject(tyconfig, `tyconfig.js should export an object.`)
+  const mergedConfig = merge(defaultConfig, tyconfig);
+
+  (['output', 'tsconfig', 'inno']).forEach(key => {
+    checkObject(mergedConfig[key], `module.exports.${key} should be an object.`)
+  })
+
+  if (!mergedConfig.target) {
+    let pkg
+    try {
+      pkg = require(getPath('package.json'))
+    } catch (_) {
+      pkg = {}
+    }
+    if (pkg.devDependencies && pkg.devDependencies.electron) {
+      mergedConfig.target = 'electron'
+    } else {
+      mergedConfig.target = 'web'
+    }
+  }
+
+  if (mergedConfig.target === 'electron') {
+    setDefault(mergedConfig, 'contentBase', mergedConfig.resourcesPath || 'resources')
+    setDefault(mergedConfig, 'publicPath', '/app/renderer/')
+  } else if (mergedConfig.target === 'web') {
+    setDefault(mergedConfig, 'contentBase', mergedConfig.output.web || 'dist')
+    setDefault(mergedConfig, 'publicPath', '/')
+  }
+
+  if (!mergedConfig.entry) {
+    mergedConfig.entry = {
+      web: { app: [getPath('./src/index')] },
+      renderer: { renderer: [getPath('./src/renderer/renderer')] },
+      main: { main: [getPath('./src/main/main')] }
+    }
+  }
+
+  if (!mergedConfig.entry.web) {
+    mergedConfig.entry.web = { app: [getPath('./src/index')] }
+  }
+
+  if (!mergedConfig.entry.renderer) {
+    mergedConfig.entry.renderer = { renderer: [getPath('./src/renderer/renderer')] }
+  }
+
+  if (!mergedConfig.entry.main) {
+    mergedConfig.entry.main = { main: [getPath('./src/main/main')] }
+  }
+
+  return mergedConfig
+}
+
+module.exports = readTyConfig

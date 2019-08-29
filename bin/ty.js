@@ -21,21 +21,4 @@ for (const key in args) {
   }
 }
 
-const config = require('../config/config.js')
-const command = process.argv[2]
-const defaultProduction = ['build', 'pack']
-if (defaultProduction.indexOf(command) !== -1) {
-  process.env.NODE_ENV = config.mode = 'production'
-}
-
-const cliConfig = ['mode', 'arch', 'target', 'devServerHost', 'devServerPort']
-cliConfig.forEach((key) => {
-  if (args[key]) {
-    config[key] = args[key]
-    if (key === 'mode') {
-      process.env.NODE_ENV = args[key]
-    }
-  }
-})
-
-require('../index.js')(command, config, args)
+require('../index.js')(process.argv[2], args)

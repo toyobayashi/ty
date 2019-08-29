@@ -56,12 +56,12 @@ declare namespace ty {
 
 declare function ty (
   command: string,
-  config: ty.Configuration,
-  args: {
+  args?: {
     [arg: string]: any
     '--'?: string[]
     _: string[]
-  }
+  },
+  config?: ty.Configuration
 ): void
 
 export = ty
