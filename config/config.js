@@ -1,4 +1,5 @@
 const merge = require('deepmerge')
+const chalk = require('chalk')
 const getPath = require('../util/path.js')
 
 const tyconfigPath = getPath('./tyconfig.js')
@@ -129,7 +130,12 @@ const config = {
   }
 }
 
-const mergedConfig = merge(config, tyconfig)
+checkObject(tyconfig, `tyconfig.js should export an object.`)
+const mergedConfig = merge(config, tyconfig);
+
+(['output', 'tsconfig', 'inno']).forEach(key => {
+  checkObject(mergedConfig[key], `module.exports.${key} should be an object.`)
+})
 
 if (!mergedConfig.target) {
   let pkg
@@ -178,5 +184,12 @@ module.exports = mergedConfig
 function setDefault (config, key, value) {
   if (!config[key]) {
     config[key] = value
+  }
+}
+
+function checkObject (o, msg) {
+  if (Object.prototype.toString.call(o) !== '[object Object]') {
+    console.log(chalk.redBright(msg))
+    process.exit(1)
   }
 }
