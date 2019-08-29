@@ -132,7 +132,12 @@ const config = {
 const mergedConfig = merge(config, tyconfig)
 
 if (!mergedConfig.target) {
-  const pkg = require(getPath('package.json'))
+  let pkg
+  try {
+    pkg = require(getPath('package.json'))
+  } catch (_) {
+    pkg = {}
+  }
   if (pkg.devDependencies && pkg.devDependencies.electron) {
     mergedConfig.target = 'electron'
   } else {

@@ -125,7 +125,21 @@ class WebpackConfig {
   }
 
   constructor (config) {
-    this._pkg = require(getPath('package.json'))
+    let pkg
+    try {
+      pkg = require(getPath('package.json'))
+    } catch (_) {
+      pkg = {
+        name: '',
+        version: '0.0.0',
+        main: '',
+        author: '',
+        license: '',
+        devDependencies: {},
+        dependencies: {}
+      }
+    }
+    this._pkg = pkg
     this._useVue = !!((this._pkg.devDependencies && this._pkg.devDependencies.vue) || (this._pkg.dependencies && this._pkg.dependencies.vue))
     this._electronTarget = (config.target === 'electron')
     this._useTypeScript = !!((this._pkg.devDependencies && this._pkg.devDependencies.typescript) || existsSync(getPath('tsconfig.json')))
