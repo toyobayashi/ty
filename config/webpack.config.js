@@ -1,5 +1,5 @@
 const { execSync } = require('child_process')
-const { existsSync } = require('fs-extra')
+const { existsSync, writeFileSync } = require('fs-extra')
 const { HotModuleReplacementPlugin } = require('webpack')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin')
@@ -10,6 +10,7 @@ const webpackNodeExternals = require('webpack-node-externals')
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin')
 const getPath = require('../util/path.js')
 const path = require('path')
+const os = require('os')
 
 class WebpackConfig {
   _createCssLoaders (config, importLoaders = 0) {
@@ -142,7 +143,30 @@ class WebpackConfig {
     this._pkg = pkg
     this._useVue = !!((this._pkg.devDependencies && this._pkg.devDependencies.vue) || (this._pkg.dependencies && this._pkg.dependencies.vue))
     this._electronTarget = (config.target === 'electron')
-    this._useTypeScript = !!((this._pkg.devDependencies && this._pkg.devDependencies.typescript) || existsSync(getPath('tsconfig.json')))
+
+    const existsTypeScriptInPackageJson = !!(this._pkg.devDependencies && this._pkg.devDependencies.typescript)
+    if (this._electronTarget) {
+      const rendererTSConfig = existsSync(getPath(config.tsconfig.renderer))
+      const mainTSConfig = existsSync(getPath(config.tsconfig.main))
+      this._useTypeScript = !!(
+        existsTypeScriptInPackageJson ||
+        rendererTSConfig ||
+        mainTSConfig
+      )
+
+      if (this._useTypeScript) {
+        if (!rendererTSConfig) writeFileSync(getPath(config.tsconfig.renderer), '{}' + os.EOL, 'utf8')
+        if (!mainTSConfig) writeFileSync(getPath(config.tsconfig.main), '{}' + os.EOL, 'utf8')
+      }
+    } else {
+      const webTSConfig = existsSync(getPath(config.tsconfig.web))
+      this._useTypeScript = !!(existsTypeScriptInPackageJson || webTSConfig)
+
+      if (this._useTypeScript) {
+        if (!webTSConfig) writeFileSync(getPath(config.tsconfig.web), '{}' + os.EOL, 'utf8')
+      }
+    }
+
     this._useESLint = !!((this._pkg.devDependencies && this._pkg.devDependencies.eslint) || (
       existsSync(getPath('.eslintrc.js')) ||
       existsSync(getPath('.eslintrc.yml')) ||
