@@ -154,10 +154,10 @@ function readTyConfig () {
       process.exit(1)
     }
     tsnode.register({})
-    tyconfig = require(tyconfigTsPath).default
+    tyconfig = require(tyconfigTsPath).default || require(tyconfigTsPath)
   }
 
-  checkObject(tyconfig, `tyconfig.js should export an object.`)
+  checkObject(tyconfig, `tyconfig.${tyconfigTsPath ? 't' : 'j'}s should export an object.`)
   const mergedConfig = merge(defaultConfig, tyconfig);
 
   (['output', 'tsconfig', 'inno']).forEach(key => {
