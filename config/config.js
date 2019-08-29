@@ -1,15 +1,28 @@
 const merge = require('deepmerge')
 const chalk = require('chalk')
+const { existsSync } = require('fs-extra')
 const getPath = require('../util/path.js')
 
 const tyconfigPath = getPath('./tyconfig.js')
+const tyconfigTsPath = getPath('./tyconfig.ts')
 
 let tyconfig = {}
-try {
-  tyconfig = require(tyconfigPath)
-} catch (_) {}
 
-const config = {
+if (existsSync(tyconfigPath)) {
+  tyconfig = require(tyconfigPath)
+} else if (existsSync(tyconfigTsPath)) {
+  let tsnode
+  try {
+    tsnode = require('ts-node')
+  } catch (err) {
+    console.log(chalk.redBright('Please install ts-node first if you want to use typescript config file.'))
+    process.exit(1)
+  }
+  tsnode.register({})
+  tyconfig = require(tyconfigTsPath).default
+}
+
+const defaultConfig = {
   /**
    * @type {'production' | 'development'}
    */
@@ -131,7 +144,7 @@ const config = {
 }
 
 checkObject(tyconfig, `tyconfig.js should export an object.`)
-const mergedConfig = merge(config, tyconfig);
+const mergedConfig = merge(defaultConfig, tyconfig);
 
 (['output', 'tsconfig', 'inno']).forEach(key => {
   checkObject(mergedConfig[key], `module.exports.${key} should be an object.`)

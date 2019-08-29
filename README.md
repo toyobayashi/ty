@@ -49,7 +49,7 @@ No webpack config. Working in progress.
 
 ## Config
 
-`tyconfig.js`
+`tyconfig.js` or `tyconfig.ts` in your project root directory. If you want to use typescript to write configuration, you need to install `ts-node` first.
 
 * `mode` {'development' | 'production'} Default: `'production'` for `build` and `pack`, `'development'` for other command.
 
