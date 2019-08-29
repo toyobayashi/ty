@@ -137,6 +137,8 @@ No webpack config. Working in progress.
     }
     ```
 
+* `ts` {undefined | 0 | 1} Force to use typescript or not. Default: undefined
+
 * `tsconfig` - For TypeScript project. Default:
 
     ``` js
@@ -230,8 +232,10 @@ No webpack config. Working in progress.
 * `--mode`
 * `--target`
 * `--arch`
+* `--ts` - force to use typescript or not.
 * `--dev-server-port`
 * `--dev-server-host`
+* `--config` - CLI only. Specify tyconfig file path.
 
 ## Other
 

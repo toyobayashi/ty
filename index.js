@@ -1,16 +1,16 @@
 module.exports = function (command, args = { _: [] }, userConfig = {}) {
   const readTyConfig = require('./config/config.js')
   const merge = require('deepmerge')
-  let config = readTyConfig()
+  let config = readTyConfig(args.config)
 
   const defaultProduction = ['build', 'pack']
   if (defaultProduction.indexOf(command) !== -1) {
     process.env.NODE_ENV = config.mode = 'production'
   }
 
-  const cliConfig = ['mode', 'arch', 'target', 'devServerHost', 'devServerPort']
+  const cliConfig = ['mode', 'arch', 'target', 'devServerHost', 'devServerPort', 'ts']
   cliConfig.forEach((key) => {
-    if (args[key]) {
+    if (key in args) {
       config[key] = args[key]
       if (key === 'mode') {
         process.env.NODE_ENV = args[key]

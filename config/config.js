@@ -1,6 +1,7 @@
 const merge = require('deepmerge')
 const chalk = require('chalk')
 const { existsSync } = require('fs-extra')
+const { extname } = require('path')
 const getPath = require('../util/path.js')
 
 const defaultConfig = {
@@ -72,6 +73,11 @@ const defaultConfig = {
   arch: process.arch,
 
   /**
+   * @type {undefined | 0 | 1}
+   */
+  ts: undefined,
+
+  /**
    * @type {{ src: string; appid: { ia32: string; x64: string }; url: string }}
    */
   inno: {
@@ -137,27 +143,48 @@ function checkObject (o, msg) {
   }
 }
 
-function readTyConfig () {
-  const tyconfigPath = getPath('./tyconfig.js')
-  const tyconfigTsPath = getPath('./tyconfig.ts')
+function readTypeScriptConfigFile (fullPath) {
+  let tsnode
+  try {
+    tsnode = require('ts-node')
+  } catch (err) {
+    console.log(chalk.redBright('Please install ts-node and typescript first if you want to use typescript config file.'))
+    process.exit(1)
+  }
+  tsnode.register({})
+  return (require(fullPath).default || require(fullPath))
+}
 
+function readTyConfig (configPath) {
   let tyconfig = {}
-
-  if (existsSync(tyconfigPath)) {
-    tyconfig = require(tyconfigPath)
-  } else if (existsSync(tyconfigTsPath)) {
-    let tsnode
-    try {
-      tsnode = require('ts-node')
-    } catch (err) {
-      console.log(chalk.redBright('Please install ts-node first if you want to use typescript config file.'))
+  if (typeof configPath === 'string' && configPath !== '') {
+    configPath = getPath(configPath)
+    if (!existsSync(configPath)) {
+      console.log(chalk.redBright(`Can not find config file: "${configPath}".`))
       process.exit(1)
     }
-    tsnode.register({})
-    tyconfig = require(tyconfigTsPath).default || require(tyconfigTsPath)
+    const ext = extname(configPath)
+    if (ext === '.js') {
+      tyconfig = require(configPath)
+    } else if (ext === '.ts') {
+      tyconfig = readTypeScriptConfigFile(configPath)
+    } else {
+      console.log(chalk.redBright(`Can not resolve "${ext}" config file.`))
+      process.exit(1)
+    }
+    checkObject(tyconfig, `${configPath} should export an object.`)
+  } else {
+    const tyconfigPath = getPath('./tyconfig.js')
+    const tyconfigTsPath = getPath('./tyconfig.ts')
+
+    if (existsSync(tyconfigPath)) {
+      tyconfig = require(tyconfigPath)
+    } else if (existsSync(tyconfigTsPath)) {
+      tyconfig = readTypeScriptConfigFile(tyconfigTsPath)
+    }
+    checkObject(tyconfig, `tyconfig.${tyconfigTsPath ? 't' : 'j'}s should export an object.`)
   }
 
-  checkObject(tyconfig, `tyconfig.${tyconfigTsPath ? 't' : 'j'}s should export an object.`)
   const mergedConfig = merge(defaultConfig, tyconfig);
 
   (['output', 'tsconfig', 'inno']).forEach(key => {

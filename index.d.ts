@@ -23,7 +23,8 @@ declare namespace ty {
     iconSrcDir?: string
     indexHtml?: string
     assetsPath?: string
-    arch?: 'ia32' | 'x64',
+    arch?: 'ia32' | 'x64'
+    ts?: undefined | 0 | 1
 
     inno?: {
       src?: string

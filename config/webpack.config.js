@@ -11,6 +11,7 @@ const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin')
 const getPath = require('../util/path.js')
 const path = require('path')
 const os = require('os')
+const { ensureEntry, ensureFile } = require('../util/file.js')
 
 class WebpackConfig {
   _createCssLoaders (config, importLoaders = 0) {
@@ -145,10 +146,11 @@ class WebpackConfig {
     this._electronTarget = (config.target === 'electron')
 
     const existsTypeScriptInPackageJson = !!(this._pkg.devDependencies && this._pkg.devDependencies.typescript)
+
     if (this._electronTarget) {
       const rendererTSConfig = existsSync(getPath(config.tsconfig.renderer))
       const mainTSConfig = existsSync(getPath(config.tsconfig.main))
-      this._useTypeScript = !!(
+      this._useTypeScript = config.ts !== undefined ? config.ts : !!(
         existsTypeScriptInPackageJson ||
         rendererTSConfig ||
         mainTSConfig
@@ -160,7 +162,7 @@ class WebpackConfig {
       }
     } else {
       const webTSConfig = existsSync(getPath(config.tsconfig.web))
-      this._useTypeScript = !!(existsTypeScriptInPackageJson || webTSConfig)
+      this._useTypeScript = config.ts !== undefined ? config.ts : !!(existsTypeScriptInPackageJson || webTSConfig)
 
       if (this._useTypeScript) {
         if (!webTSConfig) writeFileSync(getPath(config.tsconfig.web), '{}' + os.EOL, 'utf8')
@@ -181,12 +183,30 @@ class WebpackConfig {
     ))
     this._usePostCss = existsSync(getPath('postcss.config.js')) || existsSync(getPath('.postcssrc.js'))
 
+    ensureFile(getPath(config.indexHtml || 'public/index.html'), `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>${this._pkg.name}</title>
+</head>
+<body>
+</body>
+</html>
+`)
+
     if (this._electronTarget) {
+      ensureEntry(config.entry && config.entry.main)
+      ensureEntry(config.entry && config.entry.renderer)
+
       this._initMain(config)
       this._initRenderer(config)
       this._initProductionPackage(config)
       this._initPackagerConfig(config)
     } else {
+      ensureEntry(config.entry && config.entry.web)
+
       this._initWeb(config)
     }
 
