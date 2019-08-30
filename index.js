@@ -32,7 +32,9 @@ module.exports = function (command, args = { _: [] }, userConfig = {}) {
     let fn
     try {
       fn = require('./command/' + c)
-    } catch (_) {}
+    } catch (err) {
+      console.error(err)
+    }
     return fn
   }
 
