@@ -210,19 +210,19 @@ class WebpackConfig {
 
     const getPath = this.pathUtil.getPath.bind(this.pathUtil)
     if (this._electronTarget) {
-      ensureEntry(config.entry && config.entry.main, getPath)
-      ensureEntry(config.entry && config.entry.renderer, getPath)
+      ensureEntry(config.entry && config.entry.main, getPath, this._useTypeScript ? '.ts' : '.js')
+      ensureEntry(config.entry && config.entry.renderer, getPath, this._useTypeScript ? '.ts' : '.js')
 
       this._initMain(config)
       this._initRenderer(config)
       this._initProductionPackage(config)
       this._initPackagerConfig(config)
     } else if (this._nodeTarget) {
-      ensureEntry(config.entry && config.entry.node, getPath)
+      ensureEntry(config.entry && config.entry.node, getPath, this._useTypeScript ? '.ts' : '.js')
 
       this._initNode(config)
     } else {
-      ensureEntry(config.entry && config.entry.web, getPath)
+      ensureEntry(config.entry && config.entry.web, getPath, this._useTypeScript ? '.ts' : '.js')
 
       this._initWeb(config)
     }
