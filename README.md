@@ -57,13 +57,13 @@ No webpack config. Working in progress.
 
 * `devServerPort` {number} For `serve` and `dev`. Default: `8090`.
 
-* `target` {'web' | 'electron'} If `electron` in your `devDependencies` it is `'electron'`.
+* `target` {'web' | 'electron' | 'node'} If `electron` in your `devDependencies` it is `'electron'`, otherwise it is `'web'`.
 
-* `entry` - Properties: `web`, `renderer`, `main`. Must be absolute path. Default:
+* `entry` - Must be absolute path. Default:
 
     ``` js
     const path = require('path')
-    const projectRoot = path.join(process.env.TY_CONTEXT || process.cwd())
+    const projectRoot = path.join(config.context || process.env.TY_CONTEXT || process.cwd())
     module.exports = {
       entry: {
         web: {
@@ -82,7 +82,7 @@ No webpack config. Working in progress.
     }
     ```
 
-* `output` - Properties: `web`, `renderer`, `main`. Default:
+* `output` - Default:
 
     ``` js
     module.exports = {
@@ -147,7 +147,7 @@ No webpack config. Working in progress.
 
 * `productionSourcemap` {boolean} Whether to generate sourcemap in production mode. Default: `false`.
 
-* `alias` {{ [name: string]: string }} Pass to `webpackConfig.resolve.alias`. Default: `{ '@': path.join(process.env.TY_CONTEXT || process.cwd(), 'src') }`
+* `alias` {{ [name: string]: string }} Pass to `webpackConfig.resolve.alias`. Default: `{ '@': path.join(config.context || process.env.TY_CONTEXT || process.cwd(), 'src') }`
 
 * `tsconfig` - For TypeScript project. Default:
 
