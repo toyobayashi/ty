@@ -2,7 +2,13 @@
 
 平时做项目也好写玩具也好，再也不想开始写之前先配它个几百行 Webpack。
 
-这个项目是针对**平常一般的需求**写的一个一劳永逸零配置打包器，真正零配置，自动识别项目类型（web / node / electron）。
+这个项目是针对**平常一般的需求**写的一个“一劳永逸”零配置打包器。
+
+真正零配置，不需要为打包写一行代码。（工具本身的配置还是要写，如果你要用的话，比如 eslint babel 等等）。
+
+自动识别项目平台（web / electron / node）和工具（babel / typescript / eslint / css预处理 等等）
+
+Vue 单文件组件和 React TSX 开箱即用，但是 JSX 需要自己配 babel。
 
 但适配所有场景当然是不可能的，如果需要，你仍然可以配置内部的 Webpack。
 
@@ -167,7 +173,7 @@ $ ty serve
     }
     ```
 
-* `ts` {undefined | 0 | 1} 是否强制使用 TypeScript，传数字。默认：`undefined`。
+* `ts` {undefined | 0 | 1} 强制使用或强制不使用 TypeScript，传数字。默认：`undefined`。
 
 * `context` {string} 修改打包器的上下文根目录。默认：`''`。
 
@@ -187,6 +193,8 @@ $ ty serve
       }
     }
     ```
+
+* `proxy` - 传入 `webpack-dev-server`。默认：`{}`。
 
 * `statsOptions` - 配置 Webpack 的输出，详细见 Webpack 文档。默认：
 

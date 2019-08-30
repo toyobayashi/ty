@@ -34,6 +34,8 @@ declare namespace ty {
       [name: string]: string
     }
 
+    proxy?: any
+
     inno?: {
       src?: string
       appid?: {

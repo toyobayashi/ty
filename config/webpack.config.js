@@ -657,9 +657,10 @@ class WebpackConfig {
         publicPath: config.publicPath,
         before: (app, server) => {
           app.use(require('express-serve-asar')(this.pathUtil.getPath(config.contentBase)))
-          server._watch(config.indexHtml)
+          server._watch(this.pathUtil.getPath(config.indexHtml))
         }
       }
+      if (config.proxy) this.rendererConfig.devServer.proxy = config.proxy
       this.rendererConfig.devtool = this.mainConfig.devtool = 'eval-source-map'
       this.rendererConfig.plugins = [
         ...(this.rendererConfig.plugins || []),
@@ -707,10 +708,11 @@ class WebpackConfig {
         inline: true,
         contentBase: [this.pathUtil.getPath(config.contentBase)],
         publicPath: config.publicPath,
-        before (_app, server) {
-          server._watch(config.indexHtml)
+        before: (_app, server) => {
+          server._watch(this.pathUtil.getPath(config.indexHtml))
         }
       }
+      if (config.proxy) this.webConfig.devServer.proxy = config.proxy
       this.webConfig.devtool = 'eval-source-map'
       this.webConfig.plugins = [
         ...(this.webConfig.plugins || []),

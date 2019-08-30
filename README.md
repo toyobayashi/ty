@@ -162,6 +162,8 @@ No webpack config. Working in progress.
     }
     ```
 
+* `proxy` - Pass to `webpack-dev-server`. Default: `{}`.
+
 * `statsOptions` - For webpack output. Default: 
 
     ``` js

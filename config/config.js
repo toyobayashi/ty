@@ -112,6 +112,8 @@ const defaultConfig = {
     main: 'src/main/tsconfig.json'
   },
 
+  proxy: {},
+
   statsOptions: {
     colors: true,
     children: false,
