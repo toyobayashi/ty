@@ -26,6 +26,10 @@ declare namespace ty {
     arch?: 'ia32' | 'x64'
     ts?: undefined | 0 | 1
 
+    alias?: {
+      [name: string]: string
+    }
+
     inno?: {
       src?: string
       appid?: {

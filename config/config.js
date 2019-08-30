@@ -78,6 +78,13 @@ const defaultConfig = {
   ts: undefined,
 
   /**
+   * @type {{ [name: string]: string }}
+   */
+  alias: {
+    '@': getPath('src')
+  },
+
+  /**
    * @type {{ src: string; appid: { ia32: string; x64: string }; url: string }}
    */
   inno: {
@@ -187,7 +194,7 @@ function readTyConfig (configPath) {
 
   const mergedConfig = merge(defaultConfig, tyconfig);
 
-  (['output', 'tsconfig', 'inno']).forEach(key => {
+  (['output', 'tsconfig', 'inno', 'alias']).forEach(key => {
     checkObject(mergedConfig[key], `module.exports.${key} should be an object.`)
   })
 

@@ -271,9 +271,7 @@ class WebpackConfig {
         ]
       },
       resolve: {
-        alias: {
-          '@': getPath('src')
-        },
+        alias: config.alias,
         extensions: ['.ts', '.tsx', '.js', '.vue', '.css', '.styl', '.stylus', '.less', '.sass', '.scss', '.json', '.wasm']
       },
       plugins: [
@@ -381,9 +379,7 @@ class WebpackConfig {
       },
       externals: [webpackNodeExternals()],
       resolve: {
-        alias: {
-          '@': getPath('src')
-        },
+        alias: config.alias,
         extensions: ['.js', '.ts', '.json', '.node']
       },
       plugins: [
@@ -450,9 +446,7 @@ class WebpackConfig {
         ]
       },
       resolve: {
-        alias: {
-          '@': getPath('src')
-        },
+        alias: config.alias,
         extensions: ['.ts', '.tsx', '.js', '.vue', '.css', '.styl', '.stylus', '.less', '.sass', '.scss', '.json', '.wasm']
       },
       plugins: [

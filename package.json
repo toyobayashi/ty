@@ -8,6 +8,12 @@
   "scripts": {
     "test": "node index.js"
   },
+  "author": "toyobayashi",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/toyobayashi/ty.git"
+  },
   "dependencies": {
     "asar": "^2.0.1",
     "babel-loader": "^8.0.6",
