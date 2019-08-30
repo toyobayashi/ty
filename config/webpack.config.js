@@ -274,7 +274,7 @@ class WebpackConfig {
         alias: {
           '@': getPath('src')
         },
-        extensions: ['.ts', '.tsx', '.js', '.vue', '.css', '.styl', '.stylus', '.less', '.sass', '.scss', '.json']
+        extensions: ['.ts', '.tsx', '.js', '.vue', '.css', '.styl', '.stylus', '.less', '.sass', '.scss', '.json', '.wasm']
       },
       plugins: [
         new HtmlWebpackPlugin({
@@ -363,6 +363,19 @@ class WebpackConfig {
                 }
               }
             ]
+          },
+          {
+            test: /\.node$/,
+            exclude: /node_modules/,
+            use: [
+              {
+                loader: require.resolve('native-addon-loader'),
+                options: {
+                  name: '[name].[ext]',
+                  from: '.'
+                }
+              }
+            ]
           }
         ]
       },
@@ -371,7 +384,7 @@ class WebpackConfig {
         alias: {
           '@': getPath('src')
         },
-        extensions: ['.js', '.ts', '.json']
+        extensions: ['.js', '.ts', '.json', '.node']
       },
       plugins: [
         new CopyWebpackPlugin([
@@ -440,7 +453,7 @@ class WebpackConfig {
         alias: {
           '@': getPath('src')
         },
-        extensions: ['.ts', '.tsx', '.js', '.vue', '.css', '.styl', '.stylus', '.less', '.sass', '.scss', '.json']
+        extensions: ['.ts', '.tsx', '.js', '.vue', '.css', '.styl', '.stylus', '.less', '.sass', '.scss', '.json', '.wasm']
       },
       plugins: [
         new HtmlWebpackPlugin({

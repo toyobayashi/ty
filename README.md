@@ -247,6 +247,8 @@ No webpack config. Working in progress.
 
 * Use ESLint to check typescript code instead of TSLint.
 
+* By default, `.node` file can only be used in electron main process.
+
 ## Example
 
 * [electron-vue-ts](https://github.com/toyobayashi/webpack-template/tree/master/electron-vue-ts)
