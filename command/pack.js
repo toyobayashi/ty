@@ -171,7 +171,7 @@ function inno (sourceDir, config, webpackConfig) {
 async function pack (config) {
   if (config.target !== 'electron') {
     const chalk = require('chalk')
-    console.error(chalk.redBright('This command does not support web target'))
+    console.error(chalk.redBright(`This command does not support ${config.target} target`))
     process.exit(1)
   }
 

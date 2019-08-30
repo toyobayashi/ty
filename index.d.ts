@@ -8,11 +8,13 @@ declare namespace ty {
     target?: 'electron' | 'web'
     entry?: {
       web?: WebpackEntry
+      node?: WebpackEntry
       renderer?: WebpackEntry
       main?: WebpackEntry
     }
     output?: {
       web?: string
+      node?: string
       renderer?: string
       main?: string
     }
@@ -26,6 +28,7 @@ declare namespace ty {
     arch?: 'ia32' | 'x64'
     ts?: undefined | 0 | 1
     context?: string
+    productionSourcemap?: boolean
 
     alias?: {
       [name: string]: string
@@ -42,6 +45,7 @@ declare namespace ty {
 
     tsconfig?: {
       web?: string
+      node?: string
       renderer?: string
       main?: string
     }
@@ -54,6 +58,7 @@ declare namespace ty {
 
     configureWebpack?: {
       web? (webConfig: any): void
+      node? (webConfig: any): void
       renderer? (rendererConfig: any): void
       main? (mainConfig: any): void
     }

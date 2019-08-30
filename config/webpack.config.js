@@ -145,6 +145,8 @@ class WebpackConfig {
     this.pkg = pkg
     this._useVue = !!((this.pkg.devDependencies && this.pkg.devDependencies.vue) || (this.pkg.dependencies && this.pkg.dependencies.vue))
     this._electronTarget = (config.target === 'electron')
+    this._webTarget = (config.target === 'web')
+    this._nodeTarget = (config.target === 'node')
 
     const existsTypeScriptInPackageJson = !!(this.pkg.devDependencies && this.pkg.devDependencies.typescript)
 
@@ -160,6 +162,13 @@ class WebpackConfig {
       if (this._useTypeScript) {
         if (!rendererTSConfig) writeFileSync(this.pathUtil.getPath(config.tsconfig.renderer), '{}' + os.EOL, 'utf8')
         if (!mainTSConfig) writeFileSync(this.pathUtil.getPath(config.tsconfig.main), '{}' + os.EOL, 'utf8')
+      }
+    } else if (this._nodeTarget) {
+      const nodeTSConfig = existsSync(this.pathUtil.getPath(config.tsconfig.node))
+      this._useTypeScript = config.ts !== undefined ? config.ts : !!(existsTypeScriptInPackageJson || nodeTSConfig)
+
+      if (this._useTypeScript) {
+        if (!nodeTSConfig) writeFileSync(this.pathUtil.getPath(config.tsconfig.node), '{}' + os.EOL, 'utf8')
       }
     } else {
       const webTSConfig = existsSync(this.pathUtil.getPath(config.tsconfig.web))
@@ -184,7 +193,8 @@ class WebpackConfig {
     ))
     this._usePostCss = existsSync(this.pathUtil.getPath('postcss.config.js')) || existsSync(this.pathUtil.getPath('.postcssrc.js'))
 
-    ensureFile(this.pathUtil.getPath(config.indexHtml || 'public/index.html'), `<!DOCTYPE html>
+    if (!this._nodeTarget) {
+      ensureFile(this.pathUtil.getPath(config.indexHtml || 'public/index.html'), `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
@@ -196,6 +206,7 @@ class WebpackConfig {
 </body>
 </html>
 `)
+    }
 
     const getPath = this.pathUtil.getPath.bind(this.pathUtil)
     if (this._electronTarget) {
@@ -206,6 +217,10 @@ class WebpackConfig {
       this._initRenderer(config)
       this._initProductionPackage(config)
       this._initPackagerConfig(config)
+    } else if (this._nodeTarget) {
+      ensureEntry(config.entry && config.entry.node, getPath)
+
+      this._initNode(config)
     } else {
       ensureEntry(config.entry && config.entry.web, getPath)
 
@@ -222,9 +237,69 @@ class WebpackConfig {
       if (this._electronTarget) {
         if (typeof config.configureWebpack.renderer === 'function') config.configureWebpack.renderer(this.rendererConfig)
         if (typeof config.configureWebpack.main === 'function') config.configureWebpack.main(this.mainConfig)
+      } else if (this._nodeTarget) {
+        if (typeof config.configureWebpack.node === 'function') config.configureWebpack.node(this.nodeConfig)
       } else {
         if (typeof config.configureWebpack.web === 'function') config.configureWebpack.web(this.webConfig)
       }
+    }
+  }
+
+  _initNode (config) {
+    this.nodeConfig = {
+      mode: config.mode,
+      context: this.pathUtil.getPath(),
+      target: 'node',
+      entry: config.entry.node,
+      output: {
+        filename: '[name].js',
+        path: this.pathUtil.getPath(config.output.node)
+      },
+      node: false,
+      module: {
+        rules: [
+          {
+            test: /\.tsx?$/,
+            exclude: /node_modules/,
+            use: [
+              {
+                loader: require.resolve('ts-loader'),
+                options: {
+                  transpileOnly: true,
+                  configFile: this.pathUtil.getPath(config.tsconfig.node)
+                }
+              }
+            ]
+          },
+          {
+            test: /\.node$/,
+            exclude: /node_modules/,
+            use: [
+              {
+                loader: require.resolve('native-addon-loader'),
+                options: {
+                  name: '[name].[ext]',
+                  from: '.'
+                }
+              }
+            ]
+          }
+        ]
+      },
+      externals: [webpackNodeExternals()],
+      resolve: {
+        alias: config.alias,
+        extensions: ['.js', '.ts', '.json', '.node']
+      }
+    }
+
+    if (this._useESLint) {
+      this.nodeConfig.module.rules.unshift({
+        test: /\.jsx?$/,
+        enforce: 'pre',
+        exclude: /node_modules/,
+        use: [this._createEslintLoader()]
+      })
     }
   }
 
@@ -613,6 +688,17 @@ class WebpackConfig {
           })
         ]
       }
+    } else if (this._nodeTarget) {
+      this.nodeConfig.devtool = 'eval-source-map'
+      if (this._useTypeScript) {
+        this.nodeConfig.plugins = [
+          ...(this.nodeConfig.plugins || []),
+          new ForkTsCheckerWebpackPlugin({
+            eslint: this._useESLint,
+            tsconfig: this.pathUtil.getPath(config.tsconfig.node)
+          })
+        ]
+      }
     } else {
       this.webConfig.devServer = {
         stats: config.statsOptions,
@@ -649,7 +735,13 @@ class WebpackConfig {
   }
 
   _mergeProduction (config) {
-    const terser = () => new TerserWebpackPlugin(config.terserPlugin)
+    const terser = () => {
+      if (config.productionSourcemap) {
+        config.terserPlugin.sourceMap = true
+      }
+      return new TerserWebpackPlugin(config.terserPlugin)
+    }
+
     if (this._electronTarget) {
       this.rendererConfig.plugins = [
         ...(this.rendererConfig.plugins || []),
@@ -693,6 +785,26 @@ class WebpackConfig {
           })
         ]
       }
+      if (config.productionSourcemap) this.rendererConfig.devtool = this.mainConfig.devtool = 'source-map'
+    } else if (this._nodeTarget) {
+      this.nodeConfig.optimization = {
+        ...(this.nodeConfig.optimization || {}),
+        minimizer: [terser()]
+      }
+
+      if (this._useTypeScript) {
+        this.nodeConfig.plugins = [
+          ...(this.nodeConfig.plugins || []),
+          new ForkTsCheckerWebpackPlugin({
+            eslint: this._useESLint,
+            tsconfig: this.pathUtil.getPath(config.tsconfig.node),
+            async: false,
+            useTypescriptIncrementalApi: true,
+            memoryLimit: 4096
+          })
+        ]
+      }
+      if (config.productionSourcemap) this.nodeConfig.devtool = 'source-map'
     } else {
       this.webConfig.plugins = [
         ...(this.webConfig.plugins || []),
@@ -721,6 +833,8 @@ class WebpackConfig {
           })
         ]
       }
+
+      if (config.productionSourcemap) this.webConfig.devtool = 'source-map'
     }
   }
 }

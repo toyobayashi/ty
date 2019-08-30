@@ -46,5 +46,6 @@ function printHelp () {
   console.log('  --arch=[ia32|x64]')
   console.log('  --ts=[0|1]')
   console.log('  --context=project/root/path')
+  console.log('  --production-sourcemap')
   process.exit(0)
 }

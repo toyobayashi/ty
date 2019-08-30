@@ -69,6 +69,9 @@ No webpack config. Working in progress.
         web: {
           app: [path.join(projectRoot, 'src/index')]
         },
+        node: {
+          main: [path.join(projectRoot, 'src/index')]
+        },
         renderer: {
           renderer: [path.join(projectRoot, 'src/renderer/renderer')]
         },
@@ -85,6 +88,7 @@ No webpack config. Working in progress.
     module.exports = {
       output: {
         web: 'dist',
+        node: 'dist',
         renderer: 'resources/app/renderer',
         main: 'resources/app/main'
       }
@@ -137,9 +141,11 @@ No webpack config. Working in progress.
     }
     ```
 
-* `ts` {undefined | 0 | 1} Force to use typescript or not. Default: `undefined`
+* `ts` {undefined | 0 | 1} Force to use typescript or not. Default: `undefined`.
 
 * `context` {string} Project root directory. Default: `''`
+
+* `productionSourcemap` {boolean} Whether to generate sourcemap in production mode. Default: `false`.
 
 * `alias` {{ [name: string]: string }} Pass to `webpackConfig.resolve.alias`. Default: `{ '@': path.join(process.env.TY_CONTEXT || process.cwd(), 'src') }`
 
@@ -149,6 +155,7 @@ No webpack config. Working in progress.
     module.exports = {
       tsconfig: {
         web: 'tsconfig.json',
+        node: 'tsconfig.json',
         renderer: 'src/renderer/tsconfig.json',
         main: 'src/main/tsconfig.json'
       }
@@ -206,6 +213,8 @@ No webpack config. Working in progress.
       configureWebpack: {
         // web (webConfig: WebpackConfiguration): void
         web (webConfig) {}, 
+        // node (nodeConfig: WebpackConfiguration): void
+        node (nodeConfig) {}, 
         // renderer (rendererConfig: WebpackConfiguration): void
         renderer (rendererConfig) {},
         // main (mainConfig: WebpackConfiguration): void
@@ -240,6 +249,7 @@ No webpack config. Working in progress.
 * `--context` - Project root directory.
 * `--dev-server-port`
 * `--dev-server-host`
+* `--production-sourcemap`
 * `--config` - CLI only. Specify tyconfig file path.
 
 ## Other

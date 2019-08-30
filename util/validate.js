@@ -1,4 +1,4 @@
-const cliSupportOption = ['mode', 'arch', 'target', 'devServerHost', 'devServerPort', 'ts', 'context']
+const cliSupportOption = ['mode', 'arch', 'target', 'devServerHost', 'devServerPort', 'ts', 'context', 'productionSourcemap']
 const shouldBeObject = ['output', 'tsconfig', 'inno', 'alias']
 
 module.exports = {

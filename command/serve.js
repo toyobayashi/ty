@@ -4,7 +4,7 @@ const WebpackConfig = require('../config/webpack.config.js')
 function serve (config) {
   const webpackConfig = new WebpackConfig(config)
 
-  if (webpackConfig._electronTarget) {
+  if (config.target === 'electron') {
     watch(webpackConfig.mainConfig, function watchHandler (err, stats) {
       if (err) {
         console.log(err)
@@ -19,6 +19,15 @@ function serve (config) {
         console.log(err)
         // return
       }
+    })
+  } else if (config.target === 'node') {
+    watch(webpackConfig.nodeConfig, function watchHandler (err, stats) {
+      if (err) {
+        console.log(err)
+        return
+      }
+
+      console.log(stats.toString(config.statsOptions) + '\n')
     })
   } else {
     startDevServer(webpackConfig.webConfig, config.devServerPort, config.devServerHost, function (err) {

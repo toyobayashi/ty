@@ -5,7 +5,7 @@ const start = require('./start.js')
 function dev (config) {
   if (config.target !== 'electron') {
     const chalk = require('chalk')
-    console.error(chalk.redBright('Run "ty serve" instead if your building target is web'))
+    console.error(chalk.redBright(`This command does not support ${config.target} target`))
     process.exit(1)
   }
 

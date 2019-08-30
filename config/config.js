@@ -26,6 +26,7 @@ const defaultConfig = {
    */
   entry: {
     web: null,
+    node: null,
     renderer: null,
     main: null
   },
@@ -34,6 +35,7 @@ const defaultConfig = {
    */
   output: {
     web: 'dist',
+    node: 'dist',
     renderer: 'resources/app/renderer',
     main: 'resources/app/main'
   },
@@ -79,6 +81,10 @@ const defaultConfig = {
    * @type {string}
    */
   context: '',
+  /**
+   * @type {boolean}
+   */
+  productionSourcemap: false,
 
   /**
    * @type {{ [name: string]: string }}
@@ -101,6 +107,7 @@ const defaultConfig = {
    */
   tsconfig: {
     web: 'tsconfig.json',
+    node: 'tsconfig.json',
     renderer: 'src/renderer/tsconfig.json',
     main: 'src/main/tsconfig.json'
   },
@@ -133,6 +140,7 @@ const defaultConfig = {
 
   configureWebpack: {
     web (webConfig) {},
+    node (nodeConfig) {},
     renderer (rendererConfig) {},
     main (mainConfig) {}
   }
@@ -226,7 +234,7 @@ function readTyConfig (configPath, getPath) {
   if (mergedConfig.target === 'electron') {
     setDefault(mergedConfig, 'contentBase', mergedConfig.resourcesPath || 'resources')
     setDefault(mergedConfig, 'publicPath', '/app/renderer/')
-  } else if (mergedConfig.target === 'web') {
+  } else {
     setDefault(mergedConfig, 'contentBase', mergedConfig.output.web || 'dist')
     setDefault(mergedConfig, 'publicPath', '/')
   }
@@ -234,6 +242,7 @@ function readTyConfig (configPath, getPath) {
   if (!mergedConfig.entry) {
     mergedConfig.entry = {
       web: { app: [getPath('./src/index')] },
+      node: { main: [getPath('./src/index')] },
       renderer: { renderer: [getPath('./src/renderer/renderer')] },
       main: { main: [getPath('./src/main/main')] }
     }
@@ -241,6 +250,10 @@ function readTyConfig (configPath, getPath) {
 
   if (!mergedConfig.entry.web) {
     mergedConfig.entry.web = { app: [getPath('./src/index')] }
+  }
+
+  if (!mergedConfig.entry.node) {
+    mergedConfig.entry.node = { main: [getPath('./src/index')] }
   }
 
   if (!mergedConfig.entry.renderer) {

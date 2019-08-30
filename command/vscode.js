@@ -7,75 +7,103 @@ const path = require('path')
 module.exports = function (config) {
   const pathUtil = new PathUtil(config.context)
   const target = pathUtil.getPath('.vscode/launch.json')
-  const launchJson = config.target === 'electron' ? {
-    version: '0.2.0',
-    configurations: [
-      {
-        type: 'node',
-        request: 'attach',
-        port: 9222,
-        name: 'Attach to Main Process',
-        processId: '${command:PickProcess}'
-      },
-      {
-        type: 'chrome',
-        request: 'attach',
-        name: 'Attach to Renderer Process',
-        port: 9222,
-        webRoot: path.posix.join('${workspaceFolder}', config.contentBase),
-        sourceMaps: true,
-        sourceMapPathOverrides: {
-          'webpack:///*': '${workspaceFolder}/*',
-          'webpack:///./*': '${workspaceFolder}/*'
-        }
-      },
-      {
-        name: 'Launch Main Process',
-        type: 'node',
-        request: 'launch',
-        cwd: '${workspaceFolder}',
-        runtimeExecutable: '${workspaceFolder}/node_modules/.bin/electron',
-        console: 'integratedTerminal',
-        windows: {
-          runtimeExecutable: '${workspaceFolder}\\node_modules\\.bin\\electron.cmd'
+  let launchJson
+  if (config.target === 'electron') {
+    launchJson = {
+      version: '0.2.0',
+      configurations: [
+        {
+          type: 'node',
+          request: 'attach',
+          port: 9222,
+          name: 'Attach to Main Process',
+          processId: '${command:PickProcess}'
         },
-        runtimeArgs: [
-          '--remote-debugging-port=9222',
-          path.posix.join('${workspaceFolder}', config.resourcesPath, 'app')
-        ],
-        sourceMaps: true,
-        protocol: 'inspector'
-      }
-    ]
-  } : {
-    version: '0.2.0',
-    configurations: [
-      {
-        type: 'chrome',
-        request: 'attach',
-        name: 'Attach to Chrome',
-        port: 9222,
-        webRoot: path.posix.join('${workspaceFolder}', config.contentBase),
-        sourceMaps: true,
-        sourceMapPathOverrides: {
-          'webpack:///*': '${workspaceFolder}/*',
-          'webpack:///./*': '${workspaceFolder}/*'
+        {
+          type: 'chrome',
+          request: 'attach',
+          name: 'Attach to Renderer Process',
+          port: 9222,
+          webRoot: path.posix.join('${workspaceFolder}', config.contentBase),
+          sourceMaps: true,
+          sourceMapPathOverrides: {
+            'webpack:///*': '${workspaceFolder}/*',
+            'webpack:///./*': '${workspaceFolder}/*'
+          }
+        },
+        {
+          name: 'Launch Main Process',
+          type: 'node',
+          request: 'launch',
+          cwd: '${workspaceFolder}',
+          runtimeExecutable: '${workspaceFolder}/node_modules/.bin/electron',
+          console: 'integratedTerminal',
+          windows: {
+            runtimeExecutable: '${workspaceFolder}\\node_modules\\.bin\\electron.cmd'
+          },
+          runtimeArgs: [
+            '--remote-debugging-port=9222',
+            path.posix.join('${workspaceFolder}', config.resourcesPath, 'app')
+          ],
+          sourceMaps: true,
+          protocol: 'inspector'
         }
-      },
-      {
-        type: 'chrome',
-        request: 'launch',
-        name: 'Launch Chrome',
-        port: 9222,
-        url: `http://localhost:${config.devServerPort}`,
-        webRoot: path.posix.join('${workspaceFolder}', config.contentBase),
-        sourceMaps: true,
-        sourceMapPathOverrides: {
-          'webpack:///*': '${workspaceFolder}/*',
-          'webpack:///./*': '${workspaceFolder}/*'
+      ]
+    }
+  } else if (config.target === 'node') {
+    launchJson = {
+      version: '0.2.0',
+      configurations: [
+        {
+          type: 'node',
+          request: 'attach',
+          port: 9222,
+          name: 'Attach to Main Process',
+          processId: '${command:PickProcess}'
+        },
+        {
+          name: 'Launch Main Process',
+          type: 'node',
+          request: 'launch',
+          cwd: '${workspaceFolder}',
+          program: '${workspaceFolder}',
+          console: 'integratedTerminal',
+          sourceMaps: true,
+          protocol: 'inspector'
         }
-      }
-    ]
+      ]
+    }
+  } else {
+    launchJson = {
+      version: '0.2.0',
+      configurations: [
+        {
+          type: 'chrome',
+          request: 'attach',
+          name: 'Attach to Chrome',
+          port: 9222,
+          webRoot: path.posix.join('${workspaceFolder}', config.contentBase),
+          sourceMaps: true,
+          sourceMapPathOverrides: {
+            'webpack:///*': '${workspaceFolder}/*',
+            'webpack:///./*': '${workspaceFolder}/*'
+          }
+        },
+        {
+          type: 'chrome',
+          request: 'launch',
+          name: 'Launch Chrome',
+          port: 9222,
+          url: `http://localhost:${config.devServerPort}`,
+          webRoot: path.posix.join('${workspaceFolder}', config.contentBase),
+          sourceMaps: true,
+          sourceMapPathOverrides: {
+            'webpack:///*': '${workspaceFolder}/*',
+            'webpack:///./*': '${workspaceFolder}/*'
+          }
+        }
+      ]
+    }
   }
 
   if (fs.existsSync(target)) {
