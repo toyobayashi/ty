@@ -1,4 +1,5 @@
 const webpack = require('webpack')
+const WebpackDevServer = require('webpack-dev-server')
 
 function compile (config, statsOptions) {
   return new Promise((resolve, reject) => {
@@ -22,7 +23,16 @@ function watch (config, handler) {
   return compiler
 }
 
+function startDevServer (configuration, port, host, callback) {
+  const devServerOptions = configuration.devServer || {}
+  WebpackDevServer.addDevServerEntrypoints(configuration, devServerOptions)
+  const server = new WebpackDevServer(webpack(configuration), devServerOptions)
+
+  return server.listen(port, host, callback)
+}
+
 module.exports = {
   compile,
-  watch
+  watch,
+  startDevServer
 }

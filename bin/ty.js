@@ -13,8 +13,6 @@ if (process.argv[2] === '-h' || process.argv[2] === '--help') {
   printHelp()
 }
 
-require('../util/module.js')
-
 const args = require('minimist')(process.argv.slice(3))
 for (const key in args) {
   if ((/-[a-z]/).test(key)) {
@@ -23,6 +21,7 @@ for (const key in args) {
   }
 }
 
+require('../util/module.js')(args.context)
 require('../index.js')(process.argv[2], args)
 
 function printHelp () {
@@ -46,5 +45,6 @@ function printHelp () {
   console.log('  --target=[web|electron]')
   console.log('  --arch=[ia32|x64]')
   console.log('  --ts=[0|1]')
+  console.log('  --context=project/root/path')
   process.exit(0)
 }

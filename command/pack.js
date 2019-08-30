@@ -6,19 +6,16 @@ const crossZip = require('cross-zip')
 const { createPackageWithOptions } = require('asar')
 const build = require('./build.js')
 const WebpackConfig = require('../config/webpack.config.js')
-const getPath = require('../util/path.js')
 const Log = require('../util/log.js')
-
-const pkg = require(getPath('package.json'))
 
 function isUuid4 (str) {
   const reg = /[0123456789ABCDEF]{8}-[0123456789ABCDEF]{4}-4[0123456789ABCDEF]{3}-[89AB][0123456789ABCDEF]{3}-[0123456789ABCDEF]{12}/
   return reg.test(str)
 }
 
-async function rename (appPath) {
+async function rename (appPath, webpackConfig) {
   let dirName = path.basename(appPath).split('-')
-  dirName.splice(1, 0, `v${pkg.version}`)
+  dirName.splice(1, 0, `v${webpackConfig.pkg.version}`)
   dirName = dirName.join('-')
   const newPath = path.join(path.dirname(appPath), dirName)
   if (fs.existsSync(newPath)) {
@@ -55,40 +52,40 @@ function zip (source, target) {
 function createDebInstaller (appPath, config, webpackConfig) {
   const distRoot = path.dirname(appPath)
   const icon = {
-    '16x16': getPath(config.iconSrcDir, '16x16.png'),
-    '24x24': getPath(config.iconSrcDir, '24x24.png'),
-    '32x32': getPath(config.iconSrcDir, '32x32.png'),
-    '48x48': getPath(config.iconSrcDir, '48x48.png'),
-    '64x64': getPath(config.iconSrcDir, '64x64.png'),
-    '128x128': getPath(config.iconSrcDir, '128x128.png'),
-    '256x256': getPath(config.iconSrcDir, '256x256.png'),
-    '512x512': getPath(config.iconSrcDir, '512x512.png'),
-    '1024x1024': getPath(config.iconSrcDir, '1024x1024.png')
+    '16x16': webpackConfig.pathUtil.getPath(config.iconSrcDir, '16x16.png'),
+    '24x24': webpackConfig.pathUtil.getPath(config.iconSrcDir, '24x24.png'),
+    '32x32': webpackConfig.pathUtil.getPath(config.iconSrcDir, '32x32.png'),
+    '48x48': webpackConfig.pathUtil.getPath(config.iconSrcDir, '48x48.png'),
+    '64x64': webpackConfig.pathUtil.getPath(config.iconSrcDir, '64x64.png'),
+    '128x128': webpackConfig.pathUtil.getPath(config.iconSrcDir, '128x128.png'),
+    '256x256': webpackConfig.pathUtil.getPath(config.iconSrcDir, '256x256.png'),
+    '512x512': webpackConfig.pathUtil.getPath(config.iconSrcDir, '512x512.png'),
+    '1024x1024': webpackConfig.pathUtil.getPath(config.iconSrcDir, '1024x1024.png')
   }
   fs.mkdirsSync(path.join(distRoot, '.tmp/DEBIAN'))
   fs.writeFileSync(
     path.join(distRoot, '.tmp/DEBIAN/control'),
-    `Package: ${pkg.name}
-Version: ${pkg.version}-${Math.round(new Date().getTime() / 1000)}
+    `Package: ${webpackConfig.pkg.name}
+Version: ${webpackConfig.pkg.version}-${Math.round(new Date().getTime() / 1000)}
 Section: utility
 Priority: optional
 Architecture: ${config.arch === 'x64' ? 'amd64' : 'i386'}
 Depends: kde-cli-tools | kde-runtime | trash-cli | libglib2.0-bin | gvfs-bin, libgconf-2-4, libgtk-3-0 (>= 3.10.0), libnotify4, libnss3 (>= 2:3.26), libxtst6, xdg-utils
 Installed-Size: ${getDirectorySizeSync(appPath)}
 Maintainer: ${webpackConfig.productionPackage.author}
-Homepage: https://github.com/${webpackConfig.productionPackage.author}/${pkg.name}
-Description: ${pkg.description}
+Homepage: https://github.com/${webpackConfig.productionPackage.author}/${webpackConfig.pkg.name}
+Description: ${webpackConfig.pkg.description}
 `)
 
   fs.mkdirsSync(path.join(distRoot, '.tmp/usr/share/applications'))
   fs.writeFileSync(
-    path.join(distRoot, `.tmp/usr/share/applications/${pkg.name}.desktop`),
+    path.join(distRoot, `.tmp/usr/share/applications/${webpackConfig.pkg.name}.desktop`),
     `[Desktop Entry]
-Name=${pkg.name}
-Comment=${pkg.description}
+Name=${webpackConfig.pkg.name}
+Comment=${webpackConfig.pkg.description}
 GenericName=Utility
-Exec=/usr/share/${pkg.name}/${pkg.name}
-Icon=${pkg.name}
+Exec=/usr/share/${webpackConfig.pkg.name}/${webpackConfig.pkg.name}
+Icon=${webpackConfig.pkg.name}
 Type=Application
 StartupNotify=true
 Categories=Utility;
@@ -96,11 +93,11 @@ Categories=Utility;
 
   for (const size in icon) {
     fs.mkdirsSync(path.join(distRoot, `.tmp/usr/share/icons/hicolor/${size}/apps`))
-    fs.copySync(icon[size], path.join(distRoot, `.tmp/usr/share/icons/hicolor/${size}/apps/${pkg.name}.png`))
+    fs.copySync(icon[size], path.join(distRoot, `.tmp/usr/share/icons/hicolor/${size}/apps/${webpackConfig.pkg.name}.png`))
   }
-  fs.copySync(appPath, path.join(distRoot, `.tmp/usr/share/${pkg.name}`))
+  fs.copySync(appPath, path.join(distRoot, `.tmp/usr/share/${webpackConfig.pkg.name}`))
 
-  execSync(`dpkg -b ./.tmp ./${pkg.name}-v${pkg.version}-linux-${config.arch}.deb`, { cwd: distRoot, stdio: 'inherit' })
+  execSync(`dpkg -b ./.tmp ./${webpackConfig.pkg.name}-v${webpackConfig.pkg.version}-linux-${config.arch}.deb`, { cwd: distRoot, stdio: 'inherit' })
   fs.removeSync(path.join(distRoot, '.tmp'))
 }
 
@@ -125,35 +122,35 @@ async function createAsarApp (root, webpackConfig) {
   await createPackageWithOptions(root, webpackConfig.packagerConfig.prebuiltAsar, { unpack: '*.node' })
 }
 
-async function copyExtraResources (root, config) {
-  const ls = (await fs.readdir(getPath(config.resourcesPath))).filter(item => (item !== 'app' && item !== '.gitkeep'))
+async function copyExtraResources (root, config, webpackConfig) {
+  const ls = (await fs.readdir(webpackConfig.pathUtil.getPath(config.resourcesPath))).filter(item => (item !== 'app' && item !== '.gitkeep'))
   await Promise.all(ls.map(item => {
-    return fs.copy(getPath(config.resourcesPath, item), getPath(config.distPath, 'resources', item))
+    return fs.copy(webpackConfig.pathUtil.getPath(config.resourcesPath, item), webpackConfig.pathUtil.getPath(config.distPath, 'resources', item))
   }))
-  await fs.copy(getPath(config.distPath, 'resources'), path.join(root, '..'))
+  await fs.copy(webpackConfig.pathUtil.getPath(config.distPath, 'resources'), path.join(root, '..'))
 }
 
 async function zipResourcesDir (webpackConfig, config) {
   const distResourcesDir = path.dirname(webpackConfig.packagerConfig.prebuiltAsar)
-  await zip(distResourcesDir, getPath(config.distPath, `resources-v${webpackConfig.productionPackage.version}-${process.platform}-${config.arch}.zip`))
+  await zip(distResourcesDir, webpackConfig.pathUtil.getPath(config.distPath, `resources-v${webpackConfig.productionPackage.version}-${process.platform}-${config.arch}.zip`))
 }
 
-function inno (sourceDir, config) {
+function inno (sourceDir, config, webpackConfig) {
   return new Promise((resolve, reject) => {
     if (!isUuid4(config.inno.appid[config.arch])) {
       reject(new Error(`Please specify [module.exports.inno.appid.${config.arch}] in tyconfig.js to generate windows installer.`))
       return
     }
     const def = {
-      Name: pkg.name,
-      Version: pkg.version,
-      Publisher: pkg.author,
-      URL: config.inno.url || pkg.name,
+      Name: webpackConfig.pkg.name,
+      Version: webpackConfig.pkg.version,
+      Publisher: webpackConfig.pkg.author,
+      URL: config.inno.url || webpackConfig.pkg.name,
       AppId: config.arch === 'ia32' ? `{{${config.inno.appid.ia32}}` : `{{${config.inno.appid.x64}}`,
-      OutputDir: getPath(config.distPath),
-      SetupIconFile: getPath(config.iconSrcDir, 'app.ico'),
+      OutputDir: webpackConfig.pathUtil.getPath(config.distPath),
+      SetupIconFile: webpackConfig.pathUtil.getPath(config.iconSrcDir, 'app.ico'),
       Arch: config.arch,
-      RepoDir: getPath('..'),
+      RepoDir: webpackConfig.pathUtil.getPath('..'),
       SourceDir: sourceDir,
       ArchitecturesAllowed: config.arch === 'ia32' ? '' : 'x64',
       ArchitecturesInstallIn64BitMode: config.arch === 'ia32' ? '' : 'x64'
@@ -164,7 +161,7 @@ function inno (sourceDir, config) {
         ...Object.keys(def).map(k => `/D${k}=${def[k]}`),
         config.inno.src ? path.join(__dirname, '../script/inno.iss') : config.inno.src
       ],
-      { cwd: getPath(), stdio: 'inherit' }
+      { cwd: webpackConfig.pathUtil.getPath(), stdio: 'inherit' }
     )
       .on('error', reject)
       .on('exit', resolve)
@@ -184,12 +181,12 @@ async function pack (config) {
   Log.info('Bundle production code...')
   await build(config)
 
-  const resourceAppRoot = getPath(config.resourcesPath, 'app')
+  const resourceAppRoot = webpackConfig.pathUtil.getPath(config.resourcesPath, 'app')
   Log.info('Write production package.json...')
   fs.writeFileSync(path.join(resourceAppRoot, 'package.json'), JSON.stringify(webpackConfig.productionPackage), 'utf8')
 
   Log.info('Install production dependencies...')
-  execSync(`npm install --no-package-lock --production --arch=${config.arch} --target_arch=${config.arch} --build-from-source --runtime=electron --target=${pkg.devDependencies.electron} --disturl=https://electronjs.org/headers`, { cwd: resourceAppRoot, stdio: 'inherit' })
+  execSync(`npm install --no-package-lock --production --arch=${config.arch} --target_arch=${config.arch} --build-from-source --runtime=electron --target=${webpackConfig.pkg.devDependencies.electron} --disturl=https://electronjs.org/headers`, { cwd: resourceAppRoot, stdio: 'inherit' })
   fs.writeFileSync(path.join(resourceAppRoot, 'package.json'), JSON.stringify(webpackConfig.productionPackage), 'utf8')
 
   Log.info('Make app.asar...')
@@ -197,13 +194,13 @@ async function pack (config) {
 
   Log.print('')
   const [appPath] = await packager(webpackConfig.packagerConfig)
-  const root = process.platform === 'darwin' ? path.join(appPath, `${pkg.name}.app/Contents/Resources/app`) : path.join(appPath, 'resources/app')
-  await copyExtraResources(root, config)
+  const root = process.platform === 'darwin' ? path.join(appPath, `${webpackConfig.pkg.name}.app/Contents/Resources/app`) : path.join(appPath, 'resources/app')
+  await copyExtraResources(root, config, webpackConfig)
 
   Log.info('Zip resources...')
   await zipResourcesDir(webpackConfig, config)
 
-  const newPath = await rename(appPath)
+  const newPath = await rename(appPath, webpackConfig)
 
   Log.info(`Zip ${newPath}...`)
   const size = await zip(newPath, newPath + '.zip')
@@ -217,7 +214,7 @@ async function pack (config) {
   if (process.platform === 'win32') {
     Log.info('Create inno-setup installer...')
     try {
-      await inno(newPath, config)
+      await inno(newPath, config, webpackConfig)
     } catch (err) {
       Log.warn(`${err.message}`)
     }

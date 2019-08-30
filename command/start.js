@@ -1,7 +1,8 @@
 const { spawn } = require('child_process')
-const getPath = require('../util/path.js')
+const PathUtil = require('../util/path.js')
 
 function start (config) {
+  const pathUtil = new PathUtil(config.context)
   if (config.target !== 'electron') {
     const chalk = require('chalk')
     console.error(chalk.redBright('This command does not support web target'))
@@ -10,9 +11,9 @@ function start (config) {
 
   if (config.mode === 'production') {
     const cp = spawn(require('electron'), [
-      getPath(config.resourcesPath, 'app')
+      pathUtil.getPath(config.resourcesPath, 'app')
     ], {
-      cwd: getPath(),
+      cwd: pathUtil.getPath(),
       stdio: 'inherit'
     })
     return cp
@@ -20,9 +21,9 @@ function start (config) {
     const cp = spawn(require('electron'), [
       '--remote-debugging-port=9222',
       '--inspect=' + Date.now() % 65536,
-      getPath(config.resourcesPath, 'app')
+      pathUtil.getPath(config.resourcesPath, 'app')
     ], {
-      cwd: getPath(),
+      cwd: pathUtil.getPath(),
       stdio: 'inherit'
     })
     return cp

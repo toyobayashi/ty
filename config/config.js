@@ -2,7 +2,6 @@ const merge = require('deepmerge')
 const chalk = require('chalk')
 const { existsSync } = require('fs-extra')
 const { extname } = require('path')
-const getPath = require('../util/path.js')
 
 const defaultConfig = {
   /**
@@ -76,13 +75,15 @@ const defaultConfig = {
    * @type {undefined | 0 | 1}
    */
   ts: undefined,
+  /**
+   * @type {string}
+   */
+  context: '',
 
   /**
    * @type {{ [name: string]: string }}
    */
-  alias: {
-    '@': getPath('src')
-  },
+  alias: {},
 
   /**
    * @type {{ src: string; appid: { ia32: string; x64: string }; url: string }}
@@ -162,7 +163,7 @@ function readTypeScriptConfigFile (fullPath) {
   return (require(fullPath).default || require(fullPath))
 }
 
-function readTyConfig (configPath) {
+function readTyConfig (configPath, getPath) {
   let tyconfig = {}
   if (typeof configPath === 'string' && configPath !== '') {
     configPath = getPath(configPath)
@@ -192,9 +193,19 @@ function readTyConfig (configPath) {
     checkObject(tyconfig, `tyconfig.${tyconfigTsPath ? 't' : 'j'}s should export an object.`)
   }
 
-  const mergedConfig = merge(defaultConfig, tyconfig);
+  // change context
+  if (tyconfig.context) {
+    const PathUtil = require('../util/path.js')
+    const pu = new PathUtil(tyconfig.context)
+    getPath = pu.getPath.bind(pu)
+  }
 
-  (['output', 'tsconfig', 'inno', 'alias']).forEach(key => {
+  defaultConfig.alias = {
+    '@': getPath('src')
+  }
+  const mergedConfig = merge(defaultConfig, tyconfig)
+
+  require('../util/validate.js').shouldBeObject.forEach(key => {
     checkObject(mergedConfig[key], `module.exports.${key} should be an object.`)
   })
 

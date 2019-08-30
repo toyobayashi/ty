@@ -139,6 +139,8 @@ No webpack config. Working in progress.
 
 * `ts` {undefined | 0 | 1} Force to use typescript or not. Default: `undefined`
 
+* `context` {string} Project root directory. Default: `''`
+
 * `alias` {{ [name: string]: string }} Pass to `webpackConfig.resolve.alias`. Default: `{ '@': path.join(process.env.TY_CONTEXT || process.cwd(), 'src') }`
 
 * `tsconfig` - For TypeScript project. Default:
@@ -234,7 +236,8 @@ No webpack config. Working in progress.
 * `--mode`
 * `--target`
 * `--arch`
-* `--ts` - force to use typescript or not.
+* `--ts` - Force to use typescript or not.
+* `--context` - Project root directory.
 * `--dev-server-port`
 * `--dev-server-host`
 * `--config` - CLI only. Specify tyconfig file path.

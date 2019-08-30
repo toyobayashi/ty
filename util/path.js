@@ -1,17 +1,48 @@
-const { join, resolve, isAbsolute } = require('path')
+const { join, resolve, isAbsolute, dirname } = require('path')
+const { existsSync } = require('fs-extra')
 
-const context = process.env.TY_CONTEXT ? resolve(process.env.TY_CONTEXT) : process.cwd()
-
-function getPath (...relative) {
-  if (!relative.length) {
-    return context
+class PathUtil {
+  constructor (context) {
+    if (typeof context === 'string' && context !== '') {
+      this.context = resolve(context)
+    } else {
+      if (process.env.TY_CONTEXT) {
+        this.context = resolve(process.env.TY_CONTEXT)
+      } else {
+        const root = PathUtil.findProjectRoot()
+        if (root !== '') {
+          this.context = root
+        } else {
+          this.context = process.cwd()
+        }
+      }
+    }
   }
 
-  if (isAbsolute(relative[0])) {
-    return join(...relative)
-  }
+  getPath (...relative) {
+    if (!relative.length) {
+      return this.context
+    }
 
-  return join(context, ...relative)
+    if (isAbsolute(relative[0])) {
+      return join(...relative)
+    }
+
+    return join(this.context, ...relative)
+  }
 }
 
-module.exports = getPath
+PathUtil.findProjectRoot = function findProjectRoot (start = process.cwd()) {
+  let current = start
+  let previous = ''
+  do {
+    if (existsSync(join(current, 'package.json'))) {
+      return current
+    }
+    previous = current
+    current = dirname(current)
+  } while (current !== previous)
+  return ''
+}
+
+module.exports = PathUtil

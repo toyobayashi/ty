@@ -8,7 +8,7 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
 const webpackNodeExternals = require('webpack-node-externals')
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin')
-const getPath = require('../util/path.js')
+const PathUtil = require('../util/path.js')
 const path = require('path')
 const os = require('os')
 const { ensureEntry, ensureFile } = require('../util/file.js')
@@ -127,9 +127,10 @@ class WebpackConfig {
   }
 
   constructor (config) {
+    this.pathUtil = new PathUtil(config.context)
     let pkg
     try {
-      pkg = require(getPath('package.json'))
+      pkg = require(this.pathUtil.getPath('package.json'))
     } catch (_) {
       pkg = {
         name: '',
@@ -141,15 +142,15 @@ class WebpackConfig {
         dependencies: {}
       }
     }
-    this._pkg = pkg
-    this._useVue = !!((this._pkg.devDependencies && this._pkg.devDependencies.vue) || (this._pkg.dependencies && this._pkg.dependencies.vue))
+    this.pkg = pkg
+    this._useVue = !!((this.pkg.devDependencies && this.pkg.devDependencies.vue) || (this.pkg.dependencies && this.pkg.dependencies.vue))
     this._electronTarget = (config.target === 'electron')
 
-    const existsTypeScriptInPackageJson = !!(this._pkg.devDependencies && this._pkg.devDependencies.typescript)
+    const existsTypeScriptInPackageJson = !!(this.pkg.devDependencies && this.pkg.devDependencies.typescript)
 
     if (this._electronTarget) {
-      const rendererTSConfig = existsSync(getPath(config.tsconfig.renderer))
-      const mainTSConfig = existsSync(getPath(config.tsconfig.main))
+      const rendererTSConfig = existsSync(this.pathUtil.getPath(config.tsconfig.renderer))
+      const mainTSConfig = existsSync(this.pathUtil.getPath(config.tsconfig.main))
       this._useTypeScript = config.ts !== undefined ? config.ts : !!(
         existsTypeScriptInPackageJson ||
         rendererTSConfig ||
@@ -157,55 +158,56 @@ class WebpackConfig {
       )
 
       if (this._useTypeScript) {
-        if (!rendererTSConfig) writeFileSync(getPath(config.tsconfig.renderer), '{}' + os.EOL, 'utf8')
-        if (!mainTSConfig) writeFileSync(getPath(config.tsconfig.main), '{}' + os.EOL, 'utf8')
+        if (!rendererTSConfig) writeFileSync(this.pathUtil.getPath(config.tsconfig.renderer), '{}' + os.EOL, 'utf8')
+        if (!mainTSConfig) writeFileSync(this.pathUtil.getPath(config.tsconfig.main), '{}' + os.EOL, 'utf8')
       }
     } else {
-      const webTSConfig = existsSync(getPath(config.tsconfig.web))
+      const webTSConfig = existsSync(this.pathUtil.getPath(config.tsconfig.web))
       this._useTypeScript = config.ts !== undefined ? config.ts : !!(existsTypeScriptInPackageJson || webTSConfig)
 
       if (this._useTypeScript) {
-        if (!webTSConfig) writeFileSync(getPath(config.tsconfig.web), '{}' + os.EOL, 'utf8')
+        if (!webTSConfig) writeFileSync(this.pathUtil.getPath(config.tsconfig.web), '{}' + os.EOL, 'utf8')
       }
     }
 
-    this._useESLint = !!((this._pkg.devDependencies && this._pkg.devDependencies.eslint) || (
-      existsSync(getPath('.eslintrc.js')) ||
-      existsSync(getPath('.eslintrc.yml')) ||
-      existsSync(getPath('.eslintrc.yaml')) ||
-      existsSync(getPath('.eslintrc.json')) ||
-      existsSync(getPath('.eslintrc')) ||
-      (this._pkg.eslintConfig !== undefined)
+    this._useESLint = !!((this.pkg.devDependencies && this.pkg.devDependencies.eslint) || (
+      existsSync(this.pathUtil.getPath('.eslintrc.js')) ||
+      existsSync(this.pathUtil.getPath('.eslintrc.yml')) ||
+      existsSync(this.pathUtil.getPath('.eslintrc.yaml')) ||
+      existsSync(this.pathUtil.getPath('.eslintrc.json')) ||
+      existsSync(this.pathUtil.getPath('.eslintrc')) ||
+      (this.pkg.eslintConfig !== undefined)
     ))
-    this._useBabel = !!((this._pkg.devDependencies && this._pkg.devDependencies['@babel/core']) || (
-      existsSync(getPath('babel.config.js')) ||
-      existsSync(getPath('.babelrc'))
+    this._useBabel = !!((this.pkg.devDependencies && this.pkg.devDependencies['@babel/core']) || (
+      existsSync(this.pathUtil.getPath('babel.config.js')) ||
+      existsSync(this.pathUtil.getPath('.babelrc'))
     ))
-    this._usePostCss = existsSync(getPath('postcss.config.js')) || existsSync(getPath('.postcssrc.js'))
+    this._usePostCss = existsSync(this.pathUtil.getPath('postcss.config.js')) || existsSync(this.pathUtil.getPath('.postcssrc.js'))
 
-    ensureFile(getPath(config.indexHtml || 'public/index.html'), `<!DOCTYPE html>
+    ensureFile(this.pathUtil.getPath(config.indexHtml || 'public/index.html'), `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>${this._pkg.name}</title>
+  <title>${this.pkg.name}</title>
 </head>
 <body>
 </body>
 </html>
 `)
 
+    const getPath = this.pathUtil.getPath.bind(this.pathUtil)
     if (this._electronTarget) {
-      ensureEntry(config.entry && config.entry.main)
-      ensureEntry(config.entry && config.entry.renderer)
+      ensureEntry(config.entry && config.entry.main, getPath)
+      ensureEntry(config.entry && config.entry.renderer, getPath)
 
       this._initMain(config)
       this._initRenderer(config)
       this._initProductionPackage(config)
       this._initPackagerConfig(config)
     } else {
-      ensureEntry(config.entry && config.entry.web)
+      ensureEntry(config.entry && config.entry.web, getPath)
 
       this._initWeb(config)
     }
@@ -229,12 +231,12 @@ class WebpackConfig {
   _initWeb (config) {
     this.webConfig = {
       mode: config.mode,
-      context: getPath(),
+      context: this.pathUtil.getPath(),
       target: 'web',
       entry: config.entry.web,
       output: {
         filename: '[name].js',
-        path: getPath(config.output.web)
+        path: this.pathUtil.getPath(config.output.web)
       },
       node: {
         setImmediate: false,
@@ -255,7 +257,7 @@ class WebpackConfig {
                 options: {
                   appendTsSuffixTo: [/\.vue$/],
                   transpileOnly: true,
-                  configFile: getPath(config.tsconfig.web)
+                  configFile: this.pathUtil.getPath(config.tsconfig.web)
                 }
               }
             ]
@@ -276,14 +278,14 @@ class WebpackConfig {
       },
       plugins: [
         new HtmlWebpackPlugin({
-          title: this._pkg.name,
-          template: getPath(config.indexHtml),
+          title: this.pkg.name,
+          template: this.pathUtil.getPath(config.indexHtml),
           minify: config.mode === 'production' ? config.htmlMinify : false
         }),
         new CopyWebpackPlugin([
           {
-            from: getPath('public'),
-            to: getPath(config.output.web),
+            from: this.pathUtil.getPath('public'),
+            to: this.pathUtil.getPath(config.output.web),
             toType: 'dir',
             ignore: [
               '.DS_Store'
@@ -339,12 +341,12 @@ class WebpackConfig {
   _initMain (config) {
     this.mainConfig = {
       mode: config.mode,
-      context: getPath(),
+      context: this.pathUtil.getPath(),
       target: 'electron-main',
       entry: config.entry.main,
       output: {
         filename: '[name].js',
-        path: getPath(config.output.main)
+        path: this.pathUtil.getPath(config.output.main)
       },
       node: false,
       module: {
@@ -357,7 +359,7 @@ class WebpackConfig {
                 loader: require.resolve('ts-loader'),
                 options: {
                   transpileOnly: true,
-                  configFile: getPath(config.tsconfig.main)
+                  configFile: this.pathUtil.getPath(config.tsconfig.main)
                 }
               }
             ]
@@ -384,7 +386,7 @@ class WebpackConfig {
       },
       plugins: [
         new CopyWebpackPlugin([
-          { from: getPath('package.json'), to: getPath(config.resourcesPath, 'app/package.json') }
+          { from: this.pathUtil.getPath('package.json'), to: this.pathUtil.getPath(config.resourcesPath, 'app/package.json') }
         ])
       ]
     }
@@ -393,7 +395,7 @@ class WebpackConfig {
       this.mainConfig.plugins = [
         ...(this.mainConfig.plugins || []),
         new CopyWebpackPlugin([
-          { from: getPath(config.iconSrcDir, '1024x1024.png'), to: getPath(config.resourcesPath, 'icon/app.png') }
+          { from: this.pathUtil.getPath(config.iconSrcDir, '1024x1024.png'), to: this.pathUtil.getPath(config.resourcesPath, 'icon/app.png') }
         ])
       ]
     }
@@ -411,12 +413,12 @@ class WebpackConfig {
   _initRenderer (config) {
     this.rendererConfig = {
       mode: config.mode,
-      context: getPath(),
+      context: this.pathUtil.getPath(),
       target: 'electron-renderer',
       entry: config.entry.renderer,
       output: {
         filename: '[name].js',
-        path: getPath(config.output.renderer)
+        path: this.pathUtil.getPath(config.output.renderer)
       },
       node: false,
       module: {
@@ -430,7 +432,7 @@ class WebpackConfig {
                 options: {
                   appendTsSuffixTo: [/\.vue$/],
                   transpileOnly: true,
-                  configFile: getPath(config.tsconfig.renderer)
+                  configFile: this.pathUtil.getPath(config.tsconfig.renderer)
                 }
               }
             ]
@@ -451,14 +453,14 @@ class WebpackConfig {
       },
       plugins: [
         new HtmlWebpackPlugin({
-          title: this._pkg.name,
-          template: getPath(config.indexHtml),
+          title: this.pkg.name,
+          template: this.pathUtil.getPath(config.indexHtml),
           minify: config.mode === 'production' ? config.htmlMinify : false
         }),
         new CopyWebpackPlugin([
           {
-            from: getPath('public'),
-            to: getPath(config.output.renderer),
+            from: this.pathUtil.getPath('public'),
+            to: this.pathUtil.getPath(config.output.renderer),
             toType: 'dir',
             ignore: [
               '.DS_Store'
@@ -512,23 +514,23 @@ class WebpackConfig {
   }
 
   _initProductionPackage (config) {
-    const author = typeof this._pkg.author === 'object' ? this._pkg.author.name : this._pkg.author
+    const author = typeof this.pkg.author === 'object' ? this.pkg.author.name : this.pkg.author
 
     const productionPackage = {
-      name: this._pkg.name,
-      version: this._pkg.version,
-      main: this._pkg.main,
+      name: this.pkg.name,
+      version: this.pkg.version,
+      main: this.pkg.main,
       author,
-      license: this._pkg.license
+      license: this.pkg.license
     }
 
-    if (this._pkg.dependencies) {
-      productionPackage.dependencies = this._pkg.dependencies
+    if (this.pkg.dependencies) {
+      productionPackage.dependencies = this.pkg.dependencies
     }
 
     try {
-      productionPackage._commit = execSync('git rev-parse HEAD', { cwd: getPath() }).toString().replace(/[\r\n]/g, '')
-      productionPackage._commitDate = new Date((execSync('git log -1', { cwd: getPath() }).toString().match(/Date:\s*(.*?)\n/))[1]).toISOString()
+      productionPackage._commit = execSync('git rev-parse HEAD', { cwd: this.pathUtil.getPath() }).toString().replace(/[\r\n]/g, '')
+      productionPackage._commitDate = new Date((execSync('git log -1', { cwd: this.pathUtil.getPath() }).toString().match(/Date:\s*(.*?)\n/))[1]).toISOString()
     } catch (_) {}
 
     this.productionPackage = productionPackage
@@ -536,10 +538,10 @@ class WebpackConfig {
 
   _initPackagerConfig (config) {
     const packagerOptions = {
-      dir: getPath(),
-      out: getPath(config.distPath),
+      dir: this.pathUtil.getPath(),
+      out: this.pathUtil.getPath(config.distPath),
       arch: config.arch || process.arch,
-      prebuiltAsar: getPath(config.distPath, 'resources/app.asar'),
+      prebuiltAsar: this.pathUtil.getPath(config.distPath, 'resources/app.asar'),
       appCopyright: `Copyright (C) ${new Date().getFullYear()} ${this.productionPackage.author}`,
       overwrite: true
     }
@@ -549,18 +551,18 @@ class WebpackConfig {
         unsafelyDisableChecksums: true,
         mirrorOptions: {
           mirror: process.env.npm_config_electron_mirror.endsWith('/') ? process.env.npm_config_electron_mirror : (process.env.npm_config_electron_mirror + '/'),
-          customDir: this._pkg.devDependencies.electron
+          customDir: this.pkg.devDependencies.electron
         }
       }
     }
 
     if (process.platform === 'win32') {
-      const iconPath = getPath(config.iconSrcDir, 'app.ico')
+      const iconPath = this.pathUtil.getPath(config.iconSrcDir, 'app.ico')
       if (existsSync(iconPath)) {
         packagerOptions.icon = iconPath
       }
     } else if (process.platform === 'darwin') {
-      const iconPath = getPath(config.iconSrcDir, 'app.icns')
+      const iconPath = this.pathUtil.getPath(config.iconSrcDir, 'app.icns')
       if (existsSync(iconPath)) {
         packagerOptions.icon = iconPath
       }
@@ -576,10 +578,10 @@ class WebpackConfig {
         hot: true,
         host: config.devServerHost,
         inline: true,
-        contentBase: [getPath(config.contentBase)],
+        contentBase: [this.pathUtil.getPath(config.contentBase)],
         publicPath: config.publicPath,
-        before (app, server) {
-          app.use(require('express-serve-asar')(getPath(config.contentBase)))
+        before: (app, server) => {
+          app.use(require('express-serve-asar')(this.pathUtil.getPath(config.contentBase)))
           server._watch(config.indexHtml)
         }
       }
@@ -598,7 +600,7 @@ class WebpackConfig {
           ...(this.rendererConfig.plugins || []),
           new ForkTsCheckerWebpackPlugin({
             eslint: this._useESLint,
-            tsconfig: getPath(config.tsconfig.renderer),
+            tsconfig: this.pathUtil.getPath(config.tsconfig.renderer),
             vue: this._useVue
           })
         ]
@@ -607,7 +609,7 @@ class WebpackConfig {
           ...(this.mainConfig.plugins || []),
           new ForkTsCheckerWebpackPlugin({
             eslint: this._useESLint,
-            tsconfig: getPath(config.tsconfig.main)
+            tsconfig: this.pathUtil.getPath(config.tsconfig.main)
           })
         ]
       }
@@ -617,7 +619,7 @@ class WebpackConfig {
         hot: true,
         host: config.devServerHost,
         inline: true,
-        contentBase: [getPath(config.contentBase)],
+        contentBase: [this.pathUtil.getPath(config.contentBase)],
         publicPath: config.publicPath,
         before (_app, server) {
           server._watch(config.indexHtml)
@@ -638,7 +640,7 @@ class WebpackConfig {
           ...(this.webConfig.plugins || []),
           new ForkTsCheckerWebpackPlugin({
             eslint: this._useESLint,
-            tsconfig: getPath(config.tsconfig.web),
+            tsconfig: this.pathUtil.getPath(config.tsconfig.web),
             vue: this._useVue
           })
         ]
@@ -672,7 +674,7 @@ class WebpackConfig {
           ...(this.rendererConfig.plugins || []),
           new ForkTsCheckerWebpackPlugin({
             eslint: this._useESLint,
-            tsconfig: getPath(config.tsconfig.renderer),
+            tsconfig: this.pathUtil.getPath(config.tsconfig.renderer),
             vue: this._useVue,
             async: false,
             useTypescriptIncrementalApi: true,
@@ -684,7 +686,7 @@ class WebpackConfig {
           ...(this.mainConfig.plugins || []),
           new ForkTsCheckerWebpackPlugin({
             eslint: this._useESLint,
-            tsconfig: getPath(config.tsconfig.main),
+            tsconfig: this.pathUtil.getPath(config.tsconfig.main),
             async: false,
             useTypescriptIncrementalApi: true,
             memoryLimit: 4096
@@ -711,7 +713,7 @@ class WebpackConfig {
           ...(this.webConfig.plugins || []),
           new ForkTsCheckerWebpackPlugin({
             eslint: this._useESLint,
-            tsconfig: getPath(config.tsconfig.web),
+            tsconfig: this.pathUtil.getPath(config.tsconfig.web),
             vue: this._useVue,
             async: false,
             useTypescriptIncrementalApi: true,

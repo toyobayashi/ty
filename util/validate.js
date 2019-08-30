@@ -1,0 +1,7 @@
+const cliSupportOption = ['mode', 'arch', 'target', 'devServerHost', 'devServerPort', 'ts', 'context']
+const shouldBeObject = ['output', 'tsconfig', 'inno', 'alias']
+
+module.exports = {
+  cliSupportOption,
+  shouldBeObject
+}

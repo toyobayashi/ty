@@ -1,14 +1,16 @@
 module.exports = function (command, args = { _: [] }, userConfig = {}) {
   const readTyConfig = require('./config/config.js')
   const merge = require('deepmerge')
-  let config = readTyConfig(args.config)
+  const PathUtil = require('./util/path.js')
+  const pu = new PathUtil(args.context || userConfig.context)
+  let config = readTyConfig(args.config, pu.getPath.bind(pu))
 
   const defaultProduction = ['build', 'pack']
   if (defaultProduction.indexOf(command) !== -1) {
     process.env.NODE_ENV = config.mode = 'production'
   }
 
-  const cliConfig = ['mode', 'arch', 'target', 'devServerHost', 'devServerPort', 'ts']
+  const cliConfig = require('./util/validate.js').cliSupportOption
   cliConfig.forEach((key) => {
     if (key in args) {
       config[key] = args[key]

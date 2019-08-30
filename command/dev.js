@@ -1,6 +1,5 @@
 const WebpackConfig = require('../config/webpack.config.js')
-const startDevServer = require('../util/server.js')
-const { watch } = require('../util/webpack.js')
+const { watch, startDevServer } = require('../util/webpack.js')
 const start = require('./start.js')
 
 function dev (config) {

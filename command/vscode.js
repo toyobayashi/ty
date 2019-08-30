@@ -1,11 +1,12 @@
 /* eslint-disable no-template-curly-in-string */
 
 const fs = require('fs-extra')
-const getPath = require('../util/path.js')
+const PathUtil = require('../util/path.js')
 const path = require('path')
 
 module.exports = function (config) {
-  const target = getPath('.vscode/launch.json')
+  const pathUtil = new PathUtil(config.context)
+  const target = pathUtil.getPath('.vscode/launch.json')
   const launchJson = config.target === 'electron' ? {
     version: '0.2.0',
     configurations: [
