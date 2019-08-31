@@ -11,7 +11,7 @@ module.exports = function register (context) {
     if (!result) return result
 
     if (request[0] !== '.' && result.indexOf(target) === -1) {
-      result.unshift(target)
+      result.push(target)
     }
 
     return result
@@ -20,7 +20,7 @@ module.exports = function register (context) {
 
     const paths = newReturn ? result : result[1]
     if (request[0] !== '.' && paths.indexOf(target) === -1) {
-      paths.unshift(target)
+      paths.push(target)
     }
 
     return result
