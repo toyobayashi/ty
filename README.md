@@ -164,6 +164,17 @@ No webpack config. Working in progress.
 
 * `proxy` - Pass to `webpack-dev-server`. Default: `{}`.
 
+* `packHook` - For electron packing process. Default: `undefined`.
+
+   ``` js
+   module.exports = {
+      packHook: {
+        afterInstall (config, root) {},
+        beforeZip (config, root) {}
+      }
+    }
+   ```
+
 * `statsOptions` - For webpack output. Default: 
 
     ``` js

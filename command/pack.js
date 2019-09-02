@@ -189,6 +189,11 @@ async function pack (config) {
   execSync(`npm install --no-package-lock --production --arch=${config.arch} --target_arch=${config.arch} --build-from-source --runtime=electron --target=${webpackConfig.pkg.devDependencies.electron} --disturl=https://electronjs.org/headers`, { cwd: resourceAppRoot, stdio: 'inherit' })
   fs.writeFileSync(path.join(resourceAppRoot, 'package.json'), JSON.stringify(webpackConfig.productionPackage), 'utf8')
 
+  if (config.packHook && typeof config.packHook.afterInstall === 'function') {
+    Log.info('Running config.packHook.afterInstall...')
+    await Promise.resolve(config.packHook.afterInstall(config, resourceAppRoot))
+  }
+
   Log.info('Make app.asar...')
   await createAsarApp(resourceAppRoot, webpackConfig)
 
@@ -199,6 +204,11 @@ async function pack (config) {
 
   Log.info('Zip resources...')
   await zipResourcesDir(webpackConfig, config)
+
+  if (config.packHook && typeof config.packHook.beforeZip === 'function') {
+    Log.info('Running config.packHook.beforeZip...')
+    await Promise.resolve(config.packHook.beforeZip(config, root))
+  }
 
   const newPath = await rename(appPath, webpackConfig)
 

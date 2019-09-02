@@ -114,6 +114,8 @@ const defaultConfig = {
 
   proxy: {},
 
+  packHook: undefined,
+
   statsOptions: {
     colors: true,
     children: false,

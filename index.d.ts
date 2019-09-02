@@ -52,6 +52,11 @@ declare namespace ty {
       main?: string
     }
 
+    packHook?: undefined | {
+      afterInstall? (config: ty.Configuration, root: string): void
+      beforeZip? (config: ty.Configuration, root: string): void
+    }
+
     statsOptions?: any
 
     terserPlugin?: any

@@ -196,6 +196,18 @@ $ ty serve
 
 * `proxy` - 传入 `webpack-dev-server`。默认：`{}`。
 
+* `packHook` - 用于 Electron 打包过程。 默认：`undefined`。
+
+   ``` js
+   module.exports = {
+      packHook: {
+        afterInstall (config, root) {},
+        beforeZip (config, root) {}
+      }
+    }
+   ```
+
+
 * `statsOptions` - 配置 Webpack 的输出，详细见 Webpack 文档。默认：
 
     ``` js
