@@ -41,6 +41,7 @@ No webpack config. Working in progress.
 
 * `build` - Bundle production code. Default output directory: `dist` or `resources/app`.
 * `serve` - Start local development server.
+* `watch` - Watch source code and write bundled code to local files.
 * `inspect` - Inspect webpack config.
 * `vscode` - Generate or modify `.vscode/launch.json`.
 * `dev` - [Electron project only] Start local development server and launch electron.

@@ -73,6 +73,7 @@ $ ty serve
 
 * `build` - 打包生产环境代码。默认输出位置：`dist` 或者 `resources/app`。
 * `serve` - 开发环境启动 Webpack 监听文件变化。
+* `watch` - 监听源码变动并直接把打包后的代码写入文件，不会开启本地服务器。
 * `inspect` - 检查实际的 Webpack 配置。
 * `vscode` - 生成或修改 VSCode 启动项配置文件 `.vscode/launch.json`。
 * `dev` - 【限 Electron 项目】 监听源文件改动并启动 Electron。修改主进程代码会自动重启。

@@ -1,6 +1,12 @@
 declare namespace ty {
   type WebpackEntry = string | string[] | { [name: string]: string | string[] }
 
+  interface minimistArgs {
+    [arg: string]: any
+    '--'?: string[]
+    _: string[]
+  } 
+
   export interface Configuration {
     mode?: 'production' | 'development'
     devServerHost?: string
@@ -72,14 +78,14 @@ declare namespace ty {
   }
 }
 
-declare function ty (
-  command: string,
-  args?: {
-    [arg: string]: any
-    '--'?: string[]
-    _: string[]
-  },
-  config?: ty.Configuration
-): void
+declare function ty (command: 'build', args?: ty.minimistArgs, config?: ty.Configuration): void
+declare function ty (command: 'dev', args?: ty.minimistArgs, config?: ty.Configuration): void
+declare function ty (command: 'inspect', args?: ty.minimistArgs, config?: ty.Configuration): void
+declare function ty (command: 'pack', args?: ty.minimistArgs, config?: ty.Configuration): void
+declare function ty (command: 'serve', args?: ty.minimistArgs, config?: ty.Configuration): void
+declare function ty (command: 'start', args?: ty.minimistArgs, config?: ty.Configuration): void
+declare function ty (command: 'vscode', args?: ty.minimistArgs, config?: ty.Configuration): void
+declare function ty (command: 'watch', args?: ty.minimistArgs, config?: ty.Configuration): void
+declare function ty (command: string, args?: ty.minimistArgs, config?: ty.Configuration): void
 
 export = ty
