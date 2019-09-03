@@ -1,5 +1,5 @@
 const { join, resolve, isAbsolute, dirname } = require('path')
-const { existsSync } = require('fs-extra')
+const { existsSync, statSync } = require('fs-extra')
 
 class PathUtil {
   constructor (context) {
@@ -32,17 +32,33 @@ class PathUtil {
   }
 }
 
-PathUtil.findProjectRoot = function findProjectRoot (start = process.cwd()) {
-  let current = start
+PathUtil.findProjectRoot = function findProjectRoot (start) {
+  let current = start ? resolve(start) : process.cwd()
   let previous = ''
   do {
-    if (existsSync(join(current, 'package.json'))) {
+    const target = join(current, 'package.json')
+    if (existsSync(target) && statSync(target).isFile()) {
       return current
     }
     previous = current
     current = dirname(current)
   } while (current !== previous)
   return ''
+}
+
+PathUtil.findAllNodeModulesPaths = function findAllNodeModulesPaths (start) {
+  let current = start ? resolve(start) : process.cwd()
+  let previous = ''
+  const res = []
+  do {
+    const target = join(current, 'node_modules')
+    if (existsSync(target) && statSync(target).isDirectory()) {
+      res.push(target)
+    }
+    previous = current
+    current = dirname(current)
+  } while (current !== previous)
+  return res
 }
 
 module.exports = PathUtil

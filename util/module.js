@@ -1,8 +1,7 @@
 module.exports = function register (context) {
   const PathUtil = require('./path.js')
   const Module = require('module')
-  const target = (new PathUtil(context)).getPath('node_modules')
-
+  const targets = PathUtil.findAllNodeModulesPaths(context)
   const originalResolveLookupPaths = Module._resolveLookupPaths
 
   Module._resolveLookupPaths = originalResolveLookupPaths.length === 2 ? function (request, parent) {
@@ -10,8 +9,12 @@ module.exports = function register (context) {
 
     if (!result) return result
 
-    if (request[0] !== '.' && result.indexOf(target) === -1) {
-      result.push(target)
+    if (request[0] !== '.') {
+      for (let i = 0; i < targets.length; i++) {
+        if (result.indexOf(targets[i]) === -1) {
+          result.push(targets[i])
+        }
+      }
     }
 
     return result
@@ -19,8 +22,13 @@ module.exports = function register (context) {
     const result = originalResolveLookupPaths.call(Module, request, parent, newReturn)
 
     const paths = newReturn ? result : result[1]
-    if (request[0] !== '.' && paths.indexOf(target) === -1) {
-      paths.push(target)
+
+    if (request[0] !== '.') {
+      for (let i = 0; i < targets.length; i++) {
+        if (paths.indexOf(targets[i]) === -1) {
+          paths.push(targets[i])
+        }
+      }
     }
 
     return result
