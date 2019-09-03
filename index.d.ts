@@ -35,6 +35,7 @@ declare namespace ty {
     ts?: undefined | 0 | 1
     context?: string
     productionSourcemap?: boolean
+    cssModule?: boolean
 
     alias?: {
       [name: string]: string
@@ -68,6 +69,8 @@ declare namespace ty {
     terserPlugin?: any
 
     htmlMinify?: any
+
+    cssOptimize?: any
 
     configureWebpack?: {
       web? (webConfig: any): void

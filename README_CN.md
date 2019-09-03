@@ -180,6 +180,8 @@ $ ty serve
 
 * `productionSourcemap` {boolean} 生产环境是否需要源地图。默认：`false`。
 
+* `cssModule` {boolean} 是否启用 CSS Module。默认：`false`。
+
 * `alias` {{ [name: string]: string }} 传给 `webpackConfig.resolve.alias`。 默认：`{ '@': path.join(conifg.context || process.env.TY_CONTEXT || process.cwd(), 'src') }`
 
 * `tsconfig` - 指定各构建目标的 `tsconfig.json` 位置。默认：
@@ -253,6 +255,24 @@ $ ty serve
     }
     ```
 
+* `cssOptimize` - 传入 `new OptimizeCSSAssetsPlugin()`。默认：
+
+    ``` js
+    module.exports = {
+      cssOptimize: {
+        cssProcessorPluginOptions: {
+          preset: [
+            'default',
+            {
+              mergeLonghand: false,
+              cssDeclarationSorter: false
+            }
+          ]
+        }
+      }
+    }
+    ```
+
 * `configureWebpack` - 修改内部的 Webpack 配置。默认：
 
     ``` js
@@ -303,6 +323,7 @@ $ ty serve
 * `--dev-server-port`
 * `--dev-server-host`
 * `--production-sourcemap`
+* `--css-module`
 * `--config` - 只能在命令行使用。指定配置文件的路径。
 
 ## 其它

@@ -148,6 +148,8 @@ No webpack config. Working in progress.
 
 * `productionSourcemap` {boolean} Whether to generate sourcemap in production mode. Default: `false`.
 
+* `cssModule` {boolean} Whether to enable css module. Default: `false`.
+
 * `alias` {{ [name: string]: string }} Pass to `webpackConfig.resolve.alias`. Default: `{ '@': path.join(config.context || process.env.TY_CONTEXT || process.cwd(), 'src') }`
 
 * `tsconfig` - For TypeScript project. Default:
@@ -220,6 +222,24 @@ No webpack config. Working in progress.
     }
     ```
 
+* `cssOptimize` - Pass to `new OptimizeCSSAssetsPlugin(cssOptimize)`. Default:
+
+    ``` js
+    module.exports = {
+      cssOptimize: {
+        cssProcessorPluginOptions: {
+          preset: [
+            'default',
+            {
+              mergeLonghand: false,
+              cssDeclarationSorter: false
+            }
+          ]
+        }
+      }
+    }
+    ```
+
 * `configureWebpack` - Modify webpack config. Default:
 
     ``` js
@@ -264,6 +284,7 @@ No webpack config. Working in progress.
 * `--dev-server-port`
 * `--dev-server-host`
 * `--production-sourcemap`
+* `--css-module`
 * `--config` - CLI only. Specify tyconfig file path.
 
 ## Other

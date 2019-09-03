@@ -85,6 +85,10 @@ const defaultConfig = {
    * @type {boolean}
    */
   productionSourcemap: false,
+  /**
+   * @type {boolean}
+   */
+  cssModule: false,
 
   /**
    * @type {{ [name: string]: string }}
@@ -140,6 +144,18 @@ const defaultConfig = {
     removeAttributeQuotes: true,
     collapseBooleanAttributes: true,
     removeScriptTypeAttributes: true
+  },
+
+  cssOptimize: {
+    cssProcessorPluginOptions: {
+      preset: [
+        'default',
+        {
+          mergeLonghand: false,
+          cssDeclarationSorter: false
+        }
+      ]
+    }
   },
 
   configureWebpack: {

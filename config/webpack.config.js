@@ -14,54 +14,165 @@ const os = require('os')
 const { ensureEntry, ensureFile } = require('../util/file.js')
 
 class WebpackConfig {
-  _createCssLoaders (config, importLoaders = 0) {
+  _createCssLoaders (config, importLoaders = 0, cssModule = false) {
+    const cssLoaderOptions = {
+      sourceMap: config.mode === 'production' ? !!config.productionSourcemap : false,
+      importLoaders: (this._usePostCss ? 1 : 0) + importLoaders
+    }
+
+    if (cssModule) {
+      cssLoaderOptions.module = true
+      cssLoaderOptions.localIdentName = '[name]_[local]_[hash:base64:5]'
+    }
     return [
-      config.mode === 'production' ? MiniCssExtractPlugin.loader : (this._useVue ? require.resolve('vue-style-loader') : require.resolve('style-loader')),
+      config.mode === 'production' ? {
+        loader: MiniCssExtractPlugin.loader,
+        options: {
+          sourceMap: !!config.productionSourcemap
+        }
+      } : (this._useVue ? require.resolve('vue-style-loader') : require.resolve('style-loader')),
       {
         loader: require.resolve('css-loader'),
-        options: {
-          importLoaders
-        }
-      }
+        options: cssLoaderOptions
+      },
+      ...(this._usePostCss ? [this._createPostCssLoader(config)] : [])
     ]
+  }
+
+  _createPostCssLoader (config) {
+    return {
+      loader: require.resolve('postcss-loader'),
+      options: {
+        sourceMap: config.mode === 'production' ? !!config.productionSourcemap : false
+      }
+    }
+  }
+
+  _createStylusLoader (config) {
+    return {
+      loader: require.resolve('stylus-loader'),
+      options: {
+        sourceMap: config.mode === 'production' ? !!config.productionSourcemap : false,
+        preferPathResolver: 'webpack'
+      }
+    }
+  }
+
+  _createLessLoader (config) {
+    return {
+      loader: require.resolve('less-loader'),
+      options: {
+        sourceMap: config.mode === 'production' ? !!config.productionSourcemap : false
+      }
+    }
+  }
+
+  _createSassLoader (config) {
+    return {
+      loader: require.resolve('sass-loader'),
+      options: {
+        sourceMap: config.mode === 'production' ? !!config.productionSourcemap : false,
+        indentedSyntax: true
+      }
+    }
   }
 
   _createStyleLoaders (config) {
     return [
       {
         test: /\.css$/,
-        use: [
-          ...(this._createCssLoaders(config, this._usePostCss ? 1 : 0)),
-          ...(this._usePostCss ? [require.resolve('postcss-loader')] : [])
+        oneOf: [
+          {
+            resourceQuery: /module/,
+            use: [
+              ...(this._createCssLoaders(config, 0, true))
+            ]
+          },
+          {
+            test: /\.module\.\w+$/,
+            use: [
+              ...(this._createCssLoaders(config, 0, true))
+            ]
+          },
+          {
+            use: [
+              ...(this._createCssLoaders(config, 0, !!config.cssModule))
+            ]
+          }
         ]
       },
       {
         test: /\.styl(us)?$/,
-        use: [
-          ...(this._createCssLoaders(config, this._usePostCss ? 2 : 1)),
-          ...(this._usePostCss ? [require.resolve('postcss-loader')] : []),
-          require.resolve('stylus-loader')
+        oneOf: [
+          {
+            resourceQuery: /module/,
+            use: [
+              ...(this._createCssLoaders(config, 1, true)),
+              this._createStylusLoader(config)
+            ]
+          },
+          {
+            test: /\.module\.\w+$/,
+            use: [
+              ...(this._createCssLoaders(config, 1, true)),
+              this._createStylusLoader(config)
+            ]
+          },
+          {
+            use: [
+              ...(this._createCssLoaders(config, 1, !!config.cssModule)),
+              this._createStylusLoader(config)
+            ]
+          }
         ]
       },
       {
         test: /\.less$/,
-        use: [
-          ...(this._createCssLoaders(config, this._usePostCss ? 2 : 1)),
-          ...(this._usePostCss ? [require.resolve('postcss-loader')] : []),
-          require.resolve('less-loader')
+        oneOf: [
+          {
+            resourceQuery: /module/,
+            use: [
+              ...(this._createCssLoaders(config, 1, true)),
+              this._createLessLoader(config)
+            ]
+          },
+          {
+            test: /\.module\.\w+$/,
+            use: [
+              ...(this._createCssLoaders(config, 1, true)),
+              this._createLessLoader(config)
+            ]
+          },
+          {
+            use: [
+              ...(this._createCssLoaders(config, 1, !!config.cssModule)),
+              this._createLessLoader(config)
+            ]
+          }
         ]
       },
       {
         test: /\.s[ac]ss$/i,
-        use: [
-          ...(this._createCssLoaders(config, this._usePostCss ? 2 : 1)),
-          ...(this._usePostCss ? [require.resolve('postcss-loader')] : []),
+        oneOf: [
           {
-            loader: require.resolve('sass-loader'),
-            options: {
-              sourceMap: false,
-              indentedSyntax: true
-            }
+            resourceQuery: /module/,
+            use: [
+              ...(this._createCssLoaders(config, 1, true)),
+              this._createSassLoader(config)
+            ]
+          },
+          {
+            test: /\.module\.\w+$/,
+            use: [
+              ...(this._createCssLoaders(config, 1, true)),
+              this._createSassLoader(config)
+            ]
+          },
+          {
+            use: [
+              ...(this._createCssLoaders(config, 1, !!config.cssModule)),
+              this._createSassLoader(config)
+            ]
           }
         ]
       }
@@ -744,6 +855,23 @@ class WebpackConfig {
       return new TerserWebpackPlugin(config.terserPlugin)
     }
 
+    const cssnano = () => {
+      const option = config.cssOptimize || {}
+      if (config.productionSourcemap) {
+        option.cssProcessorOptions ? (
+          option.cssProcessorOptions.map ? (
+            option.cssProcessorOptions.map.inline = false
+          ) : (
+            option.cssProcessorOptions.map = { inline: false }
+          )
+        ) : (option.cssProcessorOptions = {
+          map: { inline: false }
+        })
+      }
+
+      return new OptimizeCSSAssetsPlugin(option)
+    }
+
     if (this._electronTarget) {
       this.rendererConfig.plugins = [
         ...(this.rendererConfig.plugins || []),
@@ -755,7 +883,7 @@ class WebpackConfig {
         ...(this.rendererConfig.optimization || {}),
         minimizer: [
           terser(),
-          new OptimizeCSSAssetsPlugin({})
+          cssnano()
         ]
       }
       this.mainConfig.optimization = {
@@ -818,7 +946,7 @@ class WebpackConfig {
         ...(this.webConfig.optimization || {}),
         minimizer: [
           terser(),
-          new OptimizeCSSAssetsPlugin({})
+          cssnano()
         ]
       }
 
