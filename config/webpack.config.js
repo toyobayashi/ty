@@ -1,5 +1,5 @@
 const { execSync } = require('child_process')
-const { existsSync, writeFileSync } = require('fs-extra')
+const { existsSync, mkdirsSync } = require('fs-extra')
 const { HotModuleReplacementPlugin } = require('webpack')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin')
@@ -10,8 +10,7 @@ const webpackNodeExternals = require('webpack-node-externals')
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin')
 const PathUtil = require('../util/path.js')
 const path = require('path')
-const os = require('os')
-const { ensureEntry, ensureFile } = require('../util/file.js')
+const { ensureEntry, copyTemplate } = require('../util/file.js')
 
 class WebpackConfig {
   _createCssLoaders (config, importLoaders = 0, cssModule = false) {
@@ -271,22 +270,22 @@ class WebpackConfig {
       )
 
       if (this._useTypeScript) {
-        if (!rendererTSConfig) writeFileSync(this.pathUtil.getPath(config.tsconfig.renderer), '{}' + os.EOL, 'utf8')
-        if (!mainTSConfig) writeFileSync(this.pathUtil.getPath(config.tsconfig.main), '{}' + os.EOL, 'utf8')
+        if (!rendererTSConfig) copyTemplate('tsconfig.json', this.pathUtil.getPath(config.tsconfig.renderer), { jsx: 'react', module: 'esnext', target: 'es2018', baseUrl: '../..' })
+        if (!mainTSConfig) copyTemplate('tsconfig.json', this.pathUtil.getPath(config.tsconfig.main), { jsx: '', module: 'esnext', target: 'es2018', baseUrl: '../..' })
       }
     } else if (this._nodeTarget) {
       const nodeTSConfig = existsSync(this.pathUtil.getPath(config.tsconfig.node))
       this._useTypeScript = config.ts !== undefined ? config.ts : !!(existsTypeScriptInPackageJson || nodeTSConfig)
 
       if (this._useTypeScript) {
-        if (!nodeTSConfig) writeFileSync(this.pathUtil.getPath(config.tsconfig.node), '{}' + os.EOL, 'utf8')
+        if (!nodeTSConfig) copyTemplate('tsconfig.json', this.pathUtil.getPath(config.tsconfig.node), { jsx: '', module: 'esnext', target: 'es2018', baseUrl: '.' })
       }
     } else {
       const webTSConfig = existsSync(this.pathUtil.getPath(config.tsconfig.web))
       this._useTypeScript = config.ts !== undefined ? config.ts : !!(existsTypeScriptInPackageJson || webTSConfig)
 
       if (this._useTypeScript) {
-        if (!webTSConfig) writeFileSync(this.pathUtil.getPath(config.tsconfig.web), '{}' + os.EOL, 'utf8')
+        if (!webTSConfig) copyTemplate('tsconfig.json', this.pathUtil.getPath(config.tsconfig.web), { jsx: 'react', module: 'esnext', target: 'es5', baseUrl: '.' })
       }
     }
 
@@ -305,35 +304,34 @@ class WebpackConfig {
     this._usePostCss = existsSync(this.pathUtil.getPath('postcss.config.js')) || existsSync(this.pathUtil.getPath('.postcssrc.js'))
 
     if (!this._nodeTarget) {
-      ensureFile(this.pathUtil.getPath(config.indexHtml || 'public/index.html'), `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>${this.pkg.name}</title>
-</head>
-<body>
-</body>
-</html>
-`)
+      const indexHTML = this.pathUtil.getPath(config.indexHtml || 'public/index.html')
+      if (!existsSync(indexHTML)) {
+        mkdirsSync(path.dirname(indexHTML))
+        copyTemplate('index.html', indexHTML, { title: this.pkg.name })
+      }
     }
 
     const getPath = this.pathUtil.getPath.bind(this.pathUtil)
+    const suffix = this._useTypeScript ? '.ts' : '.js'
+    const tplOptions = {
+      host: config.devServerHost,
+      port: config.devServerPort,
+      publicPath: config.publicPath
+    }
     if (this._electronTarget) {
-      ensureEntry(config.entry && config.entry.main, getPath, this._useTypeScript ? '.ts' : '.js')
-      ensureEntry(config.entry && config.entry.renderer, getPath, this._useTypeScript ? '.ts' : '.js')
+      ensureEntry(config.entry && config.entry.main, getPath, suffix, 'index.main' + suffix, tplOptions)
+      ensureEntry(config.entry && config.entry.renderer, getPath, suffix, 'index.web.js')
 
       this._initMain(config)
       this._initRenderer(config)
       this._initProductionPackage(config)
       this._initPackagerConfig(config)
     } else if (this._nodeTarget) {
-      ensureEntry(config.entry && config.entry.node, getPath, this._useTypeScript ? '.ts' : '.js')
+      ensureEntry(config.entry && config.entry.node, getPath, suffix, 'index.node.js')
 
       this._initNode(config)
     } else {
-      ensureEntry(config.entry && config.entry.web, getPath, this._useTypeScript ? '.ts' : '.js')
+      ensureEntry(config.entry && config.entry.web, getPath, suffix, 'index.web.js')
 
       this._initWeb(config)
     }
