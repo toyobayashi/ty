@@ -32,7 +32,7 @@ class WindowManager {
           nodeIntegration: true
         }
       }
-  
+
       windowManager.createWindow(
         WindowManager.ID_MAIN_WINDOW,
         browerWindowOptions,
