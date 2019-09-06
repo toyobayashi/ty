@@ -321,6 +321,11 @@ class WebpackConfig {
     if (this._electronTarget) {
       ensureEntry(config.entry && config.entry.main, getPath, suffix, 'index.main' + suffix, tplOptions)
       ensureEntry(config.entry && config.entry.renderer, getPath, suffix, 'index.web.js')
+      const npmrc = this.pathUtil.getPath('.npmrc')
+      if (!existsSync(npmrc)) {
+        mkdirsSync(path.dirname(npmrc))
+        copyTemplate('.npmrc', npmrc, { version: this.pkg.devDependencies.electron.replace(/[~^]/g, '') })
+      }
 
       this._initMain(config)
       this._initRenderer(config)
@@ -725,6 +730,7 @@ class WebpackConfig {
       dir: this.pathUtil.getPath(),
       out: this.pathUtil.getPath(config.distPath),
       arch: config.arch || process.arch,
+      electronVersion: this.pkg.devDependencies.electron.replace(/[~^]/g, ''),
       prebuiltAsar: this.pathUtil.getPath(config.distPath, 'resources/app.asar'),
       appCopyright: `Copyright (C) ${new Date().getFullYear()} ${this.productionPackage.author}`,
       overwrite: true
@@ -735,7 +741,7 @@ class WebpackConfig {
         unsafelyDisableChecksums: true,
         mirrorOptions: {
           mirror: process.env.npm_config_electron_mirror.endsWith('/') ? process.env.npm_config_electron_mirror : (process.env.npm_config_electron_mirror + '/'),
-          customDir: this.pkg.devDependencies.electron
+          customDir: this.pkg.devDependencies.electron.replace(/[~^]/g, '')
         }
       }
     }
