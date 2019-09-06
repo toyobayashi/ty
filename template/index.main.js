@@ -3,66 +3,118 @@ import { format } from 'url'
 import { join } from 'path'
 import { existsSync } from 'fs'
 
-let mainWindow = null
+function isPromiseLike (obj) {
+  return (obj instanceof Promise) || (
+    obj !== undefined && obj !== null && typeof obj.then === 'function' && typeof obj.catch === 'function'
+  )
+}
 
-function createWindow () {
-  const browerWindowOptions = {
-    width: 800,
-    height: 600,
-    show: false,
-    webPreferences: {
-      nodeIntegration: true
+class WindowManager {
+  constructor () {
+    if (WindowManager._instance) {
+      throw new Error('Can not create multiple WindowManager instances.')
     }
+    this.windows = new Map()
   }
 
-  if (process.platform === 'linux') {
-    const linuxIcon = join(__dirname, '../../icon/app.png')
-    if (existsSync(linuxIcon)) {
-      browerWindowOptions.icon = nativeImage.createFromPath(linuxIcon)
+  createWindow (name, browerWindowOptions, url) {
+    if (this.windows.has(name)) {
+      throw new Error(`The window named "${name}" exists.`)
     }
-  } else {
-    if (process.env.NODE_ENV !== 'production') {
-      const iconPath = join(__dirname, `../../../icon/app.${process.platform === 'win32' ? 'ico' : 'icns'}`)
-      if (existsSync(iconPath)) {
-        browerWindowOptions.icon = nativeImage.createFromPath(iconPath)
+
+    if (!('icon' in browerWindowOptions)) {
+      if (process.platform === 'linux') {
+        const linuxIcon = join(__dirname, '../../icon/app.png')
+        if (existsSync(linuxIcon)) {
+          browerWindowOptions.icon = nativeImage.createFromPath(linuxIcon)
+        }
+      } else {
+        if (process.env.NODE_ENV !== 'production') {
+          const iconPath = join(__dirname, `../../../icon/app.${process.platform === 'win32' ? 'ico' : 'icns'}`)
+          if (existsSync(iconPath)) {
+            browerWindowOptions.icon = nativeImage.createFromPath(iconPath)
+          }
+        }
       }
     }
+
+    let win = new BrowserWindow(browerWindowOptions)
+
+    win.on('ready-to-show', function () {
+      if (!win) return
+      win.show()
+      win.focus()
+      if (process.env.NODE_ENV !== 'production') win.webContents.openDevTools()
+    })
+
+    win.on('closed', () => {
+      win = null
+      this.windows.delete(name)
+    })
+
+    this.windows.set(name, win)
+
+    if (process.env.NODE_ENV === 'production') {
+      win.removeMenu ? win.removeMenu() : win.setMenu(null)
+    }
+    const res = win.loadURL(url)
+
+    if (isPromiseLike(res)) {
+      res.catch((err) => {
+        console.log(err)
+      })
+    }
   }
 
-  mainWindow = new BrowserWindow(browerWindowOptions)
-
-  mainWindow.on('ready-to-show', function () {
-    if (!mainWindow) return
-    mainWindow.show()
-    mainWindow.focus()
-    if (process.env.NODE_ENV !== 'production') mainWindow.webContents.openDevTools()
-  })
-
-  mainWindow.on('closed', function () {
-    mainWindow = null
-  })
-
-  if (process.env.NODE_ENV !== 'production') {
-    const res = mainWindow.loadURL('http://{{host}}:{{port}}{{publicPath}}')
-
-    if (res !== undefined && typeof res.then === 'function' && typeof res.catch === 'function') {
-      res.catch((err) => {
-        console.log(err)
-      })
+  getWindow (name) {
+    if (this.windows.has(name)) {
+      return this.windows.get(name)
     }
-  } else {
-    mainWindow.removeMenu ? mainWindow.removeMenu() : mainWindow.setMenu(null)
-    const res = mainWindow.loadURL(format({
-      pathname: join(__dirname, '../renderer/index.html'),
-      protocol: 'file:',
-      slashes: true
-    }))
+    throw new Error(`The window named "${name} doesn't exists."`)
+  }
 
-    if (res !== undefined && typeof res.then === 'function' && typeof res.catch === 'function') {
-      res.catch((err) => {
-        console.log(err)
-      })
+  removeWindow (name) {
+    if (!this.windows.has(name)) {
+      throw new Error(`The window named "${name} doesn't exists."`)
     }
+    this.windows.get(name).close()
+  }
+
+  hasWindow (name) {
+    return this.windows.has(name)
+  }
+}
+
+WindowManager.getInstance = function () {
+  if (!WindowManager._instance) {
+    WindowManager._instance = new WindowManager()
+  }
+  return WindowManager._instance
+}
+
+WindowManager.ID_MAIN_WINDOW = 'main-window'
+
+WindowManager.createMainWindow = function () {
+  const windowManager = WindowManager.getInstance()
+  if (!windowManager.hasWindow(WindowManager.ID_MAIN_WINDOW)) {
+    const browerWindowOptions = {
+      width: 800,
+      height: 600,
+      show: false,
+      webPreferences: {
+        nodeIntegration: true
+      }
+    }
+
+    windowManager.createWindow(
+      WindowManager.ID_MAIN_WINDOW,
+      browerWindowOptions,
+      process.env.NODE_ENV !== 'production' ? 'http://{{host}}:{{port}}{{publicPath}}' : format({
+        pathname: join(__dirname, '../renderer/index.html'),
+        protocol: 'file:',
+        slashes: true
+      })
+    )
   }
 }
 
@@ -73,14 +125,11 @@ app.on('window-all-closed', function () {
 })
 
 app.on('activate', function () {
-  if (mainWindow === null) {
-    createWindow()
-  }
+  WindowManager.createMainWindow()
 })
 
-// tslint:disable-next-line: strict-type-predicates
 typeof app.whenReady === 'function' ? app.whenReady().then(main) : app.on('ready', main)
 
 function main () {
-  if (!mainWindow) createWindow()
+  WindowManager.createMainWindow()
 }
