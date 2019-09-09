@@ -92,10 +92,23 @@ module.exports = function (config) {
         {
           type: 'chrome',
           request: 'launch',
-          name: 'Launch Chrome',
+          name: 'Launch Chrome Remote',
           port: 9222,
           url: `http://localhost:${config.devServerPort}`,
           webRoot: path.posix.join('${workspaceFolder}', config.contentBase),
+          sourceMaps: true,
+          sourceMapPathOverrides: {
+            'webpack:///*': '${workspaceFolder}/*',
+            'webpack:///./*': '${workspaceFolder}/*'
+          }
+        },
+        {
+          type: 'chrome',
+          request: 'launch',
+          name: 'Launch Chrome Local',
+          port: 9222,
+          url: '${workspaceFolder}/dist/index.html',
+          webRoot: '${workspaceFolder}/dist',
           sourceMaps: true,
           sourceMapPathOverrides: {
             'webpack:///*': '${workspaceFolder}/*',

@@ -1,5 +1,6 @@
 const { watch } = require('../util/webpack.js')
 const WebpackConfig = require('../config/webpack.config.js')
+const { HotModuleReplacementPlugin } = require('webpack')
 
 function _watch (config) {
   const webpackConfig = new WebpackConfig(config)
@@ -14,12 +15,27 @@ function _watch (config) {
   })
 
   if (config.target === 'electron') {
+    removeServerConfig(webpackConfig.rendererConfig)
     watchConfig(webpackConfig.mainConfig)
     watchConfig(webpackConfig.rendererConfig)
   } else if (config.target === 'node') {
     watchConfig(webpackConfig.nodeConfig)
   } else {
+    removeServerConfig(webpackConfig.webConfig)
     watchConfig(webpackConfig.webConfig)
+  }
+}
+
+function removeServerConfig (webpackConf) {
+  delete webpackConf.devServer
+  delete webpackConf.output.publicPath
+  if (webpackConf.plugins) {
+    for (let i = 0; i < webpackConf.plugins.length; i++) {
+      if (webpackConf.plugins[i] instanceof HotModuleReplacementPlugin) {
+        webpackConf.plugins.splice(i, 1)
+        break
+      }
+    }
   }
 }
 
