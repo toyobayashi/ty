@@ -144,6 +144,8 @@ No webpack config. Working in progress.
 
 * `ts` {undefined | 0 | 1} Force to use typescript or not. Default: `undefined`.
 
+* `generate` {undefined | 0 | 1} Force to generate missing files or not. Default: `undefined`.
+
 * `context` {string} Project root directory. Default: `''`
 
 * `productionSourcemap` {boolean} Whether to generate sourcemap in production mode. Default: `false`.
@@ -280,6 +282,7 @@ No webpack config. Working in progress.
 * `--target`
 * `--arch`
 * `--ts` - Force to use typescript or not.
+* `--generate` - Force to generate missing files or not.
 * `--context` - Project root directory.
 * `--dev-server-port`
 * `--dev-server-host`

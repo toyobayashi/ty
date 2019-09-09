@@ -176,6 +176,8 @@ $ ty serve
 
 * `ts` {undefined | 0 | 1} 强制使用或强制不使用 TypeScript，传数字。默认：`undefined`。
 
+* `generate` {undefined | 0 | 1} 强制生成或强制不生成缺失的文件。默认：`undefined`。
+
 * `context` {string} 修改打包器的上下文根目录。默认：`''`。
 
 * `productionSourcemap` {boolean} 生产环境是否需要源地图。默认：`false`。
@@ -318,8 +320,9 @@ $ ty serve
 * `--mode`
 * `--target`
 * `--arch`
-* `--ts`
-* `--context`
+* `--ts` - 强制使用或强制不使用 TypeScript。
+* `--generate` - 强制生成或强制不生成缺失的文件。
+* `--context` - 项目的根目录。
 * `--dev-server-port`
 * `--dev-server-host`
 * `--production-sourcemap`

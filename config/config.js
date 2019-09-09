@@ -77,6 +77,12 @@ const defaultConfig = {
    * @type {undefined | 0 | 1}
    */
   ts: undefined,
+
+  /**
+   * @type {undefined | 0 | 1}
+   */
+  generate: undefined,
+
   /**
    * @type {string}
    */

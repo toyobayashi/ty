@@ -33,6 +33,7 @@ declare namespace ty {
     assetsPath?: string
     arch?: 'ia32' | 'x64'
     ts?: undefined | 0 | 1
+    generate?: undefined | 0 | 1
     context?: string
     productionSourcemap?: boolean
     cssModule?: boolean

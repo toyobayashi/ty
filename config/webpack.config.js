@@ -236,7 +236,7 @@ class WebpackConfig {
     }
   }
 
-  constructor (config) {
+  constructor (config, generate = true) {
     this.pathUtil = new PathUtil(config.context)
     let pkg
     try {
@@ -248,7 +248,11 @@ class WebpackConfig {
         main: '',
         author: '',
         license: '',
-        devDependencies: {},
+        devDependencies: {
+          ...(config.target === 'electron' ? ({
+            electron: '4.2.10'
+          }) : ({}))
+        },
         dependencies: {}
       }
     }
@@ -259,34 +263,27 @@ class WebpackConfig {
     this._nodeTarget = (config.target === 'node')
 
     const existsTypeScriptInPackageJson = !!(this.pkg.devDependencies && this.pkg.devDependencies.typescript)
+    const tsconfigFileExists = {
+      rendererTSConfig: false,
+      mainTSConfig: false,
+      nodeTSConfig: false,
+      webTSConfig: false
+    }
 
     if (this._electronTarget) {
-      const rendererTSConfig = existsSync(this.pathUtil.getPath(config.tsconfig.renderer))
-      const mainTSConfig = existsSync(this.pathUtil.getPath(config.tsconfig.main))
-      this._useTypeScript = config.ts !== undefined ? config.ts : !!(
+      tsconfigFileExists.rendererTSConfig = existsSync(this.pathUtil.getPath(config.tsconfig.renderer))
+      tsconfigFileExists.mainTSConfig = existsSync(this.pathUtil.getPath(config.tsconfig.main))
+      this._useTypeScript = config.ts !== undefined ? !!config.ts : !!(
         existsTypeScriptInPackageJson ||
-        rendererTSConfig ||
-        mainTSConfig
+        tsconfigFileExists.rendererTSConfig ||
+        tsconfigFileExists.mainTSConfig
       )
-
-      if (this._useTypeScript) {
-        if (!rendererTSConfig) copyTemplate('tsconfig.json', this.pathUtil.getPath(config.tsconfig.renderer), { jsx: 'react', module: 'esnext', target: 'es2018', baseUrl: '../..' })
-        if (!mainTSConfig) copyTemplate('tsconfig.json', this.pathUtil.getPath(config.tsconfig.main), { jsx: '', module: 'esnext', target: 'es2018', baseUrl: '../..' })
-      }
     } else if (this._nodeTarget) {
-      const nodeTSConfig = existsSync(this.pathUtil.getPath(config.tsconfig.node))
-      this._useTypeScript = config.ts !== undefined ? config.ts : !!(existsTypeScriptInPackageJson || nodeTSConfig)
-
-      if (this._useTypeScript) {
-        if (!nodeTSConfig) copyTemplate('tsconfig.json', this.pathUtil.getPath(config.tsconfig.node), { jsx: '', module: 'esnext', target: 'es2018', baseUrl: '.' })
-      }
+      tsconfigFileExists.nodeTSConfig = existsSync(this.pathUtil.getPath(config.tsconfig.node))
+      this._useTypeScript = config.ts !== undefined ? !!config.ts : !!(existsTypeScriptInPackageJson || tsconfigFileExists.nodeTSConfig)
     } else {
-      const webTSConfig = existsSync(this.pathUtil.getPath(config.tsconfig.web))
-      this._useTypeScript = config.ts !== undefined ? config.ts : !!(existsTypeScriptInPackageJson || webTSConfig)
-
-      if (this._useTypeScript) {
-        if (!webTSConfig) copyTemplate('tsconfig.json', this.pathUtil.getPath(config.tsconfig.web), { jsx: 'react', module: 'esnext', target: 'es5', baseUrl: '.' })
-      }
+      tsconfigFileExists.webTSConfig = existsSync(this.pathUtil.getPath(config.tsconfig.web))
+      this._useTypeScript = config.ts !== undefined ? !!config.ts : !!(existsTypeScriptInPackageJson || tsconfigFileExists.webTSConfig)
     }
 
     this._useESLint = !!((this.pkg.devDependencies && this.pkg.devDependencies.eslint) || (
@@ -303,6 +300,60 @@ class WebpackConfig {
     ))
     this._usePostCss = existsSync(this.pathUtil.getPath('postcss.config.js')) || existsSync(this.pathUtil.getPath('.postcssrc.js'))
 
+    if (config.generate !== undefined ? !!config.generate : generate) {
+      this._generateTemplates(config, tsconfigFileExists)
+    }
+
+    this._initConfig(config)
+
+    if (config.mode === 'production') {
+      this._mergeProduction(config)
+    } else {
+      this._mergeDevelopment(config)
+    }
+
+    if (config.configureWebpack) {
+      this._configureWebpack(config)
+    }
+  }
+
+  _initConfig (config) {
+    if (this._electronTarget) {
+      this._initMain(config)
+      this._initRenderer(config)
+      this._initProductionPackage(config)
+      this._initPackagerConfig(config)
+    } else if (this._nodeTarget) {
+      this._initNode(config)
+    } else {
+      this._initWeb(config)
+    }
+  }
+
+  _configureWebpack (config) {
+    if (this._electronTarget) {
+      if (typeof config.configureWebpack.renderer === 'function') config.configureWebpack.renderer(this.rendererConfig)
+      if (typeof config.configureWebpack.main === 'function') config.configureWebpack.main(this.mainConfig)
+    } else if (this._nodeTarget) {
+      if (typeof config.configureWebpack.node === 'function') config.configureWebpack.node(this.nodeConfig)
+    } else {
+      if (typeof config.configureWebpack.web === 'function') config.configureWebpack.web(this.webConfig)
+    }
+  }
+
+  _generateTemplates (config, tsconfigFileExists) {
+    if (this._useTypeScript) {
+      const templateFilename = 'tsconfig.json'
+      if (this._electronTarget) {
+        if (!tsconfigFileExists.rendererTSConfig) copyTemplate(templateFilename, this.pathUtil.getPath(config.tsconfig.renderer), { jsx: 'react', module: 'esnext', target: 'es2018', baseUrl: '../..' })
+        if (!tsconfigFileExists.mainTSConfig) copyTemplate(templateFilename, this.pathUtil.getPath(config.tsconfig.main), { jsx: '', module: 'esnext', target: 'es2018', baseUrl: '../..' })
+      } else if (this._nodeTarget) {
+        if (!tsconfigFileExists.nodeTSConfig) copyTemplate(templateFilename, this.pathUtil.getPath(config.tsconfig.node), { jsx: '', module: 'esnext', target: 'es2018', baseUrl: '.' })
+      } else {
+        if (!tsconfigFileExists.webTSConfig) copyTemplate(templateFilename, this.pathUtil.getPath(config.tsconfig.web), { jsx: 'react', module: 'esnext', target: 'es5', baseUrl: '.' })
+      }
+    }
+
     if (!this._nodeTarget) {
       const indexHTML = this.pathUtil.getPath(config.indexHtml || 'public/index.html')
       if (!existsSync(indexHTML)) {
@@ -318,6 +369,7 @@ class WebpackConfig {
       port: config.devServerPort,
       publicPath: config.publicPath
     }
+
     if (this._electronTarget) {
       ensureEntry(config.entry && config.entry.main, getPath, suffix, 'index.main' + suffix, tplOptions)
       ensureEntry(config.entry && config.entry.renderer, getPath, suffix, 'index.web.js')
@@ -326,36 +378,10 @@ class WebpackConfig {
         mkdirsSync(path.dirname(npmrc))
         copyTemplate('.npmrc', npmrc, { version: this.pkg.devDependencies.electron.replace(/[~^]/g, '') })
       }
-
-      this._initMain(config)
-      this._initRenderer(config)
-      this._initProductionPackage(config)
-      this._initPackagerConfig(config)
     } else if (this._nodeTarget) {
       ensureEntry(config.entry && config.entry.node, getPath, suffix, 'index.node.js')
-
-      this._initNode(config)
     } else {
       ensureEntry(config.entry && config.entry.web, getPath, suffix, 'index.web.js')
-
-      this._initWeb(config)
-    }
-
-    if (config.mode === 'production') {
-      this._mergeProduction(config)
-    } else {
-      this._mergeDevelopment(config)
-    }
-
-    if (config.configureWebpack) {
-      if (this._electronTarget) {
-        if (typeof config.configureWebpack.renderer === 'function') config.configureWebpack.renderer(this.rendererConfig)
-        if (typeof config.configureWebpack.main === 'function') config.configureWebpack.main(this.mainConfig)
-      } else if (this._nodeTarget) {
-        if (typeof config.configureWebpack.node === 'function') config.configureWebpack.node(this.nodeConfig)
-      } else {
-        if (typeof config.configureWebpack.web === 'function') config.configureWebpack.web(this.webConfig)
-      }
     }
   }
 

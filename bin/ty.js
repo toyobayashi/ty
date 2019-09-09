@@ -15,6 +15,29 @@ if (process.argv[2] === '-h' || process.argv[2] === '--help') {
 
 const args = require('minimist')(process.argv.slice(3))
 for (const key in args) {
+  switch (args[key]) {
+    case 'true':
+      args[key] = true
+      break
+    case 'false':
+      args[key] = false
+      break
+    case 'null':
+      args[key] = null
+      break
+    case 'undefined':
+      args[key] = undefined
+      break
+    default:
+      break
+  }
+
+  if (typeof args[key] === 'string') {
+    if (args[key][0] === '#') {
+      args[key] = args[key].substring(1)
+    }
+  }
+
   if ((/-[a-z]/).test(key)) {
     args[key.replace(/-([a-z])/g, (_match, p1, _offset, _str) => p1.toUpperCase())] = args[key]
     delete args[key]
@@ -44,6 +67,7 @@ function printHelp () {
   console.log('  --target=[web|electron]')
   console.log('  --arch=[ia32|x64]')
   console.log('  --ts=[0|1]')
+  console.log('  --generate=[0|1]')
   console.log('  --context=project/root/path')
   console.log('  --production-sourcemap')
   console.log('\nRepo: https://github.com/toyobayashi/ty')
