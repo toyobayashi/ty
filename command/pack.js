@@ -144,22 +144,23 @@ function inno (sourceDir, config, webpackConfig) {
     const def = {
       Name: webpackConfig.pkg.name,
       Version: webpackConfig.pkg.version,
-      Publisher: webpackConfig.pkg.author,
+      Publisher: typeof webpackConfig.pkg.author === 'object' ? webpackConfig.pkg.author.name : webpackConfig.pkg.author,
       URL: config.inno.url || webpackConfig.pkg.name,
       AppId: config.arch === 'ia32' ? `{{${config.inno.appid.ia32}}` : `{{${config.inno.appid.x64}}`,
       OutputDir: webpackConfig.pathUtil.getPath(config.distPath),
       SetupIconFile: webpackConfig.pathUtil.getPath(config.iconSrcDir, 'app.ico'),
       Arch: config.arch,
-      RepoDir: webpackConfig.pathUtil.getPath('..'),
+      // RepoDir: webpackConfig.pathUtil.getPath(),
       SourceDir: sourceDir,
       ArchitecturesAllowed: config.arch === 'ia32' ? '' : 'x64',
-      ArchitecturesInstallIn64BitMode: config.arch === 'ia32' ? '' : 'x64'
+      ArchitecturesInstallIn64BitMode: config.arch === 'ia32' ? '' : 'x64',
+      ...(Object.prototype.toString.call(config.inno.def) === '[object Object]' ? config.inno.def : {})
     }
     spawn('ISCC.exe',
       [
         '/Q',
         ...Object.keys(def).map(k => `/D${k}=${def[k]}`),
-        config.inno.src ? path.join(__dirname, '../script/inno.iss') : config.inno.src
+        config.inno.src ? config.inno.src : path.join(__dirname, '../script/inno.iss')
       ],
       { cwd: webpackConfig.pathUtil.getPath(), stdio: 'inherit' }
     )

@@ -137,7 +137,8 @@ No webpack config. Working in progress.
           ia32: '', // UUID
           x64: '' // UUID
         },
-        url: '' // display in installer
+        url: '', // display in installer
+        def: {} // declare inno script variable
       }
     }
     ```

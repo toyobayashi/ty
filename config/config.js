@@ -115,7 +115,8 @@ const defaultConfig = {
       ia32: '',
       x64: ''
     },
-    url: ''
+    url: '',
+    def: {}
   },
   /**
    * @type {{ web: string; renderer: string; main: string }}

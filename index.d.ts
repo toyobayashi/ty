@@ -51,7 +51,10 @@ declare namespace ty {
         ia32?: string
         x64?: string
       },
-      url?: string
+      url?: string,
+      def?: {
+        [key: string]: string
+      }
     }
 
     tsconfig?: {
