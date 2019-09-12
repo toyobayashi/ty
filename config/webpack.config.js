@@ -32,7 +32,10 @@ class WebpackConfig {
       } : (this._useVue ? require.resolve('vue-style-loader') : require.resolve('style-loader')),
       {
         loader: require.resolve('css-loader'),
-        options: cssLoaderOptions
+        options: {
+          ...cssLoaderOptions,
+          ...(Object.prototype.toString.call(config.cssLoaderOptions) === '[object Object]' ? config.cssLoaderOptions : {})
+        }
       },
       ...(this._usePostCss ? [this._createPostCssLoader(config)] : [])
     ]
@@ -356,7 +359,7 @@ class WebpackConfig {
 
     if (!this._nodeTarget) {
       for (let i = 0; i < config.indexHtml.length; i++) {
-        const html = this.pathUtil.getPath(config.indexHtml[i])
+        const html = this.pathUtil.getPath(config.indexHtml[i].template)
         if (!existsSync(html)) {
           mkdirsSync(path.dirname(html))
           copyTemplate('index.html', html, { title: this.pkg.name })
@@ -395,7 +398,8 @@ class WebpackConfig {
       entry: config.entry.node,
       output: {
         filename: '[name].js',
-        path: this.pathUtil.getPath(config.output.node)
+        path: this.pathUtil.getPath(config.output.node),
+        libraryTarget: 'commonjs2'
       },
       node: false,
       module: {
@@ -566,7 +570,8 @@ class WebpackConfig {
       entry: config.entry.main,
       output: {
         filename: '[name].js',
-        path: this.pathUtil.getPath(config.output.main)
+        path: this.pathUtil.getPath(config.output.main),
+        libraryTarget: 'commonjs2'
       },
       node: false,
       module: {
@@ -807,7 +812,7 @@ class WebpackConfig {
         before: (app, server) => {
           app.use(require('express-serve-asar')(this.pathUtil.getPath(config.contentBase)))
           for (let i = 0; i < config.indexHtml.length; i++) {
-            server._watch(this.pathUtil.getPath(config.indexHtml[i]))
+            server._watch(this.pathUtil.getPath(config.indexHtml[i].template))
           }
         }
       }

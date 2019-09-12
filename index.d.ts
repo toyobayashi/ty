@@ -37,6 +37,7 @@ declare namespace ty {
     context?: string
     productionSourcemap?: boolean
     cssModule?: boolean
+    cssLoaderOptions?: any
 
     alias?: {
       [name: string]: string

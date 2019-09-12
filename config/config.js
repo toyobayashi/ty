@@ -97,6 +97,11 @@ const defaultConfig = {
   cssModule: false,
 
   /**
+   * @type {any}
+   */
+  cssLoaderOptions: {},
+
+  /**
    * @type {{ [name: string]: string }}
    */
   alias: {},
@@ -193,7 +198,7 @@ function readTypeScriptConfigFile (fullPath) {
     console.log(chalk.redBright('Please install ts-node and typescript first if you want to use typescript config file.'))
     process.exit(1)
   }
-  tsnode.register({})
+  tsnode.register({ compilerOptions: { module: 'commonjs' } })
   return (require(fullPath).default || require(fullPath))
 }
 
