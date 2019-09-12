@@ -121,7 +121,7 @@ No webpack config. Working in progress.
       └── app.icns (mac)
     ```
 
-* `indexHtml` {string} Default: `'public/index.html'`.
+* `indexHtml` {any[]} Pass to `new HtmlWebpackPlugin(item)`. Default: `[{ template: 'public/index.html' }]`.
 
 * `assetsPath` {string} Where the static assets should be output. Relative to `output`. Default: `''`.
 

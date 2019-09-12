@@ -153,7 +153,7 @@ $ ty serve
       └── app.icns (mac)
     ```
 
-* `indexHtml` {string} 默认：`'public/index.html'`。
+* `indexHtml` {string} 传入 `new HtmlWebpackPlugin(item)`。默认：`[{ template: 'public/index.html' }]`。
 
 * `assetsPath` {string} 静态资源应该输出的位置。相对于 `output`。 默认：`''`。
 

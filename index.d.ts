@@ -29,7 +29,7 @@ declare namespace ty {
     publicPath?: string
     distPath?: string
     iconSrcDir?: string
-    indexHtml?: string
+    indexHtml?: any[]
     assetsPath?: string
     arch?: 'ia32' | 'x64'
     ts?: undefined | 0 | 1

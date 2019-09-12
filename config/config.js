@@ -60,9 +60,9 @@ const defaultConfig = {
    */
   iconSrcDir: 'icon',
   /**
-   * @type {string}
+   * @type {any[]}
    */
-  indexHtml: 'public/index.html',
+  indexHtml: null,
   /**
    * @type {string}
    */
@@ -288,6 +288,17 @@ function readTyConfig (configPath, getPath) {
 
   if (!mergedConfig.entry.main) {
     mergedConfig.entry.main = { main: [getPath('./src/main/main')] }
+  }
+
+  if (!mergedConfig.indexHtml) {
+    mergedConfig.indexHtml = [{
+      template: 'public/index.html'
+    }]
+  } else {
+    if (!Array.isArray(mergedConfig.indexHtml)) {
+      console.log(chalk.redBright('module.exports.indexHtml should be an array.'))
+      process.exit(1)
+    }
   }
 
   return mergedConfig

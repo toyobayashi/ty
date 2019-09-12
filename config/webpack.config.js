@@ -355,10 +355,12 @@ class WebpackConfig {
     }
 
     if (!this._nodeTarget) {
-      const indexHTML = this.pathUtil.getPath(config.indexHtml || 'public/index.html')
-      if (!existsSync(indexHTML)) {
-        mkdirsSync(path.dirname(indexHTML))
-        copyTemplate('index.html', indexHTML, { title: this.pkg.name })
+      for (let i = 0; i < config.indexHtml.length; i++) {
+        const html = this.pathUtil.getPath(config.indexHtml[i])
+        if (!existsSync(html)) {
+          mkdirsSync(path.dirname(html))
+          copyTemplate('index.html', html, { title: this.pkg.name })
+        }
       }
     }
 
@@ -492,10 +494,13 @@ class WebpackConfig {
         extensions: ['.ts', '.tsx', '.js', '.vue', '.css', '.styl', '.stylus', '.less', '.sass', '.scss', '.json', '.wasm']
       },
       plugins: [
-        new HtmlWebpackPlugin({
-          title: this.pkg.name,
-          template: this.pathUtil.getPath(config.indexHtml),
-          minify: config.mode === 'production' ? config.htmlMinify : false
+        ...config.indexHtml.map(htmlOption => {
+          return new HtmlWebpackPlugin({
+            ...htmlOption,
+            title: htmlOption.title || this.pkg.name,
+            template: this.pathUtil.getPath(htmlOption.template),
+            minify: config.mode === 'production' ? (htmlOption.minify || config.htmlMinify) : false
+          })
         }),
         new CopyWebpackPlugin([
           {
@@ -667,10 +672,13 @@ class WebpackConfig {
         extensions: ['.ts', '.tsx', '.js', '.vue', '.css', '.styl', '.stylus', '.less', '.sass', '.scss', '.json', '.wasm']
       },
       plugins: [
-        new HtmlWebpackPlugin({
-          title: this.pkg.name,
-          template: this.pathUtil.getPath(config.indexHtml),
-          minify: config.mode === 'production' ? config.htmlMinify : false
+        ...config.indexHtml.map(htmlOption => {
+          return new HtmlWebpackPlugin({
+            ...htmlOption,
+            title: htmlOption.title || this.pkg.name,
+            template: this.pathUtil.getPath(htmlOption.template),
+            minify: config.mode === 'production' ? (htmlOption.minify || config.htmlMinify) : false
+          })
         }),
         new CopyWebpackPlugin([
           {
@@ -798,7 +806,9 @@ class WebpackConfig {
         publicPath: config.publicPath,
         before: (app, server) => {
           app.use(require('express-serve-asar')(this.pathUtil.getPath(config.contentBase)))
-          server._watch(this.pathUtil.getPath(config.indexHtml))
+          for (let i = 0; i < config.indexHtml.length; i++) {
+            server._watch(this.pathUtil.getPath(config.indexHtml[i]))
+          }
         }
       }
       if (config.proxy) this.rendererConfig.devServer.proxy = config.proxy
@@ -850,7 +860,9 @@ class WebpackConfig {
         contentBase: [this.pathUtil.getPath(config.contentBase)],
         publicPath: config.publicPath,
         before: (_app, server) => {
-          server._watch(this.pathUtil.getPath(config.indexHtml))
+          for (let i = 0; i < config.indexHtml.length; i++) {
+            server._watch(this.pathUtil.getPath(config.indexHtml[i]))
+          }
         }
       }
       if (config.proxy) this.webConfig.devServer.proxy = config.proxy
