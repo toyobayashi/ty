@@ -473,9 +473,24 @@ class WebpackConfig {
       module: {
         rules: [
           {
-            test: /\.tsx?$/,
+            test: /\.ts$/,
             exclude: /node_modules/,
             use: [
+              {
+                loader: require.resolve('ts-loader'),
+                options: {
+                  appendTsSuffixTo: [/\.vue$/],
+                  transpileOnly: true,
+                  configFile: this.pathUtil.getPath(config.tsconfig.web)
+                }
+              }
+            ]
+          },
+          {
+            test: /\.tsx$/,
+            exclude: /node_modules/,
+            use: [
+              ...((this._useBabel && this._useVue) ? [require.resolve('babel-loader')] : []),
               {
                 loader: require.resolve('ts-loader'),
                 options: {
@@ -511,7 +526,7 @@ class WebpackConfig {
         }),
         new CopyWebpackPlugin([
           {
-            from: this.pathUtil.getPath('public'),
+            from: this.pathUtil.getPath(config.staticDir || 'public'),
             to: this.pathUtil.getPath(config.output.web),
             toType: 'dir',
             ignore: [
@@ -660,9 +675,24 @@ class WebpackConfig {
       module: {
         rules: [
           {
-            test: /\.tsx?$/,
+            test: /\.ts$/,
             exclude: /node_modules/,
             use: [
+              {
+                loader: require.resolve('ts-loader'),
+                options: {
+                  appendTsSuffixTo: [/\.vue$/],
+                  transpileOnly: true,
+                  configFile: this.pathUtil.getPath(config.tsconfig.renderer)
+                }
+              }
+            ]
+          },
+          {
+            test: /\.tsx$/,
+            exclude: /node_modules/,
+            use: [
+              ...((this._useBabel && this._useVue) ? [require.resolve('babel-loader')] : []),
               {
                 loader: require.resolve('ts-loader'),
                 options: {
@@ -698,7 +728,7 @@ class WebpackConfig {
         }),
         new CopyWebpackPlugin([
           {
-            from: this.pathUtil.getPath('public'),
+            from: this.pathUtil.getPath(config.staticDir || 'public'),
             to: this.pathUtil.getPath(config.output.renderer),
             toType: 'dir',
             ignore: [
@@ -773,9 +803,24 @@ class WebpackConfig {
       module: {
         rules: [
           {
-            test: /\.tsx?$/,
+            test: /\.ts$/,
             exclude: /node_modules/,
             use: [
+              {
+                loader: require.resolve('ts-loader'),
+                options: {
+                  appendTsSuffixTo: [/\.vue$/],
+                  transpileOnly: true,
+                  configFile: this.pathUtil.getPath(config.tsconfig.preload)
+                }
+              }
+            ]
+          },
+          {
+            test: /\.tsx$/,
+            exclude: /node_modules/,
+            use: [
+              ...((this._useBabel && this._useVue) ? [require.resolve('babel-loader')] : []),
               {
                 loader: require.resolve('ts-loader'),
                 options: {

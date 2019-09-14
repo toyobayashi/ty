@@ -136,6 +136,8 @@ $ ty serve
 
 * `publicPath` {string} 本地开发时静态资源的相对路径。默认：`'/'` 或 `'/app/renderer/'`。
 
+* `staticDir` {string} 被复制到网站根目录下。默认： `'public'`。
+
 * `distPath` {string} 打包时的输出目录。默认：`'dist'`.
 
 * `iconSrcDir` {string} 打包时的应用图标存放位置，必须是下面这样：

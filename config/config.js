@@ -52,6 +52,10 @@ const defaultConfig = {
   /**
    * @type {string}
    */
+  staticDir: 'public',
+  /**
+   * @type {string}
+   */
   publicPath: '',
   /**
    * @type {string}

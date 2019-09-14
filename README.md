@@ -104,6 +104,8 @@ No webpack config. Working in progress.
 
 * `publicPath` {string} Default: `'/'` (web target) or `'/app/renderer/'` (electron target).
 
+* `staticDir` {string} Be copied to web root. Default: `'public'`.
+
 * `distPath` {string} For `pack` command. Default: `'dist'`.
 
 * `iconSrcDir` {string} For `pack` command. Application icons:

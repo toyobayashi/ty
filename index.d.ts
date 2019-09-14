@@ -28,6 +28,7 @@ declare namespace ty {
     }
     contentBase?: string
     resourcesPath?: string
+    staticDir?: string
     publicPath?: string
     distPath?: string
     iconSrcDir?: string
