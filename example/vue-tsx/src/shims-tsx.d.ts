@@ -10,3 +10,10 @@ declare global {
     }
   }
 }
+
+declare module "vue/types/options" {
+  interface ComponentOptions<V extends Vue> {
+    ref?: string
+    [propName: string]: any
+  }
+}

@@ -10,13 +10,16 @@ export default Vue.extend({
   methods: {
     onClick (event: Event) {
       window.alert((event.target as HTMLHeadElement).innerHTML)
+    },
+    onCustomEvent (val: string) {
+      console.log(val)
     }
   },
   render (h): VNode {
     return (
       <div id='app'>
         <h1 onClick={this.onClick}>Hello World</h1>
-        <InputModel />
+        <InputModel onCustomEvent={this.onCustomEvent} customProp={'customProp'} />
         <InputModelSFC />
       </div>
     )
