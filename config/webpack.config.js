@@ -269,6 +269,7 @@ class WebpackConfig {
     const tsconfigFileExists = {
       rendererTSConfig: false,
       mainTSConfig: false,
+      preloadTSConfig: false,
       nodeTSConfig: false,
       webTSConfig: false
     }
@@ -276,10 +277,12 @@ class WebpackConfig {
     if (this._electronTarget) {
       tsconfigFileExists.rendererTSConfig = existsSync(this.pathUtil.getPath(config.tsconfig.renderer))
       tsconfigFileExists.mainTSConfig = existsSync(this.pathUtil.getPath(config.tsconfig.main))
+      tsconfigFileExists.preloadTSConfig = existsSync(this.pathUtil.getPath(config.tsconfig.preload))
       this._useTypeScript = config.ts !== undefined ? !!config.ts : !!(
         existsTypeScriptInPackageJson ||
         tsconfigFileExists.rendererTSConfig ||
-        tsconfigFileExists.mainTSConfig
+        tsconfigFileExists.mainTSConfig ||
+        tsconfigFileExists.preloadTSConfig
       )
     } else if (this._nodeTarget) {
       tsconfigFileExists.nodeTSConfig = existsSync(this.pathUtil.getPath(config.tsconfig.node))
@@ -349,13 +352,18 @@ class WebpackConfig {
   _generateTemplates (config, tsconfigFileExists) {
     if (this._useTypeScript) {
       const templateFilename = 'tsconfig.json'
+      let jsx = 'react'
+      if (this._useBabel && this._useVue) {
+        jsx = 'preserve'
+      }
       if (this._electronTarget) {
-        if (!tsconfigFileExists.rendererTSConfig) copyTemplate(templateFilename, this.pathUtil.getPath(config.tsconfig.renderer), { jsx: 'react', module: 'esnext', target: 'es2018', baseUrl: '../..' })
+        if (!tsconfigFileExists.rendererTSConfig) copyTemplate(templateFilename, this.pathUtil.getPath(config.tsconfig.renderer), { jsx, module: 'esnext', target: 'es2018', baseUrl: '../..' })
         if (!tsconfigFileExists.mainTSConfig) copyTemplate(templateFilename, this.pathUtil.getPath(config.tsconfig.main), { jsx: '', module: 'esnext', target: 'es2018', baseUrl: '../..' })
+        if (config.entry.preload && !tsconfigFileExists.preloadTSConfig) copyTemplate(templateFilename, this.pathUtil.getPath(config.tsconfig.preload), { jsx, module: 'esnext', target: 'es2018', baseUrl: '../..' })
       } else if (this._nodeTarget) {
         if (!tsconfigFileExists.nodeTSConfig) copyTemplate(templateFilename, this.pathUtil.getPath(config.tsconfig.node), { jsx: '', module: 'esnext', target: 'es2018', baseUrl: '.' })
       } else {
-        if (!tsconfigFileExists.webTSConfig) copyTemplate(templateFilename, this.pathUtil.getPath(config.tsconfig.web), { jsx: 'react', module: 'esnext', target: 'es5', baseUrl: '.' })
+        if (!tsconfigFileExists.webTSConfig) copyTemplate(templateFilename, this.pathUtil.getPath(config.tsconfig.web), { jsx, module: 'esnext', target: 'es5', baseUrl: '.' })
       }
     }
 
@@ -1018,7 +1026,7 @@ class WebpackConfig {
         publicPath: config.publicPath,
         before: (_app, server) => {
           for (let i = 0; i < config.indexHtml.length; i++) {
-            server._watch(this.pathUtil.getPath(config.indexHtml[i]))
+            server._watch(this.pathUtil.getPath(config.indexHtml[i].template))
           }
         }
       }

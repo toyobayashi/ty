@@ -8,6 +8,7 @@
     "noImplicitReturns": true,
     "moduleResolution": "node",
     {{jsx ? '"jsx": "' + jsx + '",' : ''}}
+    {{jsx === 'preserve' ? '"jsxFactory": "h",' : ''}}
     "resolveJsonModule": true,
     "target": "{{target || 'es5'}}",
     "module": "{{module || 'esnext'}}",
