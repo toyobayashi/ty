@@ -78,7 +78,8 @@ No webpack config. Working in progress.
         },
         main: {
           main: [path.join(projectRoot, 'src/main/main')]
-        }
+        },
+        preload: null
       }
     }
     ```
@@ -91,7 +92,8 @@ No webpack config. Working in progress.
         web: 'dist',
         node: 'dist',
         renderer: 'resources/app/renderer',
-        main: 'resources/app/main'
+        main: 'resources/app/main',
+        preload: 'resources/app/preload'
       }
     }
     ```
@@ -165,7 +167,8 @@ No webpack config. Working in progress.
         web: 'tsconfig.json',
         node: 'tsconfig.json',
         renderer: 'src/renderer/tsconfig.json',
-        main: 'src/main/tsconfig.json'
+        main: 'src/main/tsconfig.json',
+        preload: 'src/preload/tsconfig.json'
       }
     }
     ```
@@ -257,7 +260,9 @@ No webpack config. Working in progress.
         // renderer (rendererConfig: WebpackConfiguration): void
         renderer (rendererConfig) {},
         // main (mainConfig: WebpackConfiguration): void
-        main (mainConfig) {}
+        main (mainConfig) {},
+        // preload (preloadConfig: WebpackConfiguration): void
+        preload (preloadConfig) {}
       }
     }
     ```

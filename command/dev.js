@@ -30,10 +30,11 @@ function dev (config) {
 
   const firstLaunch = {
     main: false,
-    renderer: false
+    renderer: false,
+    ...(config.entry.preload ? { preload: false } : {})
   }
 
-  const isReady = () => firstLaunch.main && firstLaunch.renderer
+  const isReady = () => Object.keys(firstLaunch).map(key => firstLaunch[key]).indexOf(false) === -1
 
   const webpackConfig = new WebpackConfig(config)
 
@@ -51,6 +52,23 @@ function dev (config) {
 
     console.log(stats.toString(config.statsOptions) + '\n')
   })
+
+  if (config.entry.preload) {
+    watch(webpackConfig.preloadConfig, function watchHandler (err, stats) {
+      if (err) {
+        console.log(err)
+        return
+      }
+
+      if (!firstLaunch.preload) firstLaunch.preload = true
+
+      if (isReady()) {
+        relaunch()
+      }
+
+      console.log(stats.toString(config.statsOptions) + '\n')
+    })
+  }
 
   startDevServer(webpackConfig.rendererConfig, config.devServerPort, config.devServerHost, function (err) {
     if (err) {

@@ -110,7 +110,8 @@ $ ty serve
         },
         main: {
           main: [path.join(projectRoot, 'src/main/main')]
-        }
+        },
+        preload: null
       }
     }
     ```
@@ -123,7 +124,8 @@ $ ty serve
         web: 'dist',
         node: 'dist',
         renderer: 'resources/app/renderer',
-        main: 'resources/app/main'
+        main: 'resources/app/main',
+        preload: 'resources/app/preload'
       }
     }
     ```
@@ -197,7 +199,8 @@ $ ty serve
         web: 'tsconfig.json',
         node: 'tsconfig.json',
         renderer: 'src/renderer/tsconfig.json',
-        main: 'src/main/tsconfig.json'
+        main: 'src/main/tsconfig.json',
+        preload: 'src/preload/tsconfig.json'
       }
     }
     ```
@@ -290,7 +293,9 @@ $ ty serve
         // renderer (rendererConfig: WebpackConfiguration): void
         renderer (rendererConfig) {},
         // main (mainConfig: WebpackConfiguration): void
-        main (mainConfig) {}
+        main (mainConfig) {},
+        // preload (preloadConfig: WebpackConfiguration): void
+        preload (preloadConfig) {}
       }
     }
     ```

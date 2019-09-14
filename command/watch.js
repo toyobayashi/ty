@@ -18,6 +18,9 @@ function _watch (config) {
     removeServerConfig(webpackConfig.rendererConfig)
     watchConfig(webpackConfig.mainConfig)
     watchConfig(webpackConfig.rendererConfig)
+    if (config.entry.preload) {
+      watchConfig(webpackConfig.preloadConfig)
+    }
   } else if (config.target === 'node') {
     watchConfig(webpackConfig.nodeConfig)
   } else {

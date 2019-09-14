@@ -22,13 +22,14 @@ const defaultConfig = {
   target: '',
   /**
    * @typedef {string | string[] | { [name: string]: string | string[] }} WebpackEntry
-   * @type {{ web: WebpackEntry; renderer: WebpackEntry; main: WebpackEntry }}
+   * @type {{ web: WebpackEntry; renderer: WebpackEntry; main: WebpackEntry; preload: WebpackEntry | null }}
    */
   entry: {
     web: null,
     node: null,
     renderer: null,
-    main: null
+    main: null,
+    preload: null
   },
   /**
    * @type {{ web: string; renderer: string; main: string }}
@@ -37,7 +38,8 @@ const defaultConfig = {
     web: 'dist',
     node: 'dist',
     renderer: 'resources/app/renderer',
-    main: 'resources/app/main'
+    main: 'resources/app/main',
+    preload: 'resources/app/preload'
   },
   /**
    * @type {string}
@@ -119,13 +121,14 @@ const defaultConfig = {
     def: {}
   },
   /**
-   * @type {{ web: string; renderer: string; main: string }}
+   * @type {{ web: string; renderer: string; main: string; preload: string }}
    */
   tsconfig: {
     web: 'tsconfig.json',
     node: 'tsconfig.json',
     renderer: 'src/renderer/tsconfig.json',
-    main: 'src/main/tsconfig.json'
+    main: 'src/main/tsconfig.json',
+    preload: 'src/preload/tsconfig.json'
   },
 
   proxy: {},
@@ -174,7 +177,8 @@ const defaultConfig = {
     web (webConfig) {},
     node (nodeConfig) {},
     renderer (rendererConfig) {},
-    main (mainConfig) {}
+    main (mainConfig) {},
+    preload (preloadConfig) {}
   }
 }
 
@@ -276,7 +280,8 @@ function readTyConfig (configPath, getPath) {
       web: { app: [getPath('./src/index')] },
       node: { main: [getPath('./src/index')] },
       renderer: { renderer: [getPath('./src/renderer/renderer')] },
-      main: { main: [getPath('./src/main/main')] }
+      main: { main: [getPath('./src/main/main')] },
+      preload: null
     }
   }
 

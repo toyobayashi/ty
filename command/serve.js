@@ -14,6 +14,17 @@ function serve (config) {
       console.log(stats.toString(config.statsOptions) + '\n')
     })
 
+    if (config.entry.preload) {
+      watch(webpackConfig.preloadConfig, function watchHandler (err, stats) {
+        if (err) {
+          console.log(err)
+          return
+        }
+
+        console.log(stats.toString(config.statsOptions) + '\n')
+      })
+    }
+
     startDevServer(webpackConfig.rendererConfig, config.devServerPort, config.devServerHost, function (err) {
       if (err) {
         console.log(err)

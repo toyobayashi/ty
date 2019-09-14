@@ -6,7 +6,8 @@ function build (config) {
   if (config.target === 'electron') {
     return Promise.all([
       compile(webpackConfig.mainConfig, config.statsOptions),
-      compile(webpackConfig.rendererConfig, config.statsOptions)
+      compile(webpackConfig.rendererConfig, config.statsOptions),
+      config.entry.preload ? compile(webpackConfig.preloadConfig, config.statsOptions) : Promise.resolve()
     ])
   }
 

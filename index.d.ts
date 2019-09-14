@@ -11,18 +11,20 @@ declare namespace ty {
     mode?: 'production' | 'development'
     devServerHost?: string
     devServerPort?: number
-    target?: 'electron' | 'web'
+    target?: 'electron' | 'web' | 'node'
     entry?: {
       web?: WebpackEntry
       node?: WebpackEntry
       renderer?: WebpackEntry
       main?: WebpackEntry
+      preload?: WebpackEntry | null
     }
     output?: {
       web?: string
       node?: string
       renderer?: string
       main?: string
+      preload?: string
     }
     contentBase?: string
     resourcesPath?: string
@@ -62,6 +64,7 @@ declare namespace ty {
       node?: string
       renderer?: string
       main?: string
+      preload?: string
     }
 
     packHook?: undefined | {
@@ -82,6 +85,7 @@ declare namespace ty {
       node? (webConfig: any): void
       renderer? (rendererConfig: any): void
       main? (mainConfig: any): void
+      preload? (preloadConfig: any): void
     }
   }
 }

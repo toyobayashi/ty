@@ -323,6 +323,7 @@ class WebpackConfig {
   _initConfig (config) {
     if (this._electronTarget) {
       this._initMain(config)
+      this._initPreload(config)
       this._initRenderer(config)
       this._initProductionPackage(config)
       this._initPackagerConfig(config)
@@ -336,6 +337,7 @@ class WebpackConfig {
   _configureWebpack (config) {
     if (this._electronTarget) {
       if (typeof config.configureWebpack.renderer === 'function') config.configureWebpack.renderer(this.rendererConfig)
+      if (typeof config.configureWebpack.preload === 'function') config.configureWebpack.preload(this.preloadConfig)
       if (typeof config.configureWebpack.main === 'function') config.configureWebpack.main(this.mainConfig)
     } else if (this._nodeTarget) {
       if (typeof config.configureWebpack.node === 'function') config.configureWebpack.node(this.nodeConfig)
@@ -378,6 +380,7 @@ class WebpackConfig {
     if (this._electronTarget) {
       ensureEntry(config.entry && config.entry.main, getPath, suffix, 'index.main' + suffix, tplOptions)
       ensureEntry(config.entry && config.entry.renderer, getPath, suffix, 'index.web.js')
+      ensureEntry(config.entry && config.entry.preload, getPath, suffix, 'index.preload.js')
       const npmrc = this.pathUtil.getPath('.npmrc')
       if (!existsSync(npmrc)) {
         mkdirsSync(path.dirname(npmrc))
@@ -512,6 +515,7 @@ class WebpackConfig {
             to: this.pathUtil.getPath(config.output.web),
             toType: 'dir',
             ignore: [
+              '.gitkeep',
               '.DS_Store'
             ]
           }
@@ -639,13 +643,20 @@ class WebpackConfig {
     this.rendererConfig = {
       mode: config.mode,
       context: this.pathUtil.getPath(),
-      target: 'electron-renderer',
+      target: config.entry.preload ? 'web' : 'electron-renderer',
       entry: config.entry.renderer,
       output: {
         filename: '[name].js',
         path: this.pathUtil.getPath(config.output.renderer)
       },
-      node: false,
+      node: config.entry.preload ? {
+        setImmediate: false,
+        dgram: 'empty',
+        fs: 'empty',
+        net: 'empty',
+        tls: 'empty',
+        child_process: 'empty'
+      } : false,
       module: {
         rules: [
           {
@@ -691,6 +702,7 @@ class WebpackConfig {
             to: this.pathUtil.getPath(config.output.renderer),
             toType: 'dir',
             ignore: [
+              '.gitkeep',
               '.DS_Store'
             ]
           }
@@ -733,6 +745,84 @@ class WebpackConfig {
 
     if (this._useESLint) {
       this.rendererConfig.module.rules.unshift({
+        test: /\.(jsx?|vue)$/,
+        enforce: 'pre',
+        exclude: /node_modules/,
+        use: [this._createEslintLoader()]
+      })
+    }
+  }
+
+  _initPreload (config) {
+    if (!config.entry.preload) {
+      this.preloadConfig = null
+      return
+    }
+    this.preloadConfig = {
+      mode: config.mode,
+      context: this.pathUtil.getPath(),
+      target: 'electron-renderer',
+      entry: config.entry.preload,
+      output: {
+        filename: '[name].js',
+        path: this.pathUtil.getPath(config.output.preload),
+        libraryTarget: 'commonjs2'
+      },
+      node: false,
+      externals: [webpackNodeExternals()],
+      module: {
+        rules: [
+          {
+            test: /\.tsx?$/,
+            exclude: /node_modules/,
+            use: [
+              {
+                loader: require.resolve('ts-loader'),
+                options: {
+                  appendTsSuffixTo: [/\.vue$/],
+                  transpileOnly: true,
+                  configFile: this.pathUtil.getPath(config.tsconfig.preload)
+                }
+              }
+            ]
+          },
+          {
+            test: /\.vue$/,
+            use: [
+              require.resolve('vue-loader')
+            ]
+          },
+          ...(this._createStyleLoaders(config)),
+          ...(this._createAssetsLoaders(config))
+        ]
+      },
+      resolve: {
+        alias: config.alias,
+        extensions: ['.ts', '.tsx', '.js', '.vue', '.css', '.styl', '.stylus', '.less', '.sass', '.scss', '.json', '.wasm']
+      }
+    }
+
+    if (this._useVue) {
+      const { VueLoaderPlugin } = require('vue-loader')
+      this.preloadConfig.plugins = [
+        ...(this.preloadConfig.plugins || []),
+        new VueLoaderPlugin()
+      ]
+    }
+
+    if (this._useBabel) {
+      this.preloadConfig.module.rules.unshift({
+        test: /\.jsx$/,
+        exclude: /node_modules/,
+        use: [
+          require.resolve('babel-loader')
+        ]
+      })
+      this.preloadConfig.resolve.extensions.push('.jsx')
+    }
+
+    if (this._useESLint) {
+      this.preloadConfig.module.rules.unshift({
         test: /\.(jsx?|vue)$/,
         enforce: 'pre',
         exclude: /node_modules/,
@@ -844,6 +934,23 @@ class WebpackConfig {
             tsconfig: this.pathUtil.getPath(config.tsconfig.main)
           })
         ]
+      }
+
+      if (config.entry.preload) {
+        this.preloadConfig.devtool = 'eval-source-map'
+        if (config.publicPath) {
+          this.preloadConfig.output && (this.preloadConfig.output.publicPath = config.publicPath)
+        }
+        if (this._useTypeScript) {
+          this.preloadConfig.plugins = [
+            ...(this.preloadConfig.plugins || []),
+            new ForkTsCheckerWebpackPlugin({
+              eslint: this._useESLint,
+              tsconfig: this.pathUtil.getPath(config.tsconfig.preload),
+              vue: this._useVue
+            })
+          ]
+        }
       }
     } else if (this._nodeTarget) {
       this.nodeConfig.devtool = 'eval-source-map'
@@ -963,6 +1070,36 @@ class WebpackConfig {
         ]
       }
       if (config.productionSourcemap) this.rendererConfig.devtool = this.mainConfig.devtool = 'source-map'
+
+      if (config.entry.preload) {
+        this.preloadConfig.plugins = [
+          ...(this.preloadConfig.plugins || []),
+          new MiniCssExtractPlugin({
+            filename: '[name].css'
+          })
+        ]
+        this.preloadConfig.optimization = {
+          ...(this.preloadConfig.optimization || {}),
+          minimizer: [
+            terser(),
+            cssnano()
+          ]
+        }
+        if (this._useTypeScript) {
+          this.preloadConfig.plugins = [
+            ...(this.preloadConfig.plugins || []),
+            new ForkTsCheckerWebpackPlugin({
+              eslint: this._useESLint,
+              tsconfig: this.pathUtil.getPath(config.tsconfig.preload),
+              vue: this._useVue,
+              async: false,
+              useTypescriptIncrementalApi: true,
+              memoryLimit: 4096
+            })
+          ]
+        }
+        if (config.productionSourcemap) this.preloadConfig.devtool = 'source-map'
+      }
     } else if (this._nodeTarget) {
       this.nodeConfig.optimization = {
         ...(this.nodeConfig.optimization || {}),
