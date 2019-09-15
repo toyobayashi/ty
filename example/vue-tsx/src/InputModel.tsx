@@ -22,7 +22,7 @@ export default Vue.extend({
     return (
       <div>
         <p>{this.customProp}</p>
-        <input type='text' vModel={this.inputValue} onInput_stop={this.onInput} />
+        <input type='text' vModel={this.inputValue} onInput={this.onInput} />
         <p>{this.inputValue}</p>
       </div>
     )

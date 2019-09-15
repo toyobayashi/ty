@@ -7,7 +7,6 @@ const vm = new Vue({
 
 vm.$mount('#app')
 
-
 if (process.env.NODE_ENV !== 'production') {
   if ((module as any).hot) (module as any).hot.accept()
 }
