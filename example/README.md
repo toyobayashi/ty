@@ -1,4 +1,4 @@
 ``` bash
-$ npm install -g toyobayashi/ty
+$ npm install -g @tybys/ty
 $ cd <example_dir>
 ```

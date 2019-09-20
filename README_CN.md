@@ -21,7 +21,7 @@ Vue 单文件组件和 React TSX 开箱即用，但是 JSX 需要自己配 babel
     1. 在项目里安装
 
         ``` bash
-        $ npm install -D toyobayashi/ty
+        $ npm install -D @tybys/ty
         ```
 
     2. 写在 NPM 脚本里
@@ -40,7 +40,7 @@ Vue 单文件组件和 React TSX 开箱即用，但是 JSX 需要自己配 babel
     1. 全局安装
 
         ``` bash
-        $ npm install -g toyobayashi/ty
+        $ npm install -g @tybys/ty
         ```
 
     2. 在项目中敲命令
@@ -56,7 +56,7 @@ Vue 单文件组件和 React TSX 开箱即用，但是 JSX 需要自己配 babel
 第一步，全局安装，新建一个空文件夹 cd 进去
 
 ``` bash
-$ npm install -g toyobayashi/ty
+$ npm install -g @tybys/ty
 $ mkdir hello
 $ cd hello
 ```

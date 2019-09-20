@@ -9,7 +9,7 @@ No webpack config. Working in progress.
     1. Install
 
         ``` bash
-        $ npm install -D toyobayashi/ty
+        $ npm install -D @tybys/ty
         ```
 
     2. Writing scripts in package.json
@@ -28,7 +28,7 @@ No webpack config. Working in progress.
     1. Install
 
         ``` bash
-        $ npm install -g toyobayashi/ty
+        $ npm install -g @tybys/ty
         ```
 
     2. Run in project root directory
