@@ -5,3 +5,4 @@ package-lock.json
 .idea
 *.tgz
 /example
+/README_CN.md
