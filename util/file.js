@@ -18,7 +18,13 @@ function ensureEntry (entry, getPath, suffix = '.js', template = '', options = n
         let dest = getPath(e)
         if (path.extname(dest) === '') dest += suffix
         if (!existsSync(dest)) {
-          copyTemplate(template, dest, options)
+          if (suffix === '.js' || suffix === '.ts') {
+            if (!existsSync(dest + 'x')) {
+              copyTemplate(template, dest, options)
+            }
+          } else {
+            copyTemplate(template, dest, options)
+          }
         }
       } else {
         ensureFile(getPath(e), '', suffix)
