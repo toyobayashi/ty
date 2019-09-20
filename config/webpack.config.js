@@ -392,7 +392,7 @@ class WebpackConfig {
       const npmrc = this.pathUtil.getPath('.npmrc')
       if (!existsSync(npmrc)) {
         mkdirsSync(path.dirname(npmrc))
-        copyTemplate('.npmrc', npmrc, { version: this.pkg.devDependencies.electron.replace(/[~^]/g, '') })
+        copyTemplate('npmrc.txt', npmrc, { version: this.pkg.devDependencies.electron.replace(/[~^]/g, '') })
       }
     } else if (this._nodeTarget) {
       ensureEntry(config.entry && config.entry.node, getPath, suffix, 'index.node.js')
