@@ -3,7 +3,7 @@ import { format } from 'url'
 import { join } from 'path'
 import { existsSync } from 'fs'
 
-function isPromiseLike (obj: any) {
+function isPromiseLike (obj: any): boolean {
   return (obj instanceof Promise) || (
     obj !== undefined && obj !== null && typeof obj.then === 'function' && typeof obj.catch === 'function'
   )
@@ -54,7 +54,7 @@ class WindowManager {
     this.windows = new Map()
   }
 
-  public createWindow (name: string, browerWindowOptions: BrowserWindowConstructorOptions, url: string) {
+  public createWindow (name: string, browerWindowOptions: BrowserWindowConstructorOptions, url: string): void {
     if (this.windows.has(name)) {
       throw new Error(`The window named "${name}" exists.`)
     }
@@ -131,9 +131,9 @@ app.on('window-all-closed', function () {
 app.on('activate', function () {
   WindowManager.createMainWindow()
 })
-// tslint:disable-next-line: strict-type-predicates
-typeof app.whenReady === 'function' ? app.whenReady().then(main) : app.on('ready', main)
 
-function main () {
+typeof app.whenReady === 'function' ? app.whenReady().then(main).catch(err => console.log(err)) : app.on('ready', main)
+
+function main (): void {
   WindowManager.createMainWindow()
 }

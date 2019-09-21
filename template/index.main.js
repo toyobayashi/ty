@@ -128,7 +128,7 @@ app.on('activate', function () {
   WindowManager.createMainWindow()
 })
 
-typeof app.whenReady === 'function' ? app.whenReady().then(main) : app.on('ready', main)
+typeof app.whenReady === 'function' ? app.whenReady().then(main).catch(err => console.log(err)) : app.on('ready', main)
 
 function main () {
   WindowManager.createMainWindow()

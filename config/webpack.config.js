@@ -357,13 +357,13 @@ class WebpackConfig {
         jsx = 'preserve'
       }
       if (this._electronTarget) {
-        if (!tsconfigFileExists.rendererTSConfig) copyTemplate(templateFilename, this.pathUtil.getPath(config.tsconfig.renderer), { jsx, module: 'esnext', target: 'es2018', baseUrl: '../..' })
-        if (!tsconfigFileExists.mainTSConfig) copyTemplate(templateFilename, this.pathUtil.getPath(config.tsconfig.main), { jsx: '', module: 'esnext', target: 'es2018', baseUrl: '../..' })
-        if (config.entry.preload && !tsconfigFileExists.preloadTSConfig) copyTemplate(templateFilename, this.pathUtil.getPath(config.tsconfig.preload), { jsx, module: 'esnext', target: 'es2018', baseUrl: '../..' })
+        if (!tsconfigFileExists.rendererTSConfig) copyTemplate(templateFilename, this.pathUtil.getPath(config.tsconfig.renderer), { jsx, module: 'esnext', target: 'es2018', baseUrl: '../..', include: './**/*' })
+        if (!tsconfigFileExists.mainTSConfig) copyTemplate(templateFilename, this.pathUtil.getPath(config.tsconfig.main), { jsx: '', module: 'esnext', target: 'es2018', baseUrl: '../..', include: './**/*' })
+        if (config.entry.preload && !tsconfigFileExists.preloadTSConfig) copyTemplate(templateFilename, this.pathUtil.getPath(config.tsconfig.preload), { jsx, module: 'esnext', target: 'es2018', baseUrl: '../..', include: './**/*' })
       } else if (this._nodeTarget) {
-        if (!tsconfigFileExists.nodeTSConfig) copyTemplate(templateFilename, this.pathUtil.getPath(config.tsconfig.node), { jsx: '', module: 'esnext', target: 'es2018', baseUrl: '.' })
+        if (!tsconfigFileExists.nodeTSConfig) copyTemplate(templateFilename, this.pathUtil.getPath(config.tsconfig.node), { jsx: '', module: 'esnext', target: 'es2018', baseUrl: '.', include: './src/**/*' })
       } else {
-        if (!tsconfigFileExists.webTSConfig) copyTemplate(templateFilename, this.pathUtil.getPath(config.tsconfig.web), { jsx, module: 'esnext', target: 'es5', baseUrl: '.' })
+        if (!tsconfigFileExists.webTSConfig) copyTemplate(templateFilename, this.pathUtil.getPath(config.tsconfig.web), { jsx, module: 'esnext', target: 'es5', baseUrl: '.', include: './src/**/*' })
       }
     }
 
