@@ -345,7 +345,7 @@ $ ty serve
 
 * 除了 ESLint / Babel / PostCSS，大多数情况下不需要任何多余的配置。
 
-* TypeScript 开箱即用。只需要配一下 `tsconfig.json`。如果是 Electron 项目，你需要为主进程和渲染进程各写一个 `tsconfig.json`，默认是在 `src/renderer/tsconfig.json` 和 `src/main/tsconfig.json`。
+* TypeScript 开箱即用。只需要配一下 `tsconfig.json`。如果是 Electron 项目，你需要为主进程和渲染进程各写一个 `tsconfig.json`，默认是在 `tsconfig.renderer.json` 和 `tsconfig.main.json`。
 
 * 不支持 TSLint 检查 TypeScript 代码，请使用 ESLint 检查，未来是 ESLint 的天下。
 

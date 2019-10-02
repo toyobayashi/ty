@@ -1,24 +1,18 @@
 {
+  "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noImplicitAny": true,
-    "noImplicitThis": true,
-    "noImplicitReturns": true,
-    "moduleResolution": "node",
-    "jsx": "preserve",
-    "jsxFactory": "h",
-    "resolveJsonModule": true,
-    "target": "es5",
-    "module": "esnext",
-    "experimentalDecorators": true,
-    "sourceMap": true,
     "baseUrl": ".",
     "paths": {
       "@/*": [
         "src/*"
       ]
-    }
-  }
+    },
+    "module": "esnext",
+    "target": "es5",
+    "jsx": "preserve",
+    "jsxFactory": "h"
+  },
+  "include": [
+    "./src/**/*"
+  ]
 }

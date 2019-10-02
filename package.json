@@ -1,6 +1,6 @@
 {
   "name": "@tybys/ty",
-  "version": "0.3.4",
+  "version": "0.3.5",
   "main": "index.js",
   "bin": {
     "ty": "./bin/ty.js"
@@ -23,8 +23,8 @@
     "cross-zip": "^2.1.6",
     "css-loader": "^3.2.0",
     "deepmerge": "^4.0.0",
-    "electron-packager": "^14.0.5",
-    "eslint-loader": "^3.0.0",
+    "electron-packager": "^14.0.6",
+    "eslint-loader": "^3.0.2",
     "express-serve-asar": "^1.0.2",
     "file-loader": "^4.2.0",
     "fork-ts-checker-webpack-plugin": "^1.5.0",
@@ -41,11 +41,11 @@
     "style-loader": "^1.0.0",
     "stylus-loader": "^3.0.2",
     "terser-webpack-plugin": "^1.4.1",
-    "ts-loader": "^6.0.4",
+    "ts-loader": "^6.2.0",
     "url-loader": "^2.1.0",
     "vue-loader": "^15.7.1",
-    "webpack": "^4.40.2",
-    "webpack-dev-server": "^3.8.0",
+    "webpack": "^4.41.0",
+    "webpack-dev-server": "^3.8.1",
     "webpack-node-externals": "^1.7.2"
   },
   "devDependencies": {

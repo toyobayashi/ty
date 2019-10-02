@@ -306,7 +306,7 @@ No webpack config. Working in progress.
 
 * In most cases you don't need to config anything except ESLint / Babel / PostCSS.
 
-* TypeScript support is out of box. Just write your `tsconfig.json` in project root directory. But in electron project, you should write different `tsconfig.json` for main process and renderer process, default in `src/renderer/tsconfig.json` and `src/main/tsconfig.json`.
+* TypeScript support is out of box. Just write your `tsconfig.json` in project root directory. But in electron project, you should write different `tsconfig.json` for main process and renderer process, default in `tsconfig.renderer.json` and `tsconfig.main.json`.
 
 * Use ESLint to check typescript code instead of TSLint.
 

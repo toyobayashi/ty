@@ -1,5 +1,5 @@
 const { execSync } = require('child_process')
-const { existsSync, mkdirsSync } = require('fs-extra')
+const { existsSync, mkdirsSync, readJSONSync } = require('fs-extra')
 const { HotModuleReplacementPlugin } = require('webpack')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin')
@@ -352,18 +352,64 @@ class WebpackConfig {
   _generateTemplates (config, tsconfigFileExists) {
     if (this._useTypeScript) {
       const templateFilename = 'tsconfig.json'
+      const baseFilename = 'tsconfig.base.json'
       let jsx = 'react'
       if (this._useBabel && this._useVue) {
         jsx = 'preserve'
       }
       if (this._electronTarget) {
-        if (!tsconfigFileExists.rendererTSConfig) copyTemplate(templateFilename, this.pathUtil.getPath(config.tsconfig.renderer), { jsx, module: 'esnext', target: 'es2018', baseUrl: '../..', include: './**/*' })
-        if (!tsconfigFileExists.mainTSConfig) copyTemplate(templateFilename, this.pathUtil.getPath(config.tsconfig.main), { jsx: '', module: 'esnext', target: 'es2018', baseUrl: '../..', include: './**/*' })
-        if (config.entry.preload && !tsconfigFileExists.preloadTSConfig) copyTemplate(templateFilename, this.pathUtil.getPath(config.tsconfig.preload), { jsx, module: 'esnext', target: 'es2018', baseUrl: '../..', include: './**/*' })
+        const rendererTarget = this.pathUtil.getPath(config.tsconfig.renderer)
+        const mainTarget = this.pathUtil.getPath(config.tsconfig.main)
+        const preloadTarget = this.pathUtil.getPath(config.tsconfig.preload)
+        const usePreload = !!(config.entry.preload && !tsconfigFileExists.preloadTSConfig)
+        if (!tsconfigFileExists.rendererTSConfig) {
+          copyTemplate(templateFilename, rendererTarget, { jsx, target: 'es2018', include: './src/renderer/**/*' })
+        }
+        if (!tsconfigFileExists.mainTSConfig) {
+          copyTemplate(templateFilename, mainTarget, { jsx: '', target: 'es2018', include: './src/main/**/*' })
+        }
+        if (usePreload) {
+          copyTemplate(templateFilename, preloadTarget, { jsx, target: 'es2018', include: './src/preload/**/*' })
+        }
+
+        const rendererBase = readJSONSync(rendererTarget).extends
+        const mainBase = readJSONSync(mainTarget).extends
+        if (typeof rendererBase === 'string') {
+          const t = path.join(path.dirname(rendererTarget), rendererBase)
+          if (!existsSync(t)) copyTemplate(baseFilename, t)
+        }
+        if (typeof mainBase === 'string') {
+          const t = path.join(path.dirname(mainTarget), mainBase)
+          if (!existsSync(t)) copyTemplate(baseFilename, t)
+        }
+
+        if (usePreload) {
+          const preloadBase = readJSONSync(preloadTarget).extends
+          if (typeof preloadBase === 'string') {
+            const t = path.join(path.dirname(preloadTarget), preloadBase)
+            if (!existsSync(t)) copyTemplate(baseFilename, t)
+          }
+        }
       } else if (this._nodeTarget) {
-        if (!tsconfigFileExists.nodeTSConfig) copyTemplate(templateFilename, this.pathUtil.getPath(config.tsconfig.node), { jsx: '', module: 'esnext', target: 'es2018', baseUrl: '.', include: './src/**/*' })
+        const nodeTarget = this.pathUtil.getPath(config.tsconfig.node)
+        if (!tsconfigFileExists.nodeTSConfig) {
+          copyTemplate(templateFilename, nodeTarget, { jsx: '', target: 'es2018', include: './src/**/*' })
+        }
+        const nodeBase = readJSONSync(nodeTarget).extends
+        if (typeof nodeBase === 'string') {
+          const t = path.join(path.dirname(nodeTarget), nodeBase)
+          if (!existsSync(t)) copyTemplate(baseFilename, t)
+        }
       } else {
-        if (!tsconfigFileExists.webTSConfig) copyTemplate(templateFilename, this.pathUtil.getPath(config.tsconfig.web), { jsx, module: 'esnext', target: 'es5', baseUrl: '.', include: './src/**/*' })
+        const webTarget = this.pathUtil.getPath(config.tsconfig.web)
+        if (!tsconfigFileExists.webTSConfig) {
+          copyTemplate(templateFilename, webTarget, { jsx, target: 'es5', include: './src/**/*' })
+        }
+        const webBase = readJSONSync(webTarget).extends
+        if (typeof webBase === 'string') {
+          const t = path.join(path.dirname(webTarget), webBase)
+          if (!existsSync(t)) copyTemplate(baseFilename, t)
+        }
       }
     }
 

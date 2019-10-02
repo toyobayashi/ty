@@ -1,27 +1,18 @@
 {
+  "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noImplicitAny": true,
-    "noImplicitThis": true,
-    "noImplicitReturns": true,
-    "moduleResolution": "node",
     {{jsx ? '"jsx": "' + jsx + '",' : ''}}
     {{jsx === 'preserve' ? '"jsxFactory": "h",' : ''}}
-    "resolveJsonModule": true,
-    "target": "{{target || 'es5'}}",
-    "module": "{{module || 'esnext'}}",
-    "experimentalDecorators": true,
-    "sourceMap": true,
-    "baseUrl": "{{baseUrl || '.'}}",
+    "baseUrl": ".",
     "paths": {
       "@/*": [
         "src/*"
       ]
-    }
+    },
+    "module": "esnext",
+    "target": "{{target || 'es5'}}"
   },
   "include": [
-    "{{include || './**/*'}}"
+    "{{include || './src/**/*'}}"
   ]
 }
