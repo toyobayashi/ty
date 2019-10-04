@@ -185,6 +185,8 @@ $ ty serve
 
 * `context` {string} 修改打包器的上下文根目录。默认：`''`。
 
+* `devtool` {{ development: string; production: string }} 不同模式下传给 `webpackConfig.devtool`。 默认：`{ development: 'eval-source-map', production: 'source-map' }`。
+
 * `productionSourcemap` {boolean} 生产环境是否需要源地图。默认：`false`。
 
 * `cssModule` {boolean} 是否启用 CSS Module。默认：`false`。

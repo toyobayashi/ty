@@ -181,13 +181,18 @@ class WebpackConfig {
     ]
   }
 
-  _createEslintLoader () {
+  _createEslintLoader (test) {
     return {
-      loader: require.resolve('eslint-loader'),
-      options: {
-        emitWarning: true,
-        emitError: false
-      }
+      test,
+      enforce: 'pre',
+      exclude: /node_modules/,
+      use: [{
+        loader: require.resolve('eslint-loader'),
+        options: {
+          emitWarning: true,
+          emitError: false
+        }
+      }]
     }
   }
 
@@ -236,6 +241,189 @@ class WebpackConfig {
       options: {
         name: path.posix.join(config.assetsPath || '', dir, '[name].[ext]')
       }
+    }
+  }
+
+  _createHtmlPlugins (config) {
+    return config.indexHtml.map(htmlOption => {
+      if (typeof htmlOption === 'string') {
+        return new HtmlWebpackPlugin({
+          title: this.pkg.name,
+          template: this.pathUtil.getPath(htmlOption),
+          minify: config.mode === 'production' ? config.htmlMinify : false
+        })
+      }
+
+      return new HtmlWebpackPlugin({
+        ...htmlOption,
+        title: htmlOption.title || this.pkg.name,
+        template: this.pathUtil.getPath(htmlOption.template),
+        minify: config.mode === 'production' ? (htmlOption.minify || config.htmlMinify) : false
+      })
+    })
+  }
+
+  _watchHtml (config, server) {
+    for (let i = 0; i < config.indexHtml.length; i++) {
+      const item = config.indexHtml[i]
+      const tpl = typeof item === 'string' ? item : item.template
+      server._watch(this.pathUtil.getPath(tpl))
+    }
+  }
+
+  _createBaseOptimization () {
+    return {
+      splitChunks: {
+        chunks: 'all',
+        name: false,
+        cacheGroups: {
+          'node-modules': {
+            name: 'node-modules',
+            test: /[\\/]node_modules[\\/]/,
+            priority: -10,
+            chunks: 'all'
+          }
+        }
+      }
+    }
+  }
+
+  _createCommonTSLoader (tsconfig) {
+    return {
+      test: /\.tsx?$/,
+      exclude: /node_modules/,
+      use: [
+        {
+          loader: require.resolve('ts-loader'),
+          options: {
+            transpileOnly: true,
+            configFile: this.pathUtil.getPath(tsconfig)
+          }
+        }
+      ]
+    }
+  }
+
+  _createNodeLoader () {
+    return {
+      test: /\.node$/,
+      exclude: /node_modules/,
+      use: [
+        {
+          loader: require.resolve('native-addon-loader'),
+          options: {
+            name: '[name].[ext]',
+            from: '.'
+          }
+        }
+      ]
+    }
+  }
+
+  _createNodeBaseRules (tsconfig) {
+    return [
+      this._createCommonTSLoader(tsconfig),
+      this._createNodeLoader()
+    ]
+  }
+
+  _createTSXLoader (config, tsconfig) {
+    return [
+      {
+        test: /\.ts$/,
+        exclude: /node_modules/,
+        use: [
+          {
+            loader: require.resolve('ts-loader'),
+            options: {
+              appendTsSuffixTo: [/\.vue$/],
+              transpileOnly: true,
+              configFile: this.pathUtil.getPath(config.tsconfig[tsconfig])
+            }
+          }
+        ]
+      },
+      {
+        test: /\.tsx$/,
+        exclude: /node_modules/,
+        use: [
+          ...((this._useBabel && this._useVue) ? [require.resolve('babel-loader')] : []),
+          {
+            loader: require.resolve('ts-loader'),
+            options: {
+              appendTsSuffixTo: [/\.vue$/],
+              transpileOnly: true,
+              configFile: this.pathUtil.getPath(config.tsconfig[tsconfig])
+            }
+          }
+        ]
+      }
+    ]
+  }
+
+  _createCopyPlugin (config, output) {
+    return new CopyWebpackPlugin([
+      {
+        from: this.pathUtil.getPath(config.staticDir || 'public'),
+        to: this.pathUtil.getPath(config.output[output]),
+        toType: 'dir',
+        ignore: [
+          '.gitkeep',
+          '.DS_Store'
+        ]
+      }
+    ])
+  }
+
+  _createVueLoader () {
+    return {
+      test: /\.vue$/,
+      use: [
+        require.resolve('vue-loader')
+      ]
+    }
+  }
+
+  _insertVueLoaderPlugin (webpackConfig) {
+    const { VueLoaderPlugin } = require('vue-loader')
+    if (Array.isArray(webpackConfig.plugins)) {
+      webpackConfig.plugins.push(new VueLoaderPlugin())
+    } else {
+      webpackConfig.plugins = [new VueLoaderPlugin()]
+    }
+  }
+
+  _defaultNodeLib () {
+    return {
+      setImmediate: false,
+      dgram: 'empty',
+      fs: 'empty',
+      net: 'empty',
+      tls: 'empty',
+      child_process: 'empty'
+    }
+  }
+
+  _createBabelLoader (test) {
+    return {
+      test,
+      exclude: /node_modules/,
+      use: [
+        require.resolve('babel-loader')
+      ]
+    }
+  }
+
+  _createDevServerConfig (config, before) {
+    return {
+      stats: config.statsOptions,
+      hot: true,
+      host: config.devServerHost,
+      inline: true,
+      contentBase: [this.pathUtil.getPath(config.contentBase)],
+      publicPath: config.publicPath,
+      ...(config.proxy ? { proxy: config.proxy } : {}),
+      ...(typeof before === 'function' ? { before } : {})
     }
   }
 
@@ -415,7 +603,9 @@ class WebpackConfig {
 
     if (!this._nodeTarget) {
       for (let i = 0; i < config.indexHtml.length; i++) {
-        const html = this.pathUtil.getPath(config.indexHtml[i].template)
+        const item = config.indexHtml[i]
+        const tpl = typeof item === 'string' ? item : item.template
+        const html = this.pathUtil.getPath(tpl)
         if (!existsSync(html)) {
           mkdirsSync(path.dirname(html))
           copyTemplate('index.html', html, { title: this.pkg.name })
@@ -461,32 +651,8 @@ class WebpackConfig {
       node: false,
       module: {
         rules: [
-          {
-            test: /\.tsx?$/,
-            exclude: /node_modules/,
-            use: [
-              {
-                loader: require.resolve('ts-loader'),
-                options: {
-                  transpileOnly: true,
-                  configFile: this.pathUtil.getPath(config.tsconfig.node)
-                }
-              }
-            ]
-          },
-          {
-            test: /\.node$/,
-            exclude: /node_modules/,
-            use: [
-              {
-                loader: require.resolve('native-addon-loader'),
-                options: {
-                  name: '[name].[ext]',
-                  from: '.'
-                }
-              }
-            ]
-          }
+          ...(this._useESLint ? [this._createEslintLoader(/\.jsx?$/)] : []),
+          ...(this._createNodeBaseRules(config.tsconfig.node))
         ]
       },
       externals: [webpackNodeExternals()],
@@ -494,15 +660,6 @@ class WebpackConfig {
         alias: config.alias,
         extensions: ['.js', '.ts', '.json', '.node']
       }
-    }
-
-    if (this._useESLint) {
-      this.nodeConfig.module.rules.unshift({
-        test: /\.jsx?$/,
-        enforce: 'pre',
-        exclude: /node_modules/,
-        use: [this._createEslintLoader()]
-      })
     }
   }
 
@@ -516,122 +673,30 @@ class WebpackConfig {
         filename: '[name].js',
         path: this.pathUtil.getPath(config.output.web)
       },
-      node: {
-        setImmediate: false,
-        dgram: 'empty',
-        fs: 'empty',
-        net: 'empty',
-        tls: 'empty',
-        child_process: 'empty'
-      },
+      node: this._defaultNodeLib(),
       module: {
         rules: [
-          {
-            test: /\.ts$/,
-            exclude: /node_modules/,
-            use: [
-              {
-                loader: require.resolve('ts-loader'),
-                options: {
-                  appendTsSuffixTo: [/\.vue$/],
-                  transpileOnly: true,
-                  configFile: this.pathUtil.getPath(config.tsconfig.web)
-                }
-              }
-            ]
-          },
-          {
-            test: /\.tsx$/,
-            exclude: /node_modules/,
-            use: [
-              ...((this._useBabel && this._useVue) ? [require.resolve('babel-loader')] : []),
-              {
-                loader: require.resolve('ts-loader'),
-                options: {
-                  appendTsSuffixTo: [/\.vue$/],
-                  transpileOnly: true,
-                  configFile: this.pathUtil.getPath(config.tsconfig.web)
-                }
-              }
-            ]
-          },
-          {
-            test: /\.vue$/,
-            use: [
-              require.resolve('vue-loader')
-            ]
-          },
+          ...(this._useESLint ? [this._createEslintLoader(/\.(jsx?|vue)$/)] : []),
+          ...(this._useBabel ? [this._createBabelLoader(/\.jsx?$/)] : []),
+          ...(this._createTSXLoader(config, 'web')),
+          this._createVueLoader(),
           ...(this._createStyleLoaders(config)),
           ...(this._createAssetsLoaders(config))
         ]
       },
       resolve: {
         alias: config.alias,
-        extensions: ['.ts', '.tsx', '.js', '.vue', '.css', '.styl', '.stylus', '.less', '.sass', '.scss', '.json', '.wasm']
+        extensions: ['.ts', '.tsx', '.js', ...(this._useBabel ? ['.jsx'] : []), '.vue', '.css', '.styl', '.stylus', '.less', '.sass', '.scss', '.json', '.wasm']
       },
       plugins: [
-        ...config.indexHtml.map(htmlOption => {
-          return new HtmlWebpackPlugin({
-            ...htmlOption,
-            title: htmlOption.title || this.pkg.name,
-            template: this.pathUtil.getPath(htmlOption.template),
-            minify: config.mode === 'production' ? (htmlOption.minify || config.htmlMinify) : false
-          })
-        }),
-        new CopyWebpackPlugin([
-          {
-            from: this.pathUtil.getPath(config.staticDir || 'public'),
-            to: this.pathUtil.getPath(config.output.web),
-            toType: 'dir',
-            ignore: [
-              '.gitkeep',
-              '.DS_Store'
-            ]
-          }
-        ])
+        ...(this._createHtmlPlugins(config)),
+        this._createCopyPlugin(config, 'web')
       ],
-      optimization: {
-        splitChunks: {
-          chunks: 'all',
-          name: false,
-          cacheGroups: {
-            'node-modules': {
-              name: 'node-modules',
-              test: /[\\/]node_modules[\\/]/,
-              priority: -10,
-              chunks: 'all'
-            }
-          }
-        }
-      }
+      optimization: this._createBaseOptimization()
     }
 
     if (this._useVue) {
-      const { VueLoaderPlugin } = require('vue-loader')
-      this.webConfig.plugins = [
-        ...(this.webConfig.plugins || []),
-        new VueLoaderPlugin()
-      ]
-    }
-
-    if (this._useBabel) {
-      this.webConfig.module.rules.unshift({
-        test: /\.jsx?$/,
-        exclude: /node_modules/,
-        use: [
-          require.resolve('babel-loader')
-        ]
-      })
-      this.webConfig.resolve.extensions.push('.jsx')
-    }
-
-    if (this._useESLint) {
-      this.webConfig.module.rules.unshift({
-        test: /\.(jsx?|vue)$/,
-        enforce: 'pre',
-        exclude: /node_modules/,
-        use: [this._createEslintLoader()]
-      })
+      this._insertVueLoaderPlugin(this.webConfig)
     }
   }
 
@@ -649,32 +714,8 @@ class WebpackConfig {
       node: false,
       module: {
         rules: [
-          {
-            test: /\.tsx?$/,
-            exclude: /node_modules/,
-            use: [
-              {
-                loader: require.resolve('ts-loader'),
-                options: {
-                  transpileOnly: true,
-                  configFile: this.pathUtil.getPath(config.tsconfig.main)
-                }
-              }
-            ]
-          },
-          {
-            test: /\.node$/,
-            exclude: /node_modules/,
-            use: [
-              {
-                loader: require.resolve('native-addon-loader'),
-                options: {
-                  name: '[name].[ext]',
-                  from: '.'
-                }
-              }
-            ]
-          }
+          ...(this._useESLint ? [this._createEslintLoader(/\.jsx?$/)] : []),
+          ...(this._createNodeBaseRules(config.tsconfig.main))
         ]
       },
       externals: [webpackNodeExternals()],
@@ -697,15 +738,6 @@ class WebpackConfig {
         ])
       ]
     }
-
-    if (this._useESLint) {
-      this.mainConfig.module.rules.unshift({
-        test: /\.jsx?$/,
-        enforce: 'pre',
-        exclude: /node_modules/,
-        use: [this._createEslintLoader()]
-      })
-    }
   }
 
   _initRenderer (config) {
@@ -718,122 +750,30 @@ class WebpackConfig {
         filename: '[name].js',
         path: this.pathUtil.getPath(config.output.renderer)
       },
-      node: config.entry.preload ? {
-        setImmediate: false,
-        dgram: 'empty',
-        fs: 'empty',
-        net: 'empty',
-        tls: 'empty',
-        child_process: 'empty'
-      } : false,
+      node: config.entry.preload ? this._defaultNodeLib() : false,
       module: {
         rules: [
-          {
-            test: /\.ts$/,
-            exclude: /node_modules/,
-            use: [
-              {
-                loader: require.resolve('ts-loader'),
-                options: {
-                  appendTsSuffixTo: [/\.vue$/],
-                  transpileOnly: true,
-                  configFile: this.pathUtil.getPath(config.tsconfig.renderer)
-                }
-              }
-            ]
-          },
-          {
-            test: /\.tsx$/,
-            exclude: /node_modules/,
-            use: [
-              ...((this._useBabel && this._useVue) ? [require.resolve('babel-loader')] : []),
-              {
-                loader: require.resolve('ts-loader'),
-                options: {
-                  appendTsSuffixTo: [/\.vue$/],
-                  transpileOnly: true,
-                  configFile: this.pathUtil.getPath(config.tsconfig.renderer)
-                }
-              }
-            ]
-          },
-          {
-            test: /\.vue$/,
-            use: [
-              require.resolve('vue-loader')
-            ]
-          },
+          ...(this._useESLint ? [this._createEslintLoader(/\.(jsx?|vue)$/)] : []),
+          ...(this._useBabel ? [this._createBabelLoader(/\.jsx?$/)] : []),
+          ...(this._createTSXLoader(config, 'renderer')),
+          this._createVueLoader(),
           ...(this._createStyleLoaders(config)),
           ...(this._createAssetsLoaders(config))
         ]
       },
       resolve: {
         alias: config.alias,
-        extensions: ['.ts', '.tsx', '.js', '.vue', '.css', '.styl', '.stylus', '.less', '.sass', '.scss', '.json', '.wasm']
+        extensions: ['.ts', '.tsx', '.js', ...(this._useBabel ? ['.jsx'] : []), '.vue', '.css', '.styl', '.stylus', '.less', '.sass', '.scss', '.json', '.wasm']
       },
       plugins: [
-        ...config.indexHtml.map(htmlOption => {
-          return new HtmlWebpackPlugin({
-            ...htmlOption,
-            title: htmlOption.title || this.pkg.name,
-            template: this.pathUtil.getPath(htmlOption.template),
-            minify: config.mode === 'production' ? (htmlOption.minify || config.htmlMinify) : false
-          })
-        }),
-        new CopyWebpackPlugin([
-          {
-            from: this.pathUtil.getPath(config.staticDir || 'public'),
-            to: this.pathUtil.getPath(config.output.renderer),
-            toType: 'dir',
-            ignore: [
-              '.gitkeep',
-              '.DS_Store'
-            ]
-          }
-        ])
+        ...(this._createHtmlPlugins(config)),
+        this._createCopyPlugin(config, 'renderer')
       ],
-      optimization: {
-        splitChunks: {
-          chunks: 'all',
-          name: false,
-          cacheGroups: {
-            'node-modules': {
-              name: 'node-modules',
-              test: /[\\/]node_modules[\\/]/,
-              priority: -10,
-              chunks: 'all'
-            }
-          }
-        }
-      }
+      optimization: this._createBaseOptimization()
     }
 
     if (this._useVue) {
-      const { VueLoaderPlugin } = require('vue-loader')
-      this.rendererConfig.plugins = [
-        ...(this.rendererConfig.plugins || []),
-        new VueLoaderPlugin()
-      ]
-    }
-
-    if (this._useBabel) {
-      this.rendererConfig.module.rules.unshift({
-        test: /\.jsx$/,
-        exclude: /node_modules/,
-        use: [
-          require.resolve('babel-loader')
-        ]
-      })
-      this.rendererConfig.resolve.extensions.push('.jsx')
-    }
-
-    if (this._useESLint) {
-      this.rendererConfig.module.rules.unshift({
-        test: /\.(jsx?|vue)$/,
-        enforce: 'pre',
-        exclude: /node_modules/,
-        use: [this._createEslintLoader()]
-      })
+      this._insertVueLoaderPlugin(this.rendererConfig)
     }
   }
 
@@ -856,77 +796,22 @@ class WebpackConfig {
       externals: [webpackNodeExternals()],
       module: {
         rules: [
-          {
-            test: /\.ts$/,
-            exclude: /node_modules/,
-            use: [
-              {
-                loader: require.resolve('ts-loader'),
-                options: {
-                  appendTsSuffixTo: [/\.vue$/],
-                  transpileOnly: true,
-                  configFile: this.pathUtil.getPath(config.tsconfig.preload)
-                }
-              }
-            ]
-          },
-          {
-            test: /\.tsx$/,
-            exclude: /node_modules/,
-            use: [
-              ...((this._useBabel && this._useVue) ? [require.resolve('babel-loader')] : []),
-              {
-                loader: require.resolve('ts-loader'),
-                options: {
-                  appendTsSuffixTo: [/\.vue$/],
-                  transpileOnly: true,
-                  configFile: this.pathUtil.getPath(config.tsconfig.preload)
-                }
-              }
-            ]
-          },
-          {
-            test: /\.vue$/,
-            use: [
-              require.resolve('vue-loader')
-            ]
-          },
+          ...(this._useESLint ? [this._createEslintLoader(/\.(jsx?|vue)$/)] : []),
+          ...(this._useBabel ? [this._createBabelLoader(/\.jsx?$/)] : []),
+          ...(this._createTSXLoader(config, 'preload')),
+          this._createVueLoader(),
           ...(this._createStyleLoaders(config)),
           ...(this._createAssetsLoaders(config))
         ]
       },
       resolve: {
         alias: config.alias,
-        extensions: ['.ts', '.tsx', '.js', '.vue', '.css', '.styl', '.stylus', '.less', '.sass', '.scss', '.json', '.wasm']
+        extensions: ['.ts', '.tsx', '.js', ...(this._useBabel ? ['.jsx'] : []), '.vue', '.css', '.styl', '.stylus', '.less', '.sass', '.scss', '.json', '.wasm']
       }
     }
 
     if (this._useVue) {
-      const { VueLoaderPlugin } = require('vue-loader')
-      this.preloadConfig.plugins = [
-        ...(this.preloadConfig.plugins || []),
-        new VueLoaderPlugin()
-      ]
-    }
-
-    if (this._useBabel) {
-      this.preloadConfig.module.rules.unshift({
-        test: /\.jsx$/,
-        exclude: /node_modules/,
-        use: [
-          require.resolve('babel-loader')
-        ]
-      })
-      this.preloadConfig.resolve.extensions.push('.jsx')
-    }
-
-    if (this._useESLint) {
-      this.preloadConfig.module.rules.unshift({
-        test: /\.(jsx?|vue)$/,
-        enforce: 'pre',
-        exclude: /node_modules/,
-        use: [this._createEslintLoader()]
-      })
+      this._insertVueLoaderPlugin(this.preloadConfig)
     }
   }
 
@@ -991,22 +876,12 @@ class WebpackConfig {
 
   _mergeDevelopment (config) {
     if (this._electronTarget) {
-      this.rendererConfig.devServer = {
-        stats: config.statsOptions,
-        hot: true,
-        host: config.devServerHost,
-        inline: true,
-        contentBase: [this.pathUtil.getPath(config.contentBase)],
-        publicPath: config.publicPath,
-        before: (app, server) => {
-          app.use(require('express-serve-asar')(this.pathUtil.getPath(config.contentBase)))
-          for (let i = 0; i < config.indexHtml.length; i++) {
-            server._watch(this.pathUtil.getPath(config.indexHtml[i].template))
-          }
-        }
-      }
-      if (config.proxy) this.rendererConfig.devServer.proxy = config.proxy
-      this.rendererConfig.devtool = this.mainConfig.devtool = 'eval-source-map'
+      this.rendererConfig.devServer = this._createDevServerConfig(config, (app, server) => {
+        app.use(require('express-serve-asar')(this.pathUtil.getPath(config.contentBase)))
+        this._watchHtml(config, server)
+      })
+
+      this.rendererConfig.devtool = this.mainConfig.devtool = config.devtool.development
       this.rendererConfig.plugins = [
         ...(this.rendererConfig.plugins || []),
         new HotModuleReplacementPlugin()
@@ -1036,7 +911,7 @@ class WebpackConfig {
       }
 
       if (config.entry.preload) {
-        this.preloadConfig.devtool = 'eval-source-map'
+        this.preloadConfig.devtool = config.devtool.development
         if (config.publicPath) {
           this.preloadConfig.output && (this.preloadConfig.output.publicPath = config.publicPath)
         }
@@ -1052,7 +927,7 @@ class WebpackConfig {
         }
       }
     } else if (this._nodeTarget) {
-      this.nodeConfig.devtool = 'eval-source-map'
+      this.nodeConfig.devtool = config.devtool.development
       if (this._useTypeScript) {
         this.nodeConfig.plugins = [
           ...(this.nodeConfig.plugins || []),
@@ -1063,21 +938,11 @@ class WebpackConfig {
         ]
       }
     } else {
-      this.webConfig.devServer = {
-        stats: config.statsOptions,
-        hot: true,
-        host: config.devServerHost,
-        inline: true,
-        contentBase: [this.pathUtil.getPath(config.contentBase)],
-        publicPath: config.publicPath,
-        before: (_app, server) => {
-          for (let i = 0; i < config.indexHtml.length; i++) {
-            server._watch(this.pathUtil.getPath(config.indexHtml[i].template))
-          }
-        }
-      }
-      if (config.proxy) this.webConfig.devServer.proxy = config.proxy
-      this.webConfig.devtool = 'eval-source-map'
+      this.webConfig.devServer = this._createDevServerConfig(config, (_app, server) => {
+        this._watchHtml(config, server)
+      })
+
+      this.webConfig.devtool = config.devtool.development
       this.webConfig.plugins = [
         ...(this.webConfig.plugins || []),
         new HotModuleReplacementPlugin()
@@ -1168,7 +1033,7 @@ class WebpackConfig {
           })
         ]
       }
-      if (config.productionSourcemap) this.rendererConfig.devtool = this.mainConfig.devtool = 'source-map'
+      if (config.productionSourcemap) this.rendererConfig.devtool = this.mainConfig.devtool = config.devtool.production
 
       if (config.entry.preload) {
         this.preloadConfig.plugins = [
@@ -1197,7 +1062,7 @@ class WebpackConfig {
             })
           ]
         }
-        if (config.productionSourcemap) this.preloadConfig.devtool = 'source-map'
+        if (config.productionSourcemap) this.preloadConfig.devtool = config.devtool.production
       }
     } else if (this._nodeTarget) {
       this.nodeConfig.optimization = {
@@ -1217,7 +1082,7 @@ class WebpackConfig {
           })
         ]
       }
-      if (config.productionSourcemap) this.nodeConfig.devtool = 'source-map'
+      if (config.productionSourcemap) this.nodeConfig.devtool = config.devtool.production
     } else {
       this.webConfig.plugins = [
         ...(this.webConfig.plugins || []),
@@ -1247,7 +1112,7 @@ class WebpackConfig {
         ]
       }
 
-      if (config.productionSourcemap) this.webConfig.devtool = 'source-map'
+      if (config.productionSourcemap) this.webConfig.devtool = config.devtool.production
     }
   }
 }

@@ -1,0 +1,7 @@
+{
+  "name": "ty-example-web-ts",
+  "version": "1.0.0",
+  "devDependencies": {
+    "typescript": "~3.5.3"
+  }
+}

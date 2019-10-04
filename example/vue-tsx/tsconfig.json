@@ -1,16 +1,10 @@
 {
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "baseUrl": ".",
-    "paths": {
-      "@/*": [
-        "src/*"
-      ]
-    },
-    "module": "esnext",
-    "target": "es5",
     "jsx": "preserve",
-    "jsxFactory": "h"
+    "jsxFactory": "h",
+    "module": "esnext",
+    "target": "es5"
   },
   "include": [
     "./src/**/*"

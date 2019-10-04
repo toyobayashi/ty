@@ -125,7 +125,7 @@ No webpack config. Working in progress.
       └── app.icns (mac)
     ```
 
-* `indexHtml` {any[]} Pass to `new HtmlWebpackPlugin(item)`. Default: `[{ template: 'public/index.html' }]`.
+* `indexHtml` {any[]} Pass to `HtmlWebpackPlugin`. Default: `['public/index.html']`.
 
 * `assetsPath` {string} Where the static assets should be output. Relative to `output`. Default: `''`.
 
@@ -151,7 +151,9 @@ No webpack config. Working in progress.
 
 * `generate` {undefined | 0 | 1} Force to generate missing files or not. Default: `undefined`.
 
-* `context` {string} Project root directory. Default: `''`
+* `context` {string} Project root directory. Default: `''`.
+
+* `devtool` {{ development: string; production: string }} Pass to `webpackConfig.devtool` in different mode. Default: `{ development: 'eval-source-map', production: 'source-map' }`.
 
 * `productionSourcemap` {boolean} Whether to generate sourcemap in production mode. Default: `false`.
 

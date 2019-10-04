@@ -93,6 +93,14 @@ const defaultConfig = {
    * @type {string}
    */
   context: '',
+
+  /**
+   * @type {{ development: string; production: string }}
+   */
+  devtool: {
+    development: 'eval-source-map',
+    production: 'source-map'
+  },
   /**
    * @type {boolean}
    */
@@ -306,13 +314,15 @@ function readTyConfig (configPath, getPath) {
   }
 
   if (!mergedConfig.indexHtml) {
-    mergedConfig.indexHtml = [{
-      template: 'public/index.html'
-    }]
+    mergedConfig.indexHtml = ['public/index.html']
   } else {
     if (!Array.isArray(mergedConfig.indexHtml)) {
       console.log(chalk.redBright('module.exports.indexHtml should be an array.'))
       process.exit(1)
+    }
+
+    if (!mergedConfig.indexHtml.length) {
+      mergedConfig.indexHtml = ['public/index.html']
     }
   }
 

@@ -38,6 +38,12 @@ declare namespace ty {
     ts?: undefined | 0 | 1
     generate?: undefined | 0 | 1
     context?: string
+
+    devtool?: {
+      development?: string
+      production?: string
+    }
+
     productionSourcemap?: boolean
     cssModule?: boolean
     cssLoaderOptions?: any
