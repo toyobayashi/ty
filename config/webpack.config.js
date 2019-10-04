@@ -363,13 +363,13 @@ class WebpackConfig {
         const preloadTarget = this.pathUtil.getPath(config.tsconfig.preload)
         const usePreload = !!(config.entry.preload && !tsconfigFileExists.preloadTSConfig)
         if (!tsconfigFileExists.rendererTSConfig) {
-          copyTemplate(templateFilename, rendererTarget, { jsx, target: 'es2018', include: './src/renderer/**/*' })
+          copyTemplate(templateFilename, rendererTarget, { jsx, target: 'es2018', include: './**/*', ext: '../../tsconfig.base.json' })
         }
         if (!tsconfigFileExists.mainTSConfig) {
-          copyTemplate(templateFilename, mainTarget, { jsx: '', target: 'es2018', include: './src/main/**/*' })
+          copyTemplate(templateFilename, mainTarget, { jsx: '', target: 'es2018', include: './**/*', ext: '../../tsconfig.base.json' })
         }
         if (usePreload) {
-          copyTemplate(templateFilename, preloadTarget, { jsx, target: 'es2018', include: './src/preload/**/*' })
+          copyTemplate(templateFilename, preloadTarget, { jsx, target: 'es2018', include: './**/*', ext: '../../tsconfig.base.json' })
         }
 
         const rendererBase = readJSONSync(rendererTarget).extends
@@ -393,7 +393,7 @@ class WebpackConfig {
       } else if (this._nodeTarget) {
         const nodeTarget = this.pathUtil.getPath(config.tsconfig.node)
         if (!tsconfigFileExists.nodeTSConfig) {
-          copyTemplate(templateFilename, nodeTarget, { jsx: '', target: 'es2018', include: './src/**/*' })
+          copyTemplate(templateFilename, nodeTarget, { jsx: '', target: 'es2018', include: './src/**/*', ext: './tsconfig.base.json' })
         }
         const nodeBase = readJSONSync(nodeTarget).extends
         if (typeof nodeBase === 'string') {
@@ -403,7 +403,7 @@ class WebpackConfig {
       } else {
         const webTarget = this.pathUtil.getPath(config.tsconfig.web)
         if (!tsconfigFileExists.webTSConfig) {
-          copyTemplate(templateFilename, webTarget, { jsx, target: 'es5', include: './src/**/*' })
+          copyTemplate(templateFilename, webTarget, { jsx, target: 'es5', include: './src/**/*', ext: './tsconfig.base.json' })
         }
         const webBase = readJSONSync(webTarget).extends
         if (typeof webBase === 'string') {

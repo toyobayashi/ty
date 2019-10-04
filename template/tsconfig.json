@@ -1,14 +1,8 @@
 {
-  "extends": "./tsconfig.base.json",
+  {{ext ? '"extends": "' + ext + '",' : ''}}
   "compilerOptions": {
     {{jsx ? '"jsx": "' + jsx + '",' : ''}}
     {{jsx === 'preserve' ? '"jsxFactory": "h",' : ''}}
-    "baseUrl": ".",
-    "paths": {
-      "@/*": [
-        "src/*"
-      ]
-    },
     "module": "esnext",
     "target": "{{target || 'es5'}}"
   },

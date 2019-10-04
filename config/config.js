@@ -130,9 +130,9 @@ const defaultConfig = {
   tsconfig: {
     web: 'tsconfig.json',
     node: 'tsconfig.json',
-    renderer: 'tsconfig.renderer.json',
-    main: 'tsconfig.main.json',
-    preload: 'tsconfig.reload.json'
+    renderer: 'src/renderer/tsconfig.json',
+    main: 'src/main/tsconfig.json',
+    preload: 'src/preload/tsconfig.json'
   },
 
   proxy: {},
