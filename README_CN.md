@@ -185,6 +185,10 @@ $ ty serve
 
 * `context` {string} 修改打包器的上下文根目录。默认：`''`。
 
+* `progress` {boolean} 显示编译进度。默认: `false`。
+
+* `define` {{ [key: string]: string }} 传入 `webpack.DefinePlugin`。默认：`{}`。
+
 * `devtool` {{ development: string; production: string }} 不同模式下传给 `webpackConfig.devtool`。 默认：`{ development: 'eval-source-map', production: 'source-map' }`。
 
 * `productionSourcemap` {boolean} 生产环境是否需要源地图。默认：`false`。
@@ -339,7 +343,9 @@ $ ty serve
 * `--dev-server-host`
 * `--production-sourcemap`
 * `--css-module`
+* `--progress` - 是否显示编译进度
 * `--config` - 只能在命令行使用。指定配置文件的路径。
+* `--define.PRE_DEFINE_VARIABLE='value'` - 预定义。
 
 ## 其它
 

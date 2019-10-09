@@ -13,7 +13,14 @@ module.exports = function (command, args = { _: [] }, userConfig = {}) {
   const cliConfig = require('./util/validate.js').cliSupportOption
   cliConfig.forEach((key) => {
     if (key in args) {
-      config[key] = args[key]
+      if (Object.prototype.toString.call(args[key]) === '[object Object]') {
+        config[key] = {
+          ...(config[key] || {}),
+          ...args[key]
+        }
+      } else {
+        config[key] = args[key]
+      }
       if (key === 'mode') {
         process.env.NODE_ENV = args[key]
       }

@@ -70,6 +70,8 @@ function printHelp () {
   console.log('  --generate=[0|1]')
   console.log('  --context=project/root/path')
   console.log('  --production-sourcemap')
+  console.log('  --progress')
+  console.log('  --define.PRE_DEFINE_VARIABLE=\'value\'')
   console.log('\nRepo: https://github.com/toyobayashi/ty')
   process.exit(0)
 }

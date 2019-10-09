@@ -153,6 +153,10 @@ No webpack config. Working in progress.
 
 * `context` {string} Project root directory. Default: `''`.
 
+* `progress` {boolean} Show progress. Default: `false`.
+
+* `define` {{ [key: string]: string }} Pass to `webpack.DefinePlugin`. Default: `{}`.
+
 * `devtool` {{ development: string; production: string }} Pass to `webpackConfig.devtool` in different mode. Default: `{ development: 'eval-source-map', production: 'source-map' }`.
 
 * `productionSourcemap` {boolean} Whether to generate sourcemap in production mode. Default: `false`.
@@ -300,7 +304,9 @@ No webpack config. Working in progress.
 * `--dev-server-host`
 * `--production-sourcemap`
 * `--css-module`
+* `--progress` - Show progress.
 * `--config` - CLI only. Specify tyconfig file path.
+* `--define.PRE_DEFINE_VARIABLE='value'` - Predefine.
 
 ## Other
 

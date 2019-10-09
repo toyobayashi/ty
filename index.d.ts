@@ -38,6 +38,10 @@ declare namespace ty {
     ts?: undefined | 0 | 1
     generate?: undefined | 0 | 1
     context?: string
+    progress?: boolean
+    define?: {
+      [key: string]: string
+    }
 
     devtool?: {
       development?: string

@@ -119,6 +119,15 @@ const defaultConfig = {
    * @type {{ [name: string]: string }}
    */
   alias: {},
+  /**
+   * @type {boolean}
+   */
+  progress: false,
+
+  /**
+   * @type {{ [key: string]: string }}
+   */
+  define: {},
 
   /**
    * @type {{ src: string; appid: { ia32: string; x64: string }; url: string }}

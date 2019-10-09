@@ -1,6 +1,6 @@
 const { execSync } = require('child_process')
 const { existsSync, mkdirsSync, readJSONSync } = require('fs-extra')
-const { HotModuleReplacementPlugin } = require('webpack')
+const { HotModuleReplacementPlugin, ProgressPlugin, DefinePlugin } = require('webpack')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin')
 const TerserWebpackPlugin = require('terser-webpack-plugin')
@@ -260,6 +260,12 @@ class WebpackConfig {
         template: this.pathUtil.getPath(htmlOption.template),
         minify: config.mode === 'production' ? (htmlOption.minify || config.htmlMinify) : false
       })
+    })
+  }
+
+  _createDefinePlugin (config) {
+    return new DefinePlugin({
+      ...(config.define || {})
     })
   }
 
@@ -659,7 +665,11 @@ class WebpackConfig {
       resolve: {
         alias: config.alias,
         extensions: ['.js', '.ts', '.json', '.node']
-      }
+      },
+      plugins: [
+        this._createDefinePlugin(config),
+        ...(config.progress ? [new ProgressPlugin()] : [])
+      ]
     }
   }
 
@@ -690,7 +700,9 @@ class WebpackConfig {
       },
       plugins: [
         ...(this._createHtmlPlugins(config)),
-        this._createCopyPlugin(config, 'web')
+        this._createCopyPlugin(config, 'web'),
+        this._createDefinePlugin(config),
+        ...(config.progress ? [new ProgressPlugin()] : [])
       ],
       optimization: this._createBaseOptimization()
     }
@@ -726,7 +738,9 @@ class WebpackConfig {
       plugins: [
         new CopyWebpackPlugin([
           { from: this.pathUtil.getPath('package.json'), to: this.pathUtil.getPath(config.resourcesPath, 'app/package.json') }
-        ])
+        ]),
+        this._createDefinePlugin(config),
+        ...(config.progress ? [new ProgressPlugin()] : [])
       ]
     }
 
@@ -767,7 +781,9 @@ class WebpackConfig {
       },
       plugins: [
         ...(this._createHtmlPlugins(config)),
-        this._createCopyPlugin(config, 'renderer')
+        this._createCopyPlugin(config, 'renderer'),
+        this._createDefinePlugin(config),
+        ...(config.progress ? [new ProgressPlugin()] : [])
       ],
       optimization: this._createBaseOptimization()
     }
@@ -807,7 +823,11 @@ class WebpackConfig {
       resolve: {
         alias: config.alias,
         extensions: ['.ts', '.tsx', '.js', ...(this._useBabel ? ['.jsx'] : []), '.vue', '.css', '.styl', '.stylus', '.less', '.sass', '.scss', '.json', '.wasm']
-      }
+      },
+      plugins: [
+        this._createDefinePlugin(config),
+        ...(config.progress ? [new ProgressPlugin()] : [])
+      ]
     }
 
     if (this._useVue) {
