@@ -131,6 +131,10 @@ const defaultConfig = {
    * @type {boolean}
    */
   progress: false,
+  /**
+   * @type {undefined | 0 | 1}
+   */
+  extractcss: undefined,
 
   /**
    * @type {{ [key: string]: string }}

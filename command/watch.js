@@ -3,6 +3,7 @@ const WebpackConfig = require('../config/webpack.config.js')
 const { HotModuleReplacementPlugin } = require('webpack')
 
 function _watch (config) {
+  if (config.extractcss === undefined) config.extractcss = 1
   const webpackConfig = new WebpackConfig(config)
 
   const watchConfig = (webpackConf) => watch(webpackConf, function watchHandler (err, stats) {

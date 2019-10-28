@@ -24,7 +24,7 @@ class WebpackConfig {
       cssLoaderOptions.localIdentName = '[name]_[local]_[hash:base64:5]'
     }
     return [
-      config.mode === 'production' ? {
+      this._extractCss ? {
         loader: MiniCssExtractPlugin.loader,
         options: {
           sourceMap: !!config.productionSourcemap
@@ -458,6 +458,7 @@ class WebpackConfig {
     this._electronTarget = (config.target === 'electron')
     this._webTarget = (config.target === 'web')
     this._nodeTarget = (config.target === 'node')
+    this._extractCss = config.extractcss !== undefined ? !!config.extractcss : (config.mode === 'production')
 
     const existsTypeScriptInPackageJson = !!(this.pkg.devDependencies && this.pkg.devDependencies.typescript)
     const tsconfigFileExists = {
@@ -702,7 +703,8 @@ class WebpackConfig {
         ...(this._createHtmlPlugins(config)),
         this._createCopyPlugin(config, 'web'),
         this._createDefinePlugin(config),
-        ...(config.progress ? [new ProgressPlugin()] : [])
+        ...(config.progress ? [new ProgressPlugin()] : []),
+        ...(this._extractCss ? [new MiniCssExtractPlugin({ filename: config.out.css })] : [])
       ],
       optimization: this._createBaseOptimization()
     }
@@ -783,7 +785,8 @@ class WebpackConfig {
         ...(this._createHtmlPlugins(config)),
         this._createCopyPlugin(config, 'renderer'),
         this._createDefinePlugin(config),
-        ...(config.progress ? [new ProgressPlugin()] : [])
+        ...(config.progress ? [new ProgressPlugin()] : []),
+        ...(this._extractCss ? [new MiniCssExtractPlugin({ filename: config.out.css })] : [])
       ],
       optimization: this._createBaseOptimization()
     }
@@ -826,7 +829,8 @@ class WebpackConfig {
       },
       plugins: [
         this._createDefinePlugin(config),
-        ...(config.progress ? [new ProgressPlugin()] : [])
+        ...(config.progress ? [new ProgressPlugin()] : []),
+        ...(this._extractCss ? [new MiniCssExtractPlugin({ filename: config.out.css })] : [])
       ]
     }
 
@@ -1011,12 +1015,6 @@ class WebpackConfig {
     }
 
     if (this._electronTarget) {
-      this.rendererConfig.plugins = [
-        ...(this.rendererConfig.plugins || []),
-        new MiniCssExtractPlugin({
-          filename: config.out.css
-        })
-      ]
       this.rendererConfig.optimization = {
         ...(this.rendererConfig.optimization || {}),
         minimizer: [
@@ -1056,12 +1054,6 @@ class WebpackConfig {
       if (config.productionSourcemap) this.rendererConfig.devtool = this.mainConfig.devtool = config.devtool.production
 
       if (config.entry.preload) {
-        this.preloadConfig.plugins = [
-          ...(this.preloadConfig.plugins || []),
-          new MiniCssExtractPlugin({
-            filename: config.out.css
-          })
-        ]
         this.preloadConfig.optimization = {
           ...(this.preloadConfig.optimization || {}),
           minimizer: [
@@ -1104,12 +1096,6 @@ class WebpackConfig {
       }
       if (config.productionSourcemap) this.nodeConfig.devtool = config.devtool.production
     } else {
-      this.webConfig.plugins = [
-        ...(this.webConfig.plugins || []),
-        new MiniCssExtractPlugin({
-          filename: config.out.css
-        })
-      ]
       this.webConfig.optimization = {
         ...(this.webConfig.optimization || {}),
         minimizer: [

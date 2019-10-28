@@ -10,7 +10,8 @@ const cliSupportOption = [
   'cssModule',
   'generate',
   'progress',
-  'define'
+  'define',
+  'extractcss'
 ]
 
 const shouldBeObject = ['output', 'out', 'tsconfig', 'inno', 'alias', 'devtool', 'define']

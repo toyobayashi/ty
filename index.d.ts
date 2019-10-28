@@ -45,6 +45,7 @@ declare namespace ty {
     generate?: undefined | 0 | 1
     context?: string
     progress?: boolean
+    extractcss?: undefined | 0 | 1
     define?: {
       [key: string]: string
     }
