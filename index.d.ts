@@ -26,6 +26,12 @@ declare namespace ty {
       main?: string
       preload?: string
     }
+    out?: {
+      js?: string
+      css?: string
+      node?: string
+      assets?: string
+    }
     contentBase?: string
     resourcesPath?: string
     staticDir?: string

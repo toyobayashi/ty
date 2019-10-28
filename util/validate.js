@@ -13,7 +13,7 @@ const cliSupportOption = [
   'define'
 ]
 
-const shouldBeObject = ['output', 'tsconfig', 'inno', 'alias', 'devtool', 'define']
+const shouldBeObject = ['output', 'out', 'tsconfig', 'inno', 'alias', 'devtool', 'define']
 
 module.exports = {
   cliSupportOption,

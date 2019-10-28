@@ -239,7 +239,7 @@ class WebpackConfig {
     return {
       loader: require.resolve('file-loader'),
       options: {
-        name: path.posix.join(config.assetsPath || '', dir, '[name].[ext]')
+        name: path.posix.join(config.assetsPath || '', dir, config.out.assets)
       }
     }
   }
@@ -310,7 +310,7 @@ class WebpackConfig {
     }
   }
 
-  _createNodeLoader () {
+  _createNodeLoader (config) {
     return {
       test: /\.node$/,
       exclude: /node_modules/,
@@ -318,7 +318,7 @@ class WebpackConfig {
         {
           loader: require.resolve('native-addon-loader'),
           options: {
-            name: '[name].[ext]',
+            name: config.out.node,
             from: '.'
           }
         }
@@ -326,10 +326,10 @@ class WebpackConfig {
     }
   }
 
-  _createNodeBaseRules (tsconfig) {
+  _createNodeBaseRules (tsconfig, config) {
     return [
       this._createCommonTSLoader(tsconfig),
-      this._createNodeLoader()
+      this._createNodeLoader(config)
     ]
   }
 
@@ -650,7 +650,7 @@ class WebpackConfig {
       target: 'node',
       entry: config.entry.node,
       output: {
-        filename: '[name].js',
+        filename: config.out.js,
         path: this.pathUtil.getPath(config.output.node),
         libraryTarget: 'commonjs2'
       },
@@ -658,7 +658,7 @@ class WebpackConfig {
       module: {
         rules: [
           ...(this._useESLint ? [this._createEslintLoader(/\.jsx?$/)] : []),
-          ...(this._createNodeBaseRules(config.tsconfig.node))
+          ...(this._createNodeBaseRules(config.tsconfig.node, config))
         ]
       },
       externals: [webpackNodeExternals()],
@@ -680,7 +680,7 @@ class WebpackConfig {
       target: 'web',
       entry: config.entry.web,
       output: {
-        filename: '[name].js',
+        filename: config.out.js,
         path: this.pathUtil.getPath(config.output.web)
       },
       node: this._defaultNodeLib(),
@@ -719,7 +719,7 @@ class WebpackConfig {
       target: 'electron-main',
       entry: config.entry.main,
       output: {
-        filename: '[name].js',
+        filename: config.out.js,
         path: this.pathUtil.getPath(config.output.main),
         libraryTarget: 'commonjs2'
       },
@@ -727,7 +727,7 @@ class WebpackConfig {
       module: {
         rules: [
           ...(this._useESLint ? [this._createEslintLoader(/\.jsx?$/)] : []),
-          ...(this._createNodeBaseRules(config.tsconfig.main))
+          ...(this._createNodeBaseRules(config.tsconfig.main, config))
         ]
       },
       externals: [webpackNodeExternals()],
@@ -761,7 +761,7 @@ class WebpackConfig {
       target: config.entry.preload ? 'web' : 'electron-renderer',
       entry: config.entry.renderer,
       output: {
-        filename: '[name].js',
+        filename: config.out.js,
         path: this.pathUtil.getPath(config.output.renderer)
       },
       node: config.entry.preload ? this._defaultNodeLib() : false,
@@ -804,7 +804,7 @@ class WebpackConfig {
       target: 'electron-renderer',
       entry: config.entry.preload,
       output: {
-        filename: '[name].js',
+        filename: config.out.js,
         path: this.pathUtil.getPath(config.output.preload),
         libraryTarget: 'commonjs2'
       },
@@ -1014,7 +1014,7 @@ class WebpackConfig {
       this.rendererConfig.plugins = [
         ...(this.rendererConfig.plugins || []),
         new MiniCssExtractPlugin({
-          filename: '[name].css'
+          filename: config.out.css
         })
       ]
       this.rendererConfig.optimization = {
@@ -1059,7 +1059,7 @@ class WebpackConfig {
         this.preloadConfig.plugins = [
           ...(this.preloadConfig.plugins || []),
           new MiniCssExtractPlugin({
-            filename: '[name].css'
+            filename: config.out.css
           })
         ]
         this.preloadConfig.optimization = {
@@ -1107,7 +1107,7 @@ class WebpackConfig {
       this.webConfig.plugins = [
         ...(this.webConfig.plugins || []),
         new MiniCssExtractPlugin({
-          filename: '[name].css'
+          filename: config.out.css
         })
       ]
       this.webConfig.optimization = {

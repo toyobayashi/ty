@@ -41,6 +41,14 @@ const defaultConfig = {
     main: 'resources/app/main',
     preload: 'resources/app/preload'
   },
+
+  out: {
+    js: '[name].js',
+    css: '[name].css',
+    node: '[name].[ext]',
+    assets: '[name].[ext]'
+  },
+
   /**
    * @type {string}
    */
@@ -328,10 +336,6 @@ function readTyConfig (configPath, getPath) {
     if (!Array.isArray(mergedConfig.indexHtml)) {
       console.log(chalk.redBright('module.exports.indexHtml should be an array.'))
       process.exit(1)
-    }
-
-    if (!mergedConfig.indexHtml.length) {
-      mergedConfig.indexHtml = ['public/index.html']
     }
   }
 
