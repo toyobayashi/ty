@@ -186,6 +186,15 @@ async function pack (config) {
   Log.info('Write production package.json...')
   fs.writeFileSync(path.join(resourceAppRoot, 'package.json'), JSON.stringify(webpackConfig.productionPackage), 'utf8')
 
+  if (fs.existsSync(path.join(resourceAppRoot, 'node_modules'))) {
+    Log.warn('Remove node_modules cache...')
+    try {
+      await fs.remove(path.join(resourceAppRoot, 'node_modules'))
+    } catch (err) {
+      Log.error(err.message)
+    }
+  }
+
   Log.info('Install production dependencies...')
   execSync(`npm install --no-package-lock --production --arch=${config.arch} --target_arch=${config.arch} --build-from-source --runtime=electron --target=${webpackConfig.pkg.devDependencies.electron.replace(/[~^]/g, '')} --disturl=https://electronjs.org/headers`, { cwd: resourceAppRoot, stdio: 'inherit' })
   fs.writeFileSync(path.join(resourceAppRoot, 'package.json'), JSON.stringify(webpackConfig.productionPackage), 'utf8')
