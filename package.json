@@ -1,6 +1,6 @@
 {
   "name": "@tybys/ty",
-  "version": "0.6.2",
+  "version": "0.6.3",
   "main": "index.js",
   "bin": {
     "ty": "./bin/ty.js"
@@ -15,12 +15,12 @@
     "url": "git+https://github.com/toyobayashi/ty.git"
   },
   "dependencies": {
+    "@tybys/cross-zip": "^3.0.1",
     "asar": "^2.0.1",
     "babel-loader": "^8.0.6",
     "chalk": "^2.4.2",
     "cli-highlight": "^2.1.1",
     "copy-webpack-plugin": "^5.0.4",
-    "cross-zip": "^2.1.6",
     "css-loader": "^3.2.0",
     "deepmerge": "^4.0.0",
     "electron-packager": "^14.0.6",

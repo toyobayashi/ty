@@ -2,7 +2,7 @@ const packager = require('electron-packager')
 const path = require('path')
 const fs = require('fs-extra')
 const { execSync, spawn } = require('child_process')
-const crossZip = require('cross-zip')
+const crossZip = require('@tybys/cross-zip')
 const { createPackageWithOptions } = require('asar')
 const build = require('./build.js')
 const WebpackConfig = require('../config/webpack.config.js')
@@ -28,25 +28,7 @@ async function rename (appPath, webpackConfig) {
 
 function zip (source, target) {
   if (!fs.existsSync(path.dirname(target))) fs.mkdirsSync(path.dirname(target))
-  return new Promise((resolve, reject) => {
-    crossZip.zip(source, target, (err) => {
-      if (err) {
-        reject(err)
-        return
-      }
-      fs.stat(target, (err, stat) => {
-        if (err) {
-          reject(err)
-          return
-        }
-        if (!stat.isFile()) {
-          reject(new Error('Zip failed.'))
-          return
-        }
-        resolve(stat.size)
-      })
-    })
-  })
+  return crossZip.zip(source, target, false)
 }
 
 function createDebInstaller (appPath, config, webpackConfig) {
