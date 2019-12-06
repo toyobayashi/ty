@@ -194,6 +194,8 @@ No webpack config. Working in progress.
     }
    ```
 
+* `prune` - For pruning node_modules folder after electron packing process. See `@tybys/prune-node-modules`. Default: `{ production: true }`.
+
 * `statsOptions` - For webpack output. Default: 
 
     ``` js

@@ -168,6 +168,8 @@ const defaultConfig = {
 
   packHook: undefined,
 
+  prune: { production: true },
+
   statsOptions: {
     colors: true,
     children: false,

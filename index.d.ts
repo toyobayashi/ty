@@ -90,6 +90,13 @@ declare namespace ty {
       beforeZip? (config: ty.Configuration, root: string): void
     }
 
+    prune?: {
+      whitelist?: string[]
+      removeFiles?: string[]
+      removeDirs?: string[]
+      production?: boolean
+    }
+
     statsOptions?: any
 
     terserPlugin?: any

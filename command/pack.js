@@ -3,6 +3,7 @@ const path = require('path')
 const fs = require('fs-extra')
 const { execSync, spawn } = require('child_process')
 const crossZip = require('@tybys/cross-zip')
+const pnm = require('@tybys/prune-node-modules')
 const { createPackageWithOptions } = require('asar')
 const build = require('./build.js')
 const WebpackConfig = require('../config/webpack.config.js')
@@ -168,7 +169,9 @@ async function pack (config) {
   Log.info('Write production package.json...')
   fs.writeFileSync(path.join(resourceAppRoot, 'package.json'), JSON.stringify(webpackConfig.productionPackage), 'utf8')
 
-  if (fs.existsSync(path.join(resourceAppRoot, 'node_modules'))) {
+  const existNodeModules = fs.existsSync(path.join(resourceAppRoot, 'node_modules'))
+
+  if (existNodeModules) {
     Log.warn('Remove node_modules cache...')
     try {
       await fs.remove(path.join(resourceAppRoot, 'node_modules'))
@@ -184,6 +187,11 @@ async function pack (config) {
   if (config.packHook && typeof config.packHook.afterInstall === 'function') {
     Log.info('Running config.packHook.afterInstall...')
     await Promise.resolve(config.packHook.afterInstall(config, resourceAppRoot))
+  }
+
+  if (existNodeModules && Object.prototype.toString.call(config.prune) === '[object Object]') {
+    Log.info('Prune node_modules...')
+    pnm(resourceAppRoot, config.prune)
   }
 
   Log.info('Make app.asar...')
