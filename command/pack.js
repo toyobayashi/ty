@@ -189,7 +189,7 @@ async function pack (config) {
     await Promise.resolve(config.packHook.afterInstall(config, resourceAppRoot))
   }
 
-  if (existNodeModules && Object.prototype.toString.call(config.prune) === '[object Object]') {
+  if (Object.prototype.toString.call(config.prune) === '[object Object]') {
     Log.info('Prune node_modules...')
     pnm(resourceAppRoot, config.prune)
   }
