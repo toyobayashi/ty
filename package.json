@@ -14,6 +14,10 @@
     "type": "git",
     "url": "git+https://github.com/toyobayashi/ty.git"
   },
+  "bugs": {
+    "url": "https://github.com/toyobayashi/ty/issues",
+    "email": "lifenglin314@outlook.com"
+  },
   "dependencies": {
     "@tybys/cross-zip": "^3.0.1",
     "@tybys/prune-node-modules": "^0.1.0",
