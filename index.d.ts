@@ -11,6 +11,7 @@ declare namespace ty {
     mode?: 'production' | 'development'
     devServerHost?: string
     devServerPort?: number
+    devServerOpenBrowser?: boolean | string
     target?: 'electron' | 'web' | 'node'
     entry?: {
       web?: WebpackEntry

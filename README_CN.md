@@ -90,6 +90,8 @@ $ ty serve
 
 * `devServerPort` {number} 开发环境下的本地服务器端口号。 默认：`8090`。
 
+* `devServerOpenBrowser` {boolean | string} 限 Web 项目。本地服务器启动时打开浏览器。默认：`false`。
+
 * `target` {'web' | 'electron' | 'node'} 如果项目开发依赖中安装了 `electron`，那么它就是 `'electron'`。
 
 * `entry` - 传给 Webpack 的入口文件。 默认：
@@ -342,6 +344,7 @@ $ ty serve
 * `--context` - 项目的根目录。
 * `--dev-server-port`
 * `--dev-server-host`
+* `--dev-server-open-browser`
 * `--production-sourcemap`
 * `--css-module`
 * `--progress` - 是否显示编译进度

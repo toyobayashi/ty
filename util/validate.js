@@ -4,6 +4,7 @@ const cliSupportOption = [
   'target',
   'devServerHost',
   'devServerPort',
+  'devServerOpenBrowser',
   'ts',
   'context',
   'productionSourcemap',

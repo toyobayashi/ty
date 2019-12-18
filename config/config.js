@@ -17,6 +17,10 @@ const defaultConfig = {
    */
   devServerPort: 8090,
   /**
+   * @type {boolean | string}
+   */
+  devServerOpenBrowser: false,
+  /**
    * @type {'electron' | 'web'}
    */
   target: '',

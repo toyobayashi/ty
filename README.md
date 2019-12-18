@@ -58,6 +58,8 @@ No webpack config. Working in progress.
 
 * `devServerPort` {number} For `serve` and `dev`. Default: `8090`.
 
+* `devServerOpenBrowser` {boolean | string} Web project only. For `serve` and `dev`. Default: `false`.
+
 * `target` {'web' | 'electron' | 'node'} If `electron` in your `devDependencies` it is `'electron'`, otherwise it is `'web'`.
 
 * `entry` - Must be absolute path. Default:
@@ -304,6 +306,7 @@ No webpack config. Working in progress.
 * `--context` - Project root directory.
 * `--dev-server-port`
 * `--dev-server-host`
+* `--dev-server-open-browser`
 * `--production-sourcemap`
 * `--css-module`
 * `--progress` - Show progress.

@@ -426,6 +426,7 @@ class WebpackConfig {
       hot: true,
       host: config.devServerHost,
       inline: true,
+      ...(this._webTarget ? { open: config.devServerOpenBrowser } : {}),
       contentBase: [this.pathUtil.getPath(config.contentBase)],
       publicPath: config.publicPath,
       ...(config.proxy ? { proxy: config.proxy } : {}),
