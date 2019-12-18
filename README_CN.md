@@ -195,6 +195,8 @@ $ ty serve
 
 * `productionSourcemap` {boolean} 生产环境是否需要源地图。默认：`false`。
 
+* `extractcss` {undefined | 0 | 1} 强制提取或强制不提取 CSS 文件。默认：`undefined`。
+
 * `cssModule` {boolean} 是否启用 CSS Module。默认：`false`。
 
 * `cssLoaderOptions` {any} 默认：`{}`.

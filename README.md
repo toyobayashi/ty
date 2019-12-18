@@ -163,6 +163,8 @@ No webpack config. Working in progress.
 
 * `productionSourcemap` {boolean} Whether to generate sourcemap in production mode. Default: `false`.
 
+* `extractcss` {undefined | 0 | 1} Whether to extract CSS. Default: `undefined`.
+
 * `cssModule` {boolean} Whether to enable css module. Default: `false`.
 
 * `cssLoaderOptions` {any} Default: `{}`.
