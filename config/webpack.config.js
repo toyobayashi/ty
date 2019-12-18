@@ -368,17 +368,19 @@ class WebpackConfig {
   }
 
   _createCopyPlugin (config, output) {
-    return new CopyWebpackPlugin([
+    const from = this.pathUtil.getPath(config.staticDir || 'public')
+    const to = this.pathUtil.getPath(config.output[output])
+    return (existsSync(from) ? [new CopyWebpackPlugin([
       {
-        from: this.pathUtil.getPath(config.staticDir || 'public'),
-        to: this.pathUtil.getPath(config.output[output]),
+        from,
+        to,
         toType: 'dir',
         ignore: [
           '.gitkeep',
           '.DS_Store'
         ]
       }
-    ])
+    ])] : [])
   }
 
   _createVueLoader () {
@@ -702,7 +704,7 @@ class WebpackConfig {
       },
       plugins: [
         ...(this._createHtmlPlugins(config)),
-        this._createCopyPlugin(config, 'web'),
+        ...(this._createCopyPlugin(config, 'web')),
         this._createDefinePlugin(config),
         ...(config.progress ? [new ProgressPlugin()] : []),
         ...(this._extractCss ? [new MiniCssExtractPlugin({ filename: config.out.css })] : [])
@@ -784,7 +786,7 @@ class WebpackConfig {
       },
       plugins: [
         ...(this._createHtmlPlugins(config)),
-        this._createCopyPlugin(config, 'renderer'),
+        ...(this._createCopyPlugin(config, 'renderer')),
         this._createDefinePlugin(config),
         ...(config.progress ? [new ProgressPlugin()] : []),
         ...(this._extractCss ? [new MiniCssExtractPlugin({ filename: config.out.css })] : [])

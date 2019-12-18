@@ -1,6 +1,10 @@
 const path = require('path')
 const { existsSync, mkdirsSync, writeFileSync, readFileSync, copySync } = require('fs-extra')
 
+function isNeedEnsure (p) {
+  return typeof p === 'string' && (path.isAbsolute(p) || (p[0] === '.'))
+}
+
 function ensureFile (filepath, data = '', suffix = '.js') {
   if (path.extname(filepath) === '') filepath += suffix
   if (!existsSync(filepath)) {
@@ -11,9 +15,11 @@ function ensureFile (filepath, data = '', suffix = '.js') {
 
 function ensureEntry (entry, getPath, suffix = '.js', template = '', options = null) {
   if (typeof entry === 'string') {
+    if (!isNeedEnsure(entry)) return
     ensureFile(getPath(entry), '', suffix)
   } else if (Array.isArray(entry)) {
     entry.forEach(e => {
+      if (!isNeedEnsure(e)) return
       if (typeof template === 'string' && template !== '') {
         let dest = getPath(e)
         if (path.extname(dest) === '') dest += suffix
