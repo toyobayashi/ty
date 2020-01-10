@@ -1,3 +1,5 @@
+/// <reference types="node" />
+
 declare namespace ty {
   type WebpackEntry = string | string[] | { [name: string]: string | string[] }
 
@@ -90,6 +92,21 @@ declare namespace ty {
       afterInstall? (config: ty.Configuration, root: string): void
       beforeZip? (config: ty.Configuration, root: string): void
     }
+
+    asarOptions?: {
+      globOptions?: any
+      dot?: boolean
+      ordering?: boolean
+      pattern?: string
+      unpack?: string
+      unpackDir?: string
+      transform? <T extends NodeJS.WritableStream>(filename: string): T
+      [key: string]: any
+    }
+
+    nodeModulesAsar?: boolean
+
+    nodeExternals?: any
 
     prune?: {
       whitelist?: string[]

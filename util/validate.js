@@ -15,7 +15,7 @@ const cliSupportOption = [
   'extractcss'
 ]
 
-const shouldBeObject = ['output', 'out', 'tsconfig', 'inno', 'alias', 'devtool', 'define']
+const shouldBeObject = ['output', 'out', 'tsconfig', 'inno', 'alias', 'devtool', 'define', 'asarOptions', 'nodeExternals']
 
 module.exports = {
   cliSupportOption,

@@ -1,0 +1,12 @@
+{
+  "name": "ty-example-electron",
+  "version": "1.0.0",
+  "main": "main/main.js",
+  "dependencies": {
+    "@tybys/oid": "^1.0.7"
+  },
+  "devDependencies": {
+    "asar-node": "^2.1.0",
+    "electron": "6.0.7"
+  }
+}

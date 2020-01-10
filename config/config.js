@@ -172,6 +172,14 @@ const defaultConfig = {
 
   packHook: undefined,
 
+  asarOptions: {
+    unpack: '*.node'
+  },
+
+  nodeModulesAsar: false,
+
+  nodeExternals: {},
+
   prune: { production: true },
 
   statsOptions: {

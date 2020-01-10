@@ -99,10 +99,18 @@ function getDirectorySizeSync (dir) {
   return size
 }
 
-async function createAsarApp (root, webpackConfig) {
+async function createAsarApp (root, webpackConfig, config) {
   const distResourcesDir = path.dirname(webpackConfig.packagerConfig.prebuiltAsar)
   if (fs.existsSync(distResourcesDir)) fs.removeSync(distResourcesDir)
-  await createPackageWithOptions(root, webpackConfig.packagerConfig.prebuiltAsar, { unpack: '*.node' })
+  fs.mkdirsSync(distResourcesDir)
+  if (config.nodeModulesAsar) {
+    const nodeModulesPath = path.join(root, 'node_modules')
+    if (fs.existsSync(nodeModulesPath)) {
+      await createPackageWithOptions(nodeModulesPath, path.join(distResourcesDir, 'node_modules.asar'), config.asarOptions)
+      await fs.remove(nodeModulesPath)
+    }
+  }
+  await createPackageWithOptions(root, webpackConfig.packagerConfig.prebuiltAsar, config.asarOptions)
 }
 
 async function copyExtraResources (root, config, webpackConfig) {
@@ -195,7 +203,7 @@ async function pack (config) {
   }
 
   Log.info('Make app.asar...')
-  await createAsarApp(resourceAppRoot, webpackConfig)
+  await createAsarApp(resourceAppRoot, webpackConfig, config)
 
   Log.print('')
   const [appPath] = await packager(webpackConfig.packagerConfig)

@@ -665,7 +665,7 @@ class WebpackConfig {
           ...(this._createNodeBaseRules(config.tsconfig.node, config))
         ]
       },
-      externals: [webpackNodeExternals()],
+      externals: [webpackNodeExternals(config.nodeExternals)],
       resolve: {
         alias: config.alias,
         extensions: ['.js', '.ts', '.json', '.node']
@@ -735,7 +735,7 @@ class WebpackConfig {
           ...(this._createNodeBaseRules(config.tsconfig.main, config))
         ]
       },
-      externals: [webpackNodeExternals()],
+      externals: [webpackNodeExternals(config.nodeExternals)],
       resolve: {
         alias: config.alias,
         extensions: ['.js', '.ts', '.json', '.node']
@@ -815,7 +815,7 @@ class WebpackConfig {
         libraryTarget: 'commonjs2'
       },
       node: false,
-      externals: [webpackNodeExternals()],
+      externals: [webpackNodeExternals(config.nodeExternals)],
       module: {
         rules: [
           ...(this._useESLint ? [this._createEslintLoader(/\.(jsx?|vue)$/)] : []),
