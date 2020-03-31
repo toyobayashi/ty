@@ -18,6 +18,9 @@
     "url": "https://github.com/toyobayashi/ty/issues",
     "email": "lifenglin314@outlook.com"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "@tybys/cross-zip": "^3.0.4",
     "@tybys/prune-node-modules": "^0.1.0",
