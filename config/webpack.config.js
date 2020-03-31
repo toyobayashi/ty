@@ -562,13 +562,13 @@ class WebpackConfig {
         const preloadTarget = this.pathUtil.getPath(config.tsconfig.preload)
         const usePreload = !!(config.entry.preload && !tsconfigFileExists.preloadTSConfig)
         if (!tsconfigFileExists.rendererTSConfig) {
-          copyTemplate(templateFilename, rendererTarget, { jsx, target: 'es2018', include: './**/*', ext: '../../tsconfig.base.json' })
+          copyTemplate(templateFilename, rendererTarget, { jsx, target: 'es2019', include: './**/*', ext: '../../tsconfig.base.json' })
         }
         if (!tsconfigFileExists.mainTSConfig) {
-          copyTemplate(templateFilename, mainTarget, { jsx: '', target: 'es2018', include: './**/*', ext: '../../tsconfig.base.json' })
+          copyTemplate(templateFilename, mainTarget, { jsx: '', target: 'es2019', include: './**/*', ext: '../../tsconfig.base.json' })
         }
         if (usePreload) {
-          copyTemplate(templateFilename, preloadTarget, { jsx, target: 'es2018', include: './**/*', ext: '../../tsconfig.base.json' })
+          copyTemplate(templateFilename, preloadTarget, { jsx, target: 'es2019', include: './**/*', ext: '../../tsconfig.base.json' })
         }
 
         const rendererBase = readJSONSync(rendererTarget).extends

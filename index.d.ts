@@ -96,7 +96,7 @@ declare namespace ty {
 
     packTempAppDir?: string
 
-    packagerOptions: { [key: string]: any }
+    packagerOptions?: { [key: string]: any }
 
     asarOptions?: {
       globOptions?: any
