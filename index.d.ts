@@ -36,7 +36,8 @@ declare namespace ty {
       assets?: string
     }
     contentBase?: string
-    resourcesPath?: string
+    localResourcesPath?: string
+    extraResourcesPath?: string
     staticDir?: string
     publicPath?: string
     distPath?: string
@@ -93,6 +94,10 @@ declare namespace ty {
       beforeZip? (config: ty.Configuration, root: string): void
     }
 
+    packTempAppDir?: string
+
+    packagerOptions: { [key: string]: any }
+
     asarOptions?: {
       globOptions?: any
       dot?: boolean
@@ -100,7 +105,7 @@ declare namespace ty {
       pattern?: string
       unpack?: string
       unpackDir?: string
-      transform? <T extends NodeJS.WritableStream>(filename: string): T
+      transform? (filename: string): NodeJS.WritableStream | void
       [key: string]: any
     }
 

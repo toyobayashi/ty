@@ -125,16 +125,18 @@ $ ty serve
       output: {
         web: 'dist',
         node: 'dist',
-        renderer: 'resources/app/renderer',
-        main: 'resources/app/main',
-        preload: 'resources/app/preload'
+        renderer: `${localResourcesPath}/app/renderer`,
+        main: `${localResourcesPath}/app/main`,
+        preload: `${localResourcesPath}/app/preload`
       }
     }
     ```
 
-* `contentBase` {string} 传给 `webpack-dev-server`，从什么地方托管静态文件。 默认：`'dist'` 或 `'resources'`。
+* `contentBase` {string} 传给 `webpack-dev-server`，从什么地方托管静态文件。 默认：`'dist'` 或 `'local_resources'`。
 
-* `resourcesPath` {string} 在本地开发启动时模拟 Electron 的 `resources` 目录。打包时会把这里的东西全部复制过去。默认：`'resources'`。
+* `localResourcesPath` {string} 在本地开发启动时模拟 Electron 的 `resources` 目录。默认：`'local_resources'`。
+
+* `extraResourcesPath` {string} 打包时会把这里面的东西复制到 `resources` 目录。默认：`'resources'`。
 
 * `publicPath` {string} 本地开发时静态资源的相对路径。默认：`'/'` 或 `'/app/renderer/'`。
 
@@ -230,6 +232,10 @@ $ ty serve
     }
    ```
 
+* `packTempAppDir` - 打包时产生的临时 `app` 目录。 默认：`path.join(distPath, '_app')`。
+
+* `packagerOptions` - 传入 `electron-packager`。默认： `{}`。
+
 * `asarOptions` - 传入 `asar.createPackageWithOptions()`。默认：`{ unpack: '*.node' }`。
 
 * `nodeModulesAsar` - 单独把 `node_modules` 打包成 `node_modules.asar` 与 `app.asar` 同级。默认： `false`。 
@@ -258,6 +264,7 @@ $ ty serve
       terserPlugin: {
         parallel: true,
         cache: true,
+        extractComments: false,
         terserOptions: {
           ecma: 9,
           output: {

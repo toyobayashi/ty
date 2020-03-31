@@ -1,5 +1,5 @@
 node_modules
 /public
-/resources
+/local_resources
 /.vscode
 /dist

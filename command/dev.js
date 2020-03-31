@@ -1,6 +1,7 @@
 const WebpackConfig = require('../config/webpack.config.js')
 const { watch, startDevServer } = require('../util/webpack.js')
 const start = require('./start.js')
+const fs = require('fs-extra')
 
 function dev (config) {
   if (config.target !== 'electron') {
@@ -37,7 +38,13 @@ function dev (config) {
   const isReady = () => Object.keys(firstLaunch).map(key => firstLaunch[key]).indexOf(false) === -1
 
   const webpackConfig = new WebpackConfig(config)
-
+  const extraResourcesPath = webpackConfig.pathUtil.getPath(config.extraResourcesPath)
+  if (fs.existsSync(extraResourcesPath)) {
+    const ls = fs.readdirSync(extraResourcesPath).filter(item => (item !== '.gitkeep'))
+    for (const item of ls) {
+      fs.copySync(webpackConfig.pathUtil.getPath(config.extraResourcesPath, item), webpackConfig.pathUtil.getPath(config.localResourcesPath, item))
+    }
+  }
   watch(webpackConfig.mainConfig, function watchHandler (err, stats) {
     if (err) {
       console.log(err)

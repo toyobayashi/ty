@@ -93,16 +93,18 @@ No webpack config. Working in progress.
       output: {
         web: 'dist',
         node: 'dist',
-        renderer: 'resources/app/renderer',
-        main: 'resources/app/main',
-        preload: 'resources/app/preload'
+        renderer: `${localResourcesPath}/app/renderer`,
+        main: `${localResourcesPath}/app/main`,
+        preload: `${localResourcesPath}/app/preload`
       }
     }
     ```
 
 * `contentBase` {string} For `webpack-dev-server`. Default: `'dist'` (web target) or `'resources'` (electron target).
 
-* `resourcesPath` {string} Simulate electron's `resources` directory in local development. Default: `'resources'`.
+* `localResourcesPath` {string} Simulate electron's `resources` directory in local development. Default: `'local_resources'`.
+
+* `extraResourcesPath` {string} Extra contents to be copied to `resources` dir. Default: `'resources'`.
 
 * `publicPath` {string} Default: `'/'` (web target) or `'/app/renderer/'` (electron target).
 
@@ -198,6 +200,10 @@ No webpack config. Working in progress.
     }
    ```
 
+* `packTempAppDir` - Temp `app` dir when packing. Default: `path.join(distPath, '_app')`.
+
+* `packagerOptions` - Pass to `electron-packager`. Default: `{}`.
+
 * `asarOptions` - Pass to `asar.createPackageWithOptions()`. Default: `{ unpack: '*.node' }`.
 
 * `nodeModulesAsar` - Pack `node_modules` to `node_modules.asar` and place it with `app.asar` together. Default: `false`.
@@ -226,6 +232,7 @@ No webpack config. Working in progress.
       terserPlugin: {
         parallel: true,
         cache: true,
+        extractComments: false,
         terserOptions: {
           ecma: 9,
           output: {

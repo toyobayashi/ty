@@ -114,9 +114,11 @@ async function createAsarApp (root, webpackConfig, config) {
 }
 
 async function copyExtraResources (root, config, webpackConfig) {
-  const ls = (await fs.readdir(webpackConfig.pathUtil.getPath(config.resourcesPath))).filter(item => (item !== 'app' && item !== '.gitkeep'))
+  const extraResourcesPath = webpackConfig.pathUtil.getPath(config.extraResourcesPath)
+  if (!fs.existsSync(extraResourcesPath)) return
+  const ls = (await fs.readdir(extraResourcesPath)).filter(item => (item !== '.gitkeep'))
   await Promise.all(ls.map(item => {
-    return fs.copy(webpackConfig.pathUtil.getPath(config.resourcesPath, item), webpackConfig.pathUtil.getPath(config.distPath, 'resources', item))
+    return fs.copy(webpackConfig.pathUtil.getPath(config.extraResourcesPath, item), webpackConfig.pathUtil.getPath(config.distPath, 'resources', item))
   }))
   await fs.copy(webpackConfig.pathUtil.getPath(config.distPath, 'resources'), path.join(root, '..'))
 }
@@ -173,37 +175,47 @@ async function pack (config) {
   Log.info('Bundle production code...')
   await build(config)
 
-  const resourceAppRoot = webpackConfig.pathUtil.getPath(config.resourcesPath, 'app')
-  Log.info('Write production package.json...')
-  fs.writeFileSync(path.join(resourceAppRoot, 'package.json'), JSON.stringify(webpackConfig.productionPackage), 'utf8')
+  const packTempAppDir = webpackConfig.pathUtil.getPath(config.packTempAppDir)
+  if (fs.existsSync(packTempAppDir)) fs.removeSync(packTempAppDir)
+  fs.mkdirsSync(packTempAppDir)
+  fs.copySync(webpackConfig.pathUtil.getPath(config.output.main), path.join(packTempAppDir, path.basename(config.output.main)))
+  fs.copySync(webpackConfig.pathUtil.getPath(config.output.renderer), path.join(packTempAppDir, path.basename(config.output.renderer)))
+  if (config.entry.preload) {
+    fs.copySync(webpackConfig.pathUtil.getPath(config.output.preload), path.join(packTempAppDir, path.basename(config.output.preload)))
+  }
 
-  const existNodeModules = fs.existsSync(path.join(resourceAppRoot, 'node_modules'))
+  Log.info('Write production package.json...')
+  fs.writeFileSync(path.join(packTempAppDir, 'package.json'), JSON.stringify(webpackConfig.productionPackage), 'utf8')
+
+  const existNodeModules = fs.existsSync(path.join(packTempAppDir, 'node_modules'))
 
   if (existNodeModules) {
     Log.warn('Remove node_modules cache...')
     try {
-      await fs.remove(path.join(resourceAppRoot, 'node_modules'))
+      await fs.remove(path.join(packTempAppDir, 'node_modules'))
     } catch (err) {
       Log.error(err.message)
     }
   }
 
-  Log.info('Install production dependencies...')
-  execSync(`npm install --no-package-lock --production --arch=${config.arch} --target_arch=${config.arch} --build-from-source --runtime=electron --target=${webpackConfig.pkg.devDependencies.electron.replace(/[~^]/g, '')} --disturl=https://electronjs.org/headers`, { cwd: resourceAppRoot, stdio: 'inherit' })
-  fs.writeFileSync(path.join(resourceAppRoot, 'package.json'), JSON.stringify(webpackConfig.productionPackage), 'utf8')
+  if (webpackConfig.productionPackage.dependencies && Object.keys(webpackConfig.productionPackage.dependencies).length) {
+    Log.info('Install production dependencies...')
+    execSync(`npm install --no-save --no-package-lock --production --arch=${config.arch} --target_arch=${config.arch} --build-from-source --runtime=electron --target=${webpackConfig.pkg.devDependencies.electron.replace(/[~^]/g, '')} --disturl=https://electronjs.org/headers`, { cwd: packTempAppDir, stdio: 'inherit' })
+    fs.writeFileSync(path.join(packTempAppDir, 'package.json'), JSON.stringify(webpackConfig.productionPackage), 'utf8')
+  }
 
   if (config.packHook && typeof config.packHook.afterInstall === 'function') {
     Log.info('Running config.packHook.afterInstall...')
-    await Promise.resolve(config.packHook.afterInstall(config, resourceAppRoot))
+    await Promise.resolve(config.packHook.afterInstall(config, packTempAppDir))
   }
 
   if (Object.prototype.toString.call(config.prune) === '[object Object]') {
     Log.info('Prune node_modules...')
-    pnm(resourceAppRoot, config.prune)
+    pnm(packTempAppDir, config.prune)
   }
 
   Log.info('Make app.asar...')
-  await createAsarApp(resourceAppRoot, webpackConfig, config)
+  await createAsarApp(packTempAppDir, webpackConfig, config)
 
   Log.print('')
   const [appPath] = await packager(webpackConfig.packagerConfig)

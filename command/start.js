@@ -11,7 +11,7 @@ function start (config) {
 
   if (config.mode === 'production') {
     const cp = spawn(require('electron'), [
-      pathUtil.getPath(config.resourcesPath, 'app')
+      pathUtil.getPath(config.localResourcesPath, 'app')
     ], {
       cwd: pathUtil.getPath(),
       stdio: 'inherit'
@@ -21,7 +21,7 @@ function start (config) {
     const cp = spawn(require('electron'), [
       '--remote-debugging-port=9222',
       '--inspect=' + Date.now() % 65536,
-      pathUtil.getPath(config.resourcesPath, 'app')
+      pathUtil.getPath(config.localResourcesPath, 'app')
     ], {
       cwd: pathUtil.getPath(),
       stdio: 'inherit'

@@ -1,7 +1,7 @@
 const merge = require('deepmerge')
 const chalk = require('chalk')
 const { existsSync } = require('fs-extra')
-const { extname } = require('path')
+const { extname, posix } = require('path')
 
 const defaultConfig = {
   /**
@@ -41,9 +41,9 @@ const defaultConfig = {
   output: {
     web: 'dist',
     node: 'dist',
-    renderer: 'resources/app/renderer',
-    main: 'resources/app/main',
-    preload: 'resources/app/preload'
+    renderer: '',
+    main: '',
+    preload: ''
   },
 
   out: {
@@ -60,7 +60,11 @@ const defaultConfig = {
   /**
    * @type {string}
    */
-  resourcesPath: 'resources',
+  localResourcesPath: '',
+  /**
+   * @type {string}
+   */
+  extraResourcesPath: 'resources',
   /**
    * @type {string}
    */
@@ -172,6 +176,10 @@ const defaultConfig = {
 
   packHook: undefined,
 
+  packTempAppDir: '',
+
+  packagerOptions: {},
+
   asarOptions: {
     unpack: '*.node'
   },
@@ -192,6 +200,7 @@ const defaultConfig = {
   terserPlugin: {
     parallel: true,
     cache: true,
+    extractComments: false,
     terserOptions: {
       ecma: 9,
       output: {
@@ -314,9 +323,24 @@ function readTyConfig (configPath, getPath) {
     }
   }
 
+  setDefault(mergedConfig, 'localResourcesPath', 'local_resources')
+  setDefault(mergedConfig, 'packTempAppDir', posix.join(mergedConfig.distPath, '_app'))
   if (mergedConfig.target === 'electron') {
-    setDefault(mergedConfig, 'contentBase', mergedConfig.resourcesPath || 'resources')
+    if (mergedConfig.localResourcesPath === mergedConfig.extraResourcesPath) {
+      console.log(chalk.redBright('Error: localResourcesPath === extraResourcesPath'))
+      process.exit(1)
+    }
+    setDefault(mergedConfig, 'contentBase', mergedConfig.localResourcesPath)
     setDefault(mergedConfig, 'publicPath', '/app/renderer/')
+    if (!mergedConfig.output.main) {
+      mergedConfig.output.main = posix.join(mergedConfig.localResourcesPath, 'app/main')
+    }
+    if (!mergedConfig.output.renderer) {
+      mergedConfig.output.renderer = posix.join(mergedConfig.localResourcesPath, 'app/renderer')
+    }
+    if (!mergedConfig.output.preload) {
+      mergedConfig.output.preload = posix.join(mergedConfig.localResourcesPath, 'app/preload')
+    }
   } else {
     setDefault(mergedConfig, 'contentBase', mergedConfig.output.web || 'dist')
     setDefault(mergedConfig, 'publicPath', '/')

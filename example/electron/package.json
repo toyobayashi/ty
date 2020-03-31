@@ -2,7 +2,11 @@
   "name": "ty-example-electron",
   "version": "1.0.0",
   "main": "main/main.js",
+  "scripts": {
+    "dev": "ty dev",
+    "pack": "ty pack"
+  },
   "devDependencies": {
-    "electron": "6.0.7"
+    "electron": "8.2.0"
   }
 }

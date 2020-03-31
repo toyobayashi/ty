@@ -43,7 +43,7 @@ module.exports = function (config) {
           },
           runtimeArgs: [
             '--remote-debugging-port=9222',
-            path.posix.join('${workspaceFolder}', config.resourcesPath, 'app')
+            path.posix.join('${workspaceFolder}', config.localResourcesPath, 'app')
           ],
           sourceMaps: true,
           protocol: 'inspector'

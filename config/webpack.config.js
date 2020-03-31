@@ -11,6 +11,7 @@ const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin')
 const PathUtil = require('../util/path.js')
 const path = require('path')
 const { ensureEntry, copyTemplate } = require('../util/file.js')
+const merge = require('deepmerge')
 
 class WebpackConfig {
   _createCssLoaders (config, importLoaders = 0, cssModule = false) {
@@ -742,7 +743,7 @@ class WebpackConfig {
       },
       plugins: [
         new CopyWebpackPlugin([
-          { from: this.pathUtil.getPath('package.json'), to: this.pathUtil.getPath(config.resourcesPath, 'app/package.json') }
+          { from: this.pathUtil.getPath('package.json'), to: this.pathUtil.getPath(config.localResourcesPath, 'app/package.json') }
         ]),
         this._createDefinePlugin(config),
         ...(config.progress ? [new ProgressPlugin()] : [])
@@ -753,7 +754,7 @@ class WebpackConfig {
       this.mainConfig.plugins = [
         ...(this.mainConfig.plugins || []),
         new CopyWebpackPlugin([
-          { from: this.pathUtil.getPath(config.iconSrcDir, '1024x1024.png'), to: this.pathUtil.getPath(config.resourcesPath, 'icon/app.png') }
+          { from: this.pathUtil.getPath(config.iconSrcDir, '1024x1024.png'), to: this.pathUtil.getPath(config.localResourcesPath, 'icon/app.png') }
         ])
       ]
     }
@@ -866,14 +867,17 @@ class WebpackConfig {
   }
 
   _initPackagerConfig (config) {
-    const packagerOptions = {
+    let packagerOptions = {
       dir: this.pathUtil.getPath(),
       out: this.pathUtil.getPath(config.distPath),
       arch: config.arch || process.arch,
       electronVersion: this.pkg.devDependencies.electron.replace(/[~^]/g, ''),
       prebuiltAsar: this.pathUtil.getPath(config.distPath, 'resources/app.asar'),
-      appCopyright: `Copyright (C) ${new Date().getFullYear()} ${this.productionPackage.author}`,
       overwrite: true
+    }
+
+    if (this.productionPackage.author) {
+      packagerOptions.appCopyright = `Copyright (C) ${new Date().getFullYear()} ${this.productionPackage.author}`
     }
 
     if (process.env.npm_config_electron_mirror && process.env.npm_config_electron_mirror.indexOf('taobao') !== -1) {
@@ -897,6 +901,8 @@ class WebpackConfig {
         packagerOptions.icon = iconPath
       }
     }
+
+    packagerOptions = merge(packagerOptions, config.packagerOptions)
 
     this.packagerConfig = packagerOptions
   }
