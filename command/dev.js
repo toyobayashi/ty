@@ -1,8 +1,6 @@
 const WebpackConfig = require('../config/webpack.config.js')
-const { watch, startDevServer } = require('../util/webpack.js')
+const { watch, startDevServer, copyExtraResources } = require('../util/webpack.js')
 const start = require('./start.js')
-const fs = require('fs-extra')
-const chokidar = require('chokidar')
 
 function dev (config) {
   if (config.target !== 'electron') {
@@ -39,25 +37,17 @@ function dev (config) {
   const isReady = () => Object.keys(firstLaunch).map(key => firstLaunch[key]).indexOf(false) === -1
 
   const webpackConfig = new WebpackConfig(config)
-  const extraResourcesPath = webpackConfig.pathUtil.getPath(config.extraResourcesPath)
-  if (fs.existsSync(extraResourcesPath)) {
-    fs.copySync(
-      extraResourcesPath,
-      webpackConfig.pathUtil.getPath(config.localResourcesPath),
-      { filter: (src) => !src.endsWith('.gitkeep') }
-    )
-    const watcher = chokidar.watch(extraResourcesPath)
-    watcher.on('all', () => {
-      fs.copySync(
-        extraResourcesPath,
-        webpackConfig.pathUtil.getPath(config.localResourcesPath),
-        { filter: (src) => !src.endsWith('.gitkeep') }
-      )
+
+  let timer = 0
+  copyExtraResources(config, webpackConfig, true, function () {
+    clearTimeout(timer)
+    timer = setTimeout(() => {
       if (isReady()) {
         relaunch()
       }
-    })
-  }
+    }, 300)
+  })
+
   watch(webpackConfig.mainConfig, function watchHandler (err, stats) {
     if (err) {
       console.log(err)

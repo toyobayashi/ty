@@ -1,4 +1,4 @@
-const { watch } = require('../util/webpack.js')
+const { watch, copyExtraResources } = require('../util/webpack.js')
 const WebpackConfig = require('../config/webpack.config.js')
 const { HotModuleReplacementPlugin } = require('webpack')
 
@@ -16,7 +16,7 @@ function _watch (config) {
   })
 
   if (config.target === 'electron') {
-    watchExtraResources(config, webpackConfig)
+    copyExtraResources(config, webpackConfig, true)
     removeServerConfig(webpackConfig.rendererConfig)
     watchConfig(webpackConfig.mainConfig)
     watchConfig(webpackConfig.rendererConfig)
@@ -41,27 +41,6 @@ function removeServerConfig (webpackConf) {
         break
       }
     }
-  }
-}
-
-function watchExtraResources (config, webpackConfig) {
-  const fs = require('fs-extra')
-  const chokidar = require('chokidar')
-  const extraResourcesPath = webpackConfig.pathUtil.getPath(config.extraResourcesPath)
-  if (fs.existsSync(extraResourcesPath)) {
-    fs.copySync(
-      extraResourcesPath,
-      webpackConfig.pathUtil.getPath(config.localResourcesPath),
-      { filter: (src) => !src.endsWith('.gitkeep') }
-    )
-    const watcher = chokidar.watch(extraResourcesPath)
-    watcher.on('all', () => {
-      fs.copySync(
-        extraResourcesPath,
-        webpackConfig.pathUtil.getPath(config.localResourcesPath),
-        { filter: (src) => !src.endsWith('.gitkeep') }
-      )
-    })
   }
 }
 
