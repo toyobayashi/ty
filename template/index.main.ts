@@ -1,4 +1,4 @@
-import { app, BrowserWindow, nativeImage, BrowserWindowConstructorOptions } from 'electron'
+import { app, BrowserWindow, nativeImage, BrowserWindowConstructorOptions, globalShortcut, MenuItem, Menu } from 'electron'
 import { format } from 'url'
 import { join } from 'path'
 import { existsSync } from 'fs'
@@ -7,6 +7,51 @@ function isPromiseLike (obj: any): boolean {
   return (obj instanceof Promise) || (
     obj !== undefined && obj !== null && typeof obj.then === 'function' && typeof obj.catch === 'function'
   )
+}
+
+function registerGlobalShortcut (): void {
+  globalShortcut.register('CommandOrControl+Shift+I', function () {
+    const win = BrowserWindow.getFocusedWindow()
+    if (win) {
+      if (win.webContents.isDevToolsOpened()) {
+        win.webContents.closeDevTools()
+      } else {
+        win.webContents.openDevTools()
+      }
+    }
+  })
+
+  if (process.env.NODE_ENV !== 'production') {
+    globalShortcut.register('CommandOrControl+R', function () {
+      const win = BrowserWindow.getFocusedWindow()
+      if (win) {
+        win.webContents.reload()
+      }
+    })
+  }
+}
+
+function setMacDefaultMenu (): void {
+  if (process.platform === 'darwin') {
+    const template: MenuItem[] = [
+      new MenuItem({
+        label: app.name,
+        submenu: [
+          { role: 'quit' }
+        ]
+      })
+    ]
+
+    const menu = Menu.buildFromTemplate(template)
+    Menu.setApplicationMenu(menu)
+
+    if (process.env.NODE_ENV !== 'production') {
+      const iconPath = join(__dirname, '../../../icon/1024x1024.png')
+      if (existsSync(iconPath)) {
+        app.dock.setIcon(iconPath)
+      }
+    }
+  }
 }
 
 class WindowManager {
@@ -81,7 +126,6 @@ class WindowManager {
       if (!win) return
       win.show()
       win.focus()
-      if (process.env.NODE_ENV !== 'production') win.webContents.openDevTools()
     })
 
     win.on('closed', () => {
@@ -91,9 +135,12 @@ class WindowManager {
 
     this.windows.set(name, win)
 
-    if (process.env.NODE_ENV === 'production') {
-      win.removeMenu ? win.removeMenu() : win.setMenu(null)
+    if (typeof (win as any).removeMenu === 'function') {
+      (win as any).removeMenu()
+    } else {
+      (win as any).setMenu(null)
     }
+
     const res = win.loadURL(url)
 
     if (isPromiseLike(res)) {
@@ -135,5 +182,7 @@ app.on('activate', function () {
 typeof app.whenReady === 'function' ? app.whenReady().then(main).catch(err => console.log(err)) : app.on('ready', main)
 
 function main (): void {
+  registerGlobalShortcut()
+  setMacDefaultMenu()
   WindowManager.createMainWindow()
 }
