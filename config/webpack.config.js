@@ -371,17 +371,21 @@ class WebpackConfig {
   _createCopyPlugin (config, output) {
     const from = this.pathUtil.getPath(config.staticDir || 'public')
     const to = this.pathUtil.getPath(config.output[output])
-    return (existsSync(from) ? [new CopyWebpackPlugin([
-      {
-        from,
-        to,
-        toType: 'dir',
-        ignore: [
-          '.gitkeep',
-          '.DS_Store'
-        ]
-      }
-    ])] : [])
+    return (existsSync(from) ? [new CopyWebpackPlugin({
+      patterns: [
+        {
+          from,
+          to,
+          toType: 'dir',
+          globOptions: {
+            ignore: [
+              '.gitkeep',
+              '.DS_Store'
+            ]
+          }
+        }
+      ]
+    })] : [])
   }
 
   _createVueLoader () {
@@ -592,7 +596,7 @@ class WebpackConfig {
       } else if (this._nodeTarget) {
         const nodeTarget = this.pathUtil.getPath(config.tsconfig.node)
         if (!tsconfigFileExists.nodeTSConfig) {
-          copyTemplate(templateFilename, nodeTarget, { jsx: '', target: 'es2018', include: './src/**/*', ext: './tsconfig.base.json' })
+          copyTemplate(templateFilename, nodeTarget, { jsx: '', target: 'es2019', include: './src/**/*', ext: './tsconfig.base.json' })
         }
         const nodeBase = readJSONSync(nodeTarget).extends
         if (typeof nodeBase === 'string') {
@@ -742,9 +746,11 @@ class WebpackConfig {
         extensions: ['.js', '.ts', '.json', '.node']
       },
       plugins: [
-        new CopyWebpackPlugin([
-          { from: this.pathUtil.getPath('package.json'), to: this.pathUtil.getPath(config.localResourcesPath, 'app/package.json') }
-        ]),
+        new CopyWebpackPlugin({
+          patterns: [
+            { from: this.pathUtil.getPath('package.json'), to: this.pathUtil.getPath(config.localResourcesPath, 'app/package.json') }
+          ]
+        }),
         this._createDefinePlugin(config),
         ...(config.progress ? [new ProgressPlugin()] : [])
       ]
@@ -753,9 +759,11 @@ class WebpackConfig {
     if (process.platform === 'linux') {
       this.mainConfig.plugins = [
         ...(this.mainConfig.plugins || []),
-        new CopyWebpackPlugin([
-          { from: this.pathUtil.getPath(config.iconSrcDir, '1024x1024.png'), to: this.pathUtil.getPath(config.localResourcesPath, 'icon/app.png') }
-        ])
+        new CopyWebpackPlugin({
+          patterns: [
+            { from: this.pathUtil.getPath(config.iconSrcDir, '1024x1024.png'), to: this.pathUtil.getPath(config.localResourcesPath, 'icon/app.png') }
+          ]
+        })
       ]
     }
   }

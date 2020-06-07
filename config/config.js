@@ -204,6 +204,7 @@ const defaultConfig = {
     terserOptions: {
       ecma: 9,
       output: {
+        comments: false,
         beautify: false
       }
     }
