@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "main/main.js",
   "devDependencies": {
-    "electron": "6.0.7",
+    "electron": "9.1.0",
     "typescript": "~3.5.3"
   }
 }
