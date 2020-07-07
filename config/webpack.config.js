@@ -251,15 +251,17 @@ class WebpackConfig {
         return new HtmlWebpackPlugin({
           title: this.pkg.name,
           template: this.pathUtil.getPath(htmlOption),
-          minify: config.mode === 'production' ? config.htmlMinify : false
+          minify: config.mode === 'production' ? config.htmlMinify : false,
+          cache: false
         })
       }
 
       return new HtmlWebpackPlugin({
+        cache: false,
         ...htmlOption,
         title: htmlOption.title || this.pkg.name,
         template: this.pathUtil.getPath(htmlOption.template),
-        minify: config.mode === 'production' ? (htmlOption.minify || config.htmlMinify) : false
+        minify: config.mode === 'production' ? (htmlOption.minify || config.htmlMinify) : false,
       })
     })
   }
