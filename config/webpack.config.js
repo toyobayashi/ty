@@ -381,10 +381,11 @@ class WebpackConfig {
           toType: 'dir',
           globOptions: {
             ignore: [
-              '.gitkeep',
-              '.DS_Store'
+              '**/.gitkeep',
+              '**/.DS_Store'
             ]
-          }
+          },
+          noErrorOnMissing: true
         }
       ]
     })] : [])
