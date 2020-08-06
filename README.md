@@ -208,7 +208,7 @@ No webpack config. Working in progress.
 
 * `nodeModulesAsar` - Pack `node_modules` to `node_modules.asar` and place it with `app.asar` together. Default: `false`.
 
-* `nodeExternals` - Pass to `webpack-node-externals`. Default: `{}`.
+* `nodeExternals` - Pass to `webpack-node-externals`. Default: `{ allowlist: ['tslib'] }`.
 
 * `prune` - For pruning node_modules folder after electron packing process. See `@tybys/prune-node-modules`. Default: `{ production: true }`.
 

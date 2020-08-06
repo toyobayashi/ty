@@ -186,7 +186,9 @@ const defaultConfig = {
 
   nodeModulesAsar: false,
 
-  nodeExternals: {},
+  nodeExternals: {
+    allowlist: ['tslib']
+  },
 
   prune: { production: true },
 

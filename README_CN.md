@@ -240,7 +240,7 @@ $ ty serve
 
 * `nodeModulesAsar` - 单独把 `node_modules` 打包成 `node_modules.asar` 与 `app.asar` 同级。默认： `false`。 
 
-* `nodeExternals` - 传入 `webpack-node-externals`。默认： `{}`。 
+* `nodeExternals` - 传入 `webpack-node-externals`。默认： `{ allowlist: ['tslib'] }`。 
 
 * `prune` - 用于 Electron 打包后精简 node_modules 文件夹大小。配置项详细见 `@tybys/prune-node-modules`。默认：`{ production: true }`。
 
