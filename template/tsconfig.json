@@ -4,7 +4,9 @@
     {{jsx ? '"jsx": "' + jsx + '",' : ''}}
     {{jsx === 'preserve' ? '"jsxFactory": "h",' : ''}}
     "module": "esnext",
-    "target": "{{target || 'es5'}}"
+    "target": "{{target || 'es5'}}",
+    "importHelpers": true,
+    "noEmitHelpers": true
   },
   "include": [
     "{{include || './src/**/*'}}"

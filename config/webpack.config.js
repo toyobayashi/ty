@@ -1,6 +1,6 @@
 const { execSync } = require('child_process')
 const { existsSync, mkdirsSync, readJSONSync } = require('fs-extra')
-const { HotModuleReplacementPlugin, ProgressPlugin, DefinePlugin } = require('webpack')
+const { HotModuleReplacementPlugin, ProgressPlugin, DefinePlugin, ProvidePlugin } = require('webpack')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin')
 const TerserWebpackPlugin = require('terser-webpack-plugin')
@@ -12,6 +12,7 @@ const PathUtil = require('../util/path.js')
 const path = require('path')
 const { ensureEntry, copyTemplate } = require('../util/file.js')
 const merge = require('deepmerge')
+const semver = require('semver')
 
 class WebpackConfig {
   _createCssLoaders (config, importLoaders = 0, cssModule = false) {
@@ -327,6 +328,19 @@ class WebpackConfig {
         }
       ]
     }
+  }
+
+  _createTypeScriptHelperProvidePlugin () {
+    const typescript = (this.pkg.devDependencies && this.pkg.devDependencies.typescript) || (this.pkg.dependencies && this.pkg.dependencies.typescript)
+    if (typeof typescript === 'string' && semver.lt(typescript.replace(/^[~^]/, ''), '4.0.0')) {
+      return [
+        new ProvidePlugin({
+          __classPrivateFieldGet: ['tslib', '__classPrivateFieldGet'],
+          __classPrivateFieldSet: ['tslib', '__classPrivateFieldSet']
+        })
+      ]
+    }
+    return []
   }
 
   _createNodeBaseRules (tsconfig, config) {
@@ -938,6 +952,7 @@ class WebpackConfig {
       if (this._useTypeScript) {
         this.rendererConfig.plugins = [
           ...(this.rendererConfig.plugins || []),
+          ...(this._createTypeScriptHelperProvidePlugin()),
           new ForkTsCheckerWebpackPlugin({
             eslint: this._useESLint,
             tsconfig: this.pathUtil.getPath(config.tsconfig.renderer),
@@ -947,6 +962,7 @@ class WebpackConfig {
 
         this.mainConfig.plugins = [
           ...(this.mainConfig.plugins || []),
+          ...(this._createTypeScriptHelperProvidePlugin()),
           new ForkTsCheckerWebpackPlugin({
             eslint: this._useESLint,
             tsconfig: this.pathUtil.getPath(config.tsconfig.main)
@@ -962,6 +978,7 @@ class WebpackConfig {
         if (this._useTypeScript) {
           this.preloadConfig.plugins = [
             ...(this.preloadConfig.plugins || []),
+            ...(this._createTypeScriptHelperProvidePlugin()),
             new ForkTsCheckerWebpackPlugin({
               eslint: this._useESLint,
               tsconfig: this.pathUtil.getPath(config.tsconfig.preload),
@@ -975,6 +992,7 @@ class WebpackConfig {
       if (this._useTypeScript) {
         this.nodeConfig.plugins = [
           ...(this.nodeConfig.plugins || []),
+          ...(this._createTypeScriptHelperProvidePlugin()),
           new ForkTsCheckerWebpackPlugin({
             eslint: this._useESLint,
             tsconfig: this.pathUtil.getPath(config.tsconfig.node)
@@ -999,6 +1017,7 @@ class WebpackConfig {
       if (this._useTypeScript) {
         this.webConfig.plugins = [
           ...(this.webConfig.plugins || []),
+          ...(this._createTypeScriptHelperProvidePlugin()),
           new ForkTsCheckerWebpackPlugin({
             eslint: this._useESLint,
             tsconfig: this.pathUtil.getPath(config.tsconfig.web),
@@ -1050,6 +1069,7 @@ class WebpackConfig {
       if (this._useTypeScript) {
         this.rendererConfig.plugins = [
           ...(this.rendererConfig.plugins || []),
+          ...(this._createTypeScriptHelperProvidePlugin()),
           new ForkTsCheckerWebpackPlugin({
             eslint: this._useESLint,
             tsconfig: this.pathUtil.getPath(config.tsconfig.renderer),
@@ -1062,6 +1082,7 @@ class WebpackConfig {
 
         this.mainConfig.plugins = [
           ...(this.mainConfig.plugins || []),
+          ...(this._createTypeScriptHelperProvidePlugin()),
           new ForkTsCheckerWebpackPlugin({
             eslint: this._useESLint,
             tsconfig: this.pathUtil.getPath(config.tsconfig.main),
@@ -1084,6 +1105,7 @@ class WebpackConfig {
         if (this._useTypeScript) {
           this.preloadConfig.plugins = [
             ...(this.preloadConfig.plugins || []),
+            ...(this._createTypeScriptHelperProvidePlugin()),
             new ForkTsCheckerWebpackPlugin({
               eslint: this._useESLint,
               tsconfig: this.pathUtil.getPath(config.tsconfig.preload),
@@ -1105,6 +1127,7 @@ class WebpackConfig {
       if (this._useTypeScript) {
         this.nodeConfig.plugins = [
           ...(this.nodeConfig.plugins || []),
+          ...(this._createTypeScriptHelperProvidePlugin()),
           new ForkTsCheckerWebpackPlugin({
             eslint: this._useESLint,
             tsconfig: this.pathUtil.getPath(config.tsconfig.node),
@@ -1127,6 +1150,7 @@ class WebpackConfig {
       if (this._useTypeScript) {
         this.webConfig.plugins = [
           ...(this.webConfig.plugins || []),
+          ...(this._createTypeScriptHelperProvidePlugin()),
           new ForkTsCheckerWebpackPlugin({
             eslint: this._useESLint,
             tsconfig: this.pathUtil.getPath(config.tsconfig.web),
