@@ -690,7 +690,7 @@ class WebpackConfig {
       externals: [webpackNodeExternals(config.nodeExternals)],
       resolve: {
         alias: config.alias,
-        extensions: ['.js', '.ts', '.json', '.node']
+        extensions: ['.tsx', '.ts', '.mjs', '.js', '.json', '.node', '.wasm']
       },
       plugins: [
         this._createDefinePlugin(config),
@@ -722,7 +722,7 @@ class WebpackConfig {
       },
       resolve: {
         alias: config.alias,
-        extensions: ['.ts', '.tsx', '.js', ...(this._useBabel ? ['.jsx'] : []), '.vue', '.css', '.styl', '.stylus', '.less', '.sass', '.scss', '.json', '.wasm']
+        extensions: ['.tsx', '.ts', '.mjs', '.js', ...(this._useBabel ? ['.jsx'] : []), '.vue', '.styl', '.stylus', '.less', '.sass', '.scss', '.css', '.json', '.wasm']
       },
       plugins: [
         ...(this._createHtmlPlugins(config)),
@@ -760,7 +760,7 @@ class WebpackConfig {
       externals: [webpackNodeExternals(config.nodeExternals)],
       resolve: {
         alias: config.alias,
-        extensions: ['.js', '.ts', '.json', '.node']
+        extensions: ['.tsx', '.ts', '.mjs', '.js', '.json', '.node', '.wasm']
       },
       plugins: [
         new CopyWebpackPlugin({
@@ -808,7 +808,7 @@ class WebpackConfig {
       },
       resolve: {
         alias: config.alias,
-        extensions: ['.ts', '.tsx', '.js', ...(this._useBabel ? ['.jsx'] : []), '.vue', '.css', '.styl', '.stylus', '.less', '.sass', '.scss', '.json', '.wasm']
+        extensions: ['.tsx', '.ts', '.mjs', '.js', ...(this._useBabel ? ['.jsx'] : []), '.vue', '.styl', '.stylus', '.less', '.sass', '.scss', '.css', '.json', '.wasm']
       },
       plugins: [
         ...(this._createHtmlPlugins(config)),
@@ -854,7 +854,7 @@ class WebpackConfig {
       },
       resolve: {
         alias: config.alias,
-        extensions: ['.ts', '.tsx', '.js', ...(this._useBabel ? ['.jsx'] : []), '.vue', '.css', '.styl', '.stylus', '.less', '.sass', '.scss', '.json', '.wasm']
+        extensions: ['.tsx', '.ts', '.mjs', '.js', ...(this._useBabel ? ['.jsx'] : []), '.vue', '.styl', '.stylus', '.less', '.sass', '.scss', '.css', '.json', '.wasm']
       },
       plugins: [
         this._createDefinePlugin(config),
