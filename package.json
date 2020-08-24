@@ -1,6 +1,6 @@
 {
   "name": "@tybys/ty",
-  "version": "0.10.6",
+  "version": "0.10.7",
   "main": "index.js",
   "bin": {
     "ty": "./bin/ty.js"
