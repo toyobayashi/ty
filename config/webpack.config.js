@@ -18,11 +18,12 @@ class WebpackConfig {
   _createCssLoaders (config, importLoaders = 0, cssModule = false) {
     const cssLoaderOptions = {
       sourceMap: config.mode === 'production' ? !!config.productionSourcemap : false,
-      importLoaders: (this._usePostCss ? 1 : 0) + importLoaders
+      importLoaders: (this._usePostCss ? 1 : 0) + importLoaders,
+      esModule: this._extractCss || !this._useVue // vue-style-loader 4.1.2 does not support esModule: true
     }
 
     if (cssModule) {
-      cssLoaderOptions.module = {
+      cssLoaderOptions.modules = {
         localIdentName: '[name]_[local]_[hash:base64:5]'
       }
     }
