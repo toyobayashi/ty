@@ -270,6 +270,8 @@ class WebpackConfig {
 
   _createDefinePlugin (config) {
     return new DefinePlugin({
+      __classPrivateFieldGet: ['tslib', '__classPrivateFieldGet'],
+      __classPrivateFieldSet: ['tslib', '__classPrivateFieldSet'],
       ...(config.define || {})
     })
   }
