@@ -22,8 +22,9 @@ class WebpackConfig {
     }
 
     if (cssModule) {
-      cssLoaderOptions.module = true
-      cssLoaderOptions.localIdentName = '[name]_[local]_[hash:base64:5]'
+      cssLoaderOptions.module = {
+        localIdentName: '[name]_[local]_[hash:base64:5]'
+      }
     }
     return [
       this._extractCss ? {
@@ -262,7 +263,7 @@ class WebpackConfig {
         ...htmlOption,
         title: htmlOption.title || this.pkg.name,
         template: this.pathUtil.getPath(htmlOption.template),
-        minify: config.mode === 'production' ? (htmlOption.minify || config.htmlMinify) : false,
+        minify: config.mode === 'production' ? (htmlOption.minify || config.htmlMinify) : false
       })
     })
   }
@@ -683,7 +684,7 @@ class WebpackConfig {
       node: false,
       module: {
         rules: [
-          ...(this._useESLint ? [this._createEslintLoader(/\.jsx?$/)] : []),
+          ...(this._useESLint ? [this._createEslintLoader(/\.((j|t)sx?|mjs)?$/)] : []),
           ...(this._createNodeBaseRules(config.tsconfig.node, config))
         ]
       },
@@ -712,7 +713,7 @@ class WebpackConfig {
       node: this._defaultNodeLib(),
       module: {
         rules: [
-          ...(this._useESLint ? [this._createEslintLoader(/\.(jsx?|vue)$/)] : []),
+          ...(this._useESLint ? [this._createEslintLoader(/\.((j|t)sx?|mjs|vue)$/)] : []),
           ...(this._useBabel ? [this._createBabelLoader(/\.jsx?$/)] : []),
           ...(this._createTSXLoader(config, 'web')),
           this._createVueLoader(),
@@ -753,7 +754,7 @@ class WebpackConfig {
       node: false,
       module: {
         rules: [
-          ...(this._useESLint ? [this._createEslintLoader(/\.jsx?$/)] : []),
+          ...(this._useESLint ? [this._createEslintLoader(/\.((j|t)sx?|mjs)?$/)] : []),
           ...(this._createNodeBaseRules(config.tsconfig.main, config))
         ]
       },
@@ -798,7 +799,7 @@ class WebpackConfig {
       node: config.entry.preload ? this._defaultNodeLib() : false,
       module: {
         rules: [
-          ...(this._useESLint ? [this._createEslintLoader(/\.(jsx?|vue)$/)] : []),
+          ...(this._useESLint ? [this._createEslintLoader(/\.((j|t)sx?|mjs|vue)$/)] : []),
           ...(this._useBabel ? [this._createBabelLoader(/\.jsx?$/)] : []),
           ...(this._createTSXLoader(config, 'renderer')),
           this._createVueLoader(),
@@ -844,7 +845,7 @@ class WebpackConfig {
       externals: [webpackNodeExternals(config.nodeExternals)],
       module: {
         rules: [
-          ...(this._useESLint ? [this._createEslintLoader(/\.(jsx?|vue)$/)] : []),
+          ...(this._useESLint ? [this._createEslintLoader(/\.((j|t)sx?|mjs|vue)$/)] : []),
           ...(this._useBabel ? [this._createBabelLoader(/\.jsx?$/)] : []),
           ...(this._createTSXLoader(config, 'preload')),
           this._createVueLoader(),
@@ -954,9 +955,12 @@ class WebpackConfig {
           ...(this.rendererConfig.plugins || []),
           ...(this._createTypeScriptHelperProvidePlugin()),
           new ForkTsCheckerWebpackPlugin({
-            eslint: this._useESLint,
-            tsconfig: this.pathUtil.getPath(config.tsconfig.renderer),
-            vue: this._useVue
+            typescript: {
+              configFile: this.pathUtil.getPath(config.tsconfig.renderer),
+              extensions: {
+                vue: this._useVue
+              }
+            }
           })
         ]
 
@@ -964,8 +968,9 @@ class WebpackConfig {
           ...(this.mainConfig.plugins || []),
           ...(this._createTypeScriptHelperProvidePlugin()),
           new ForkTsCheckerWebpackPlugin({
-            eslint: this._useESLint,
-            tsconfig: this.pathUtil.getPath(config.tsconfig.main)
+            typescript: {
+              configFile: this.pathUtil.getPath(config.tsconfig.main)
+            }
           })
         ]
       }
@@ -980,9 +985,12 @@ class WebpackConfig {
             ...(this.preloadConfig.plugins || []),
             ...(this._createTypeScriptHelperProvidePlugin()),
             new ForkTsCheckerWebpackPlugin({
-              eslint: this._useESLint,
-              tsconfig: this.pathUtil.getPath(config.tsconfig.preload),
-              vue: this._useVue
+              typescript: {
+                configFile: this.pathUtil.getPath(config.tsconfig.preload),
+                extensions: {
+                  vue: this._useVue
+                }
+              }
             })
           ]
         }
@@ -994,8 +1002,9 @@ class WebpackConfig {
           ...(this.nodeConfig.plugins || []),
           ...(this._createTypeScriptHelperProvidePlugin()),
           new ForkTsCheckerWebpackPlugin({
-            eslint: this._useESLint,
-            tsconfig: this.pathUtil.getPath(config.tsconfig.node)
+            typescript: {
+              configFile: this.pathUtil.getPath(config.tsconfig.node)
+            }
           })
         ]
       }
@@ -1019,9 +1028,12 @@ class WebpackConfig {
           ...(this.webConfig.plugins || []),
           ...(this._createTypeScriptHelperProvidePlugin()),
           new ForkTsCheckerWebpackPlugin({
-            eslint: this._useESLint,
-            tsconfig: this.pathUtil.getPath(config.tsconfig.web),
-            vue: this._useVue
+            typescript: {
+              configFile: this.pathUtil.getPath(config.tsconfig.web),
+              extensions: {
+                vue: this._useVue
+              }
+            }
           })
         ]
       }
@@ -1071,12 +1083,14 @@ class WebpackConfig {
           ...(this.rendererConfig.plugins || []),
           ...(this._createTypeScriptHelperProvidePlugin()),
           new ForkTsCheckerWebpackPlugin({
-            eslint: this._useESLint,
-            tsconfig: this.pathUtil.getPath(config.tsconfig.renderer),
-            vue: this._useVue,
             async: false,
-            useTypescriptIncrementalApi: true,
-            memoryLimit: 4096
+            typescript: {
+              memoryLimit: 4096,
+              configFile: this.pathUtil.getPath(config.tsconfig.renderer),
+              extensions: {
+                vue: this._useVue
+              }
+            }
           })
         ]
 
@@ -1084,11 +1098,11 @@ class WebpackConfig {
           ...(this.mainConfig.plugins || []),
           ...(this._createTypeScriptHelperProvidePlugin()),
           new ForkTsCheckerWebpackPlugin({
-            eslint: this._useESLint,
-            tsconfig: this.pathUtil.getPath(config.tsconfig.main),
             async: false,
-            useTypescriptIncrementalApi: true,
-            memoryLimit: 4096
+            typescript: {
+              memoryLimit: 4096,
+              configFile: this.pathUtil.getPath(config.tsconfig.main)
+            }
           })
         ]
       }
@@ -1107,12 +1121,14 @@ class WebpackConfig {
             ...(this.preloadConfig.plugins || []),
             ...(this._createTypeScriptHelperProvidePlugin()),
             new ForkTsCheckerWebpackPlugin({
-              eslint: this._useESLint,
-              tsconfig: this.pathUtil.getPath(config.tsconfig.preload),
-              vue: this._useVue,
               async: false,
-              useTypescriptIncrementalApi: true,
-              memoryLimit: 4096
+              typescript: {
+                memoryLimit: 4096,
+                configFile: this.pathUtil.getPath(config.tsconfig.preload),
+                extensions: {
+                  vue: this._useVue
+                }
+              }
             })
           ]
         }
@@ -1129,11 +1145,11 @@ class WebpackConfig {
           ...(this.nodeConfig.plugins || []),
           ...(this._createTypeScriptHelperProvidePlugin()),
           new ForkTsCheckerWebpackPlugin({
-            eslint: this._useESLint,
-            tsconfig: this.pathUtil.getPath(config.tsconfig.node),
             async: false,
-            useTypescriptIncrementalApi: true,
-            memoryLimit: 4096
+            typescript: {
+              memoryLimit: 4096,
+              configFile: this.pathUtil.getPath(config.tsconfig.node)
+            }
           })
         ]
       }
@@ -1152,12 +1168,14 @@ class WebpackConfig {
           ...(this.webConfig.plugins || []),
           ...(this._createTypeScriptHelperProvidePlugin()),
           new ForkTsCheckerWebpackPlugin({
-            eslint: this._useESLint,
-            tsconfig: this.pathUtil.getPath(config.tsconfig.web),
-            vue: this._useVue,
             async: false,
-            useTypescriptIncrementalApi: true,
-            memoryLimit: 4096
+            typescript: {
+              memoryLimit: 4096,
+              configFile: this.pathUtil.getPath(config.tsconfig.web),
+              extensions: {
+                vue: this._useVue
+              }
+            }
           })
         ]
       }
