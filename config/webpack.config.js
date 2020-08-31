@@ -684,7 +684,7 @@ class WebpackConfig {
       node: false,
       module: {
         rules: [
-          ...(this._useESLint ? [this._createEslintLoader(/\.((j|t)sx?|mjs)?$/)] : []),
+          ...(this._useESLint ? [this._createEslintLoader((!this._useTypeScript) ? /\.(jsx?|mjs)?$/ : /\.((j|t)sx?|mjs)?$/)] : []),
           ...(this._createNodeBaseRules(config.tsconfig.node, config))
         ]
       },
@@ -713,7 +713,7 @@ class WebpackConfig {
       node: this._defaultNodeLib(),
       module: {
         rules: [
-          ...(this._useESLint ? [this._createEslintLoader(/\.((j|t)sx?|mjs|vue)$/)] : []),
+          ...(this._useESLint ? [this._createEslintLoader((!this._useTypeScript) ? /\.(jsx?|mjs|vue)?$/ : /\.((j|t)sx?|mjs|vue)$/)] : []),
           ...(this._useBabel ? [this._createBabelLoader(/\.jsx?$/)] : []),
           ...(this._createTSXLoader(config, 'web')),
           this._createVueLoader(),
@@ -754,7 +754,7 @@ class WebpackConfig {
       node: false,
       module: {
         rules: [
-          ...(this._useESLint ? [this._createEslintLoader(/\.((j|t)sx?|mjs)?$/)] : []),
+          ...(this._useESLint ? [this._createEslintLoader((!this._useTypeScript) ? /\.(jsx?|mjs)?$/ : /\.((j|t)sx?|mjs)?$/)] : []),
           ...(this._createNodeBaseRules(config.tsconfig.main, config))
         ]
       },
@@ -799,7 +799,7 @@ class WebpackConfig {
       node: config.entry.preload ? this._defaultNodeLib() : false,
       module: {
         rules: [
-          ...(this._useESLint ? [this._createEslintLoader(/\.((j|t)sx?|mjs|vue)$/)] : []),
+          ...(this._useESLint ? [this._createEslintLoader((!this._useTypeScript) ? /\.(jsx?|mjs|vue)?$/ : /\.((j|t)sx?|mjs|vue)$/)] : []),
           ...(this._useBabel ? [this._createBabelLoader(/\.jsx?$/)] : []),
           ...(this._createTSXLoader(config, 'renderer')),
           this._createVueLoader(),
@@ -845,7 +845,7 @@ class WebpackConfig {
       externals: [webpackNodeExternals(config.nodeExternals)],
       module: {
         rules: [
-          ...(this._useESLint ? [this._createEslintLoader(/\.((j|t)sx?|mjs|vue)$/)] : []),
+          ...(this._useESLint ? [this._createEslintLoader((!this._useTypeScript) ? /\.(jsx?|mjs|vue)?$/ : /\.((j|t)sx?|mjs|vue)$/)] : []),
           ...(this._useBabel ? [this._createBabelLoader(/\.jsx?$/)] : []),
           ...(this._createTSXLoader(config, 'preload')),
           this._createVueLoader(),
