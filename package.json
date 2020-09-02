@@ -1,6 +1,6 @@
 {
   "name": "@tybys/ty",
-  "version": "0.11.4",
+  "version": "0.11.5",
   "main": "index.js",
   "bin": {
     "ty": "./bin/ty.js"
@@ -22,7 +22,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@tybys/cross-zip": "^3.0.4",
+    "@tybys/cross-zip": "^3.1.0",
     "@tybys/prune-node-modules": "^0.1.0",
     "asar": "^3.0.3",
     "babel-loader": "^8.1.0",
