@@ -220,6 +220,11 @@ async function pack (config) {
   Log.print('')
   const [appPath] = await packager(webpackConfig.packagerConfig)
   const root = process.platform === 'darwin' ? path.join(appPath, `${webpackConfig.pkg.name}.app/Contents/Resources/app`) : path.join(appPath, 'resources/app')
+  const unpackedName = path.basename(webpackConfig.packagerConfig.prebuiltAsar) + '.unpacked'
+  const unpacked = path.join(path.dirname(webpackConfig.packagerConfig.prebuiltAsar), unpackedName)
+  if (fs.existsSync(unpacked)) {
+    fs.copySync(unpacked, path.join(root, '..', unpackedName))
+  }
   await copyExtraResources(root, config, webpackConfig)
 
   Log.info('Zip resources...')
