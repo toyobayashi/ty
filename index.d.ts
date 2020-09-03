@@ -90,8 +90,13 @@ declare namespace ty {
     }
 
     packHook?: undefined | {
-      afterInstall? (config: ty.Configuration, root: string): void
-      beforeZip? (config: ty.Configuration, root: string): void
+      beforeBuild? (config: ty.Configuration): any
+      beforeBuildCopy? (config: ty.Configuration, copyPaths: { main: [string, string]; renderer: [string, string]; preload?: [string, string] }): any
+      beforeWritePackageJson? (config: ty.Configuration, pkg: any): any
+      beforeInstall? (config: ty.Configuration, tempAppDir: string): any
+      afterInstall? (config: ty.Configuration, tempAppDir: string): any
+      beforeZip? (config: ty.Configuration, appDir: string): any
+      afterZip? (config: ty.Configuration, zipPath: string): any
     }
 
     packTempAppDir?: string

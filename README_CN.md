@@ -226,8 +226,13 @@ $ ty serve
    ``` js
    module.exports = {
       packHook: {
-        afterInstall (config, root) {},
-        beforeZip (config, root) {}
+        beforeBuild (config) {},
+        beforeBuildCopy (config, copyPaths) {},
+        beforeWritePackageJson (config, pkg) { return pkg },
+        beforeInstall (config, tempAppDir) {},
+        afterInstall (config, tempAppDir) {},
+        beforeZip (config, appDir) {},
+        afterZip (config, zipPath) {}
       }
     }
    ```

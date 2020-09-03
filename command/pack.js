@@ -162,6 +162,13 @@ function inno (sourceDir, config, webpackConfig) {
   })
 }
 
+async function callPackHook (config, hookName, ...args) {
+  if (config.packHook && typeof config.packHook[hookName] === 'function') {
+    Log.info(`Running config.packHook.${hookName}...`)
+    await Promise.resolve(config.packHook[hookName](config, ...args))
+  }
+}
+
 async function pack (config) {
   if (config.target !== 'electron') {
     const chalk = require('chalk')
@@ -172,20 +179,32 @@ async function pack (config) {
   const webpackConfig = new WebpackConfig(config)
   const start = new Date().getTime()
 
+  await callPackHook(config, 'beforeBuild')
   Log.info('Bundle production code...')
   await build(config)
 
   const packTempAppDir = webpackConfig.pathUtil.getPath(config.packTempAppDir)
-  if (fs.existsSync(packTempAppDir)) fs.removeSync(packTempAppDir)
-  fs.mkdirsSync(packTempAppDir)
-  fs.copySync(webpackConfig.pathUtil.getPath(config.output.main), path.join(packTempAppDir, path.basename(config.output.main)))
-  fs.copySync(webpackConfig.pathUtil.getPath(config.output.renderer), path.join(packTempAppDir, path.basename(config.output.renderer)))
-  if (config.entry.preload) {
-    fs.copySync(webpackConfig.pathUtil.getPath(config.output.preload), path.join(packTempAppDir, path.basename(config.output.preload)))
+  const buildCopyPath = {
+    main: [webpackConfig.pathUtil.getPath(config.output.main), path.join(packTempAppDir, path.basename(config.output.main))],
+    renderer: [webpackConfig.pathUtil.getPath(config.output.renderer), path.join(packTempAppDir, path.basename(config.output.renderer))],
+    ...(config.entry.preload ? {
+      preload: [webpackConfig.pathUtil.getPath(config.output.preload), path.join(packTempAppDir, path.basename(config.output.preload))]
+    } : {})
   }
 
+  if (fs.existsSync(packTempAppDir)) fs.removeSync(packTempAppDir)
+  fs.mkdirsSync(packTempAppDir)
+
+  await callPackHook(config, 'beforeBuildCopy', buildCopyPath)
+  fs.copySync(buildCopyPath.main[0], buildCopyPath.main[1])
+  fs.copySync(buildCopyPath.renderer[0], buildCopyPath.renderer[1])
+  if (config.entry.preload) {
+    fs.copySync(buildCopyPath.preload[0], buildCopyPath.preload[1])
+  }
+
+  const pkg = (await callPackHook(config, 'beforeWritePackageJson', webpackConfig.productionPackage)) || webpackConfig.productionPackage
   Log.info('Write production package.json...')
-  fs.writeFileSync(path.join(packTempAppDir, 'package.json'), JSON.stringify(webpackConfig.productionPackage), 'utf8')
+  fs.writeFileSync(path.join(packTempAppDir, 'package.json'), JSON.stringify(pkg), 'utf8')
 
   const existNodeModules = fs.existsSync(path.join(packTempAppDir, 'node_modules'))
 
@@ -198,17 +217,15 @@ async function pack (config) {
     }
   }
 
+  await callPackHook(config, 'beforeInstall', packTempAppDir)
+
   if (webpackConfig.productionPackage.dependencies && Object.keys(webpackConfig.productionPackage.dependencies).length) {
     Log.info('Install production dependencies...')
     execSync(`npm install --no-save --no-package-lock --production --arch=${config.arch} --target_arch=${config.arch} --build-from-source --runtime=electron --target=${webpackConfig.pkg.devDependencies.electron.replace(/[~^]/g, '')} --disturl=https://electronjs.org/headers`, { cwd: packTempAppDir, stdio: 'inherit' })
     fs.writeFileSync(path.join(packTempAppDir, 'package.json'), JSON.stringify(webpackConfig.productionPackage), 'utf8')
   }
 
-  if (config.packHook && typeof config.packHook.afterInstall === 'function') {
-    Log.info('Running config.packHook.afterInstall...')
-    await Promise.resolve(config.packHook.afterInstall(config, packTempAppDir))
-  }
-
+  await callPackHook(config, 'afterInstall', packTempAppDir)
   if (Object.prototype.toString.call(config.prune) === '[object Object]') {
     Log.info('Prune node_modules...')
     pnm(packTempAppDir, config.prune)
@@ -229,17 +246,15 @@ async function pack (config) {
 
   Log.info('Zip resources...')
   await zipResourcesDir(webpackConfig, config)
-
-  if (config.packHook && typeof config.packHook.beforeZip === 'function') {
-    Log.info('Running config.packHook.beforeZip...')
-    await Promise.resolve(config.packHook.beforeZip(config, root))
-  }
+  await callPackHook(config, 'beforeZip', root)
 
   const newPath = await rename(appPath, webpackConfig)
 
   Log.info(`Zip ${newPath}...`)
   const size = await zip(newPath, newPath + '.zip')
   Log.info(`Total size of zip: ${size} Bytes`)
+
+  await callPackHook(config, 'afterZip', newPath + '.zip')
 
   if (process.platform === 'linux') {
     Log.info('Create .deb installer...')
