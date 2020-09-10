@@ -483,7 +483,7 @@ class WebpackConfig {
       }
     }
     this.pkg = pkg
-    this._useVue = !!((this.pkg.devDependencies && this.pkg.devDependencies.vue) || (this.pkg.dependencies && this.pkg.dependencies.vue))
+    this._useVue = config.vue !== undefined ? !!config.vue : !!((this.pkg.devDependencies && this.pkg.devDependencies.vue) || (this.pkg.dependencies && this.pkg.dependencies.vue))
     this._electronTarget = (config.target === 'electron')
     this._webTarget = (config.target === 'web')
     this._nodeTarget = (config.target === 'node')

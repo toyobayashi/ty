@@ -183,6 +183,8 @@ $ ty serve
     }
     ```
 
+* `vue` {undefined | 0 | 1} 强制使用或强制不使用 Vue.js，传数字。默认：`undefined`。
+
 * `ts` {undefined | 0 | 1} 强制使用或强制不使用 TypeScript，传数字。默认：`undefined`。
 
 * `generate` {undefined | 0 | 1} 强制生成或强制不生成缺失的文件。默认：`undefined`。

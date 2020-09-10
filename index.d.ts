@@ -45,6 +45,7 @@ declare namespace ty {
     indexHtml?: any[]
     assetsPath?: string
     arch?: 'ia32' | 'x64'
+    vue?: undefined | 0 | 1
     ts?: undefined | 0 | 1
     generate?: undefined | 0 | 1
     context?: string

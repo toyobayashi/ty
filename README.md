@@ -151,6 +151,8 @@ No webpack config. Working in progress.
     }
     ```
 
+* `vue` {undefined | 0 | 1} Force to use Vue.js or not. Default: `undefined`.
+
 * `ts` {undefined | 0 | 1} Force to use typescript or not. Default: `undefined`.
 
 * `generate` {undefined | 0 | 1} Force to generate missing files or not. Default: `undefined`.

@@ -103,6 +103,11 @@ const defaultConfig = {
   /**
    * @type {undefined | 0 | 1}
    */
+  vue: undefined,
+
+  /**
+   * @type {undefined | 0 | 1}
+   */
   generate: undefined,
 
   /**
