@@ -270,11 +270,11 @@ $ ty serve
     module.exports = {
       terserPlugin: {
         parallel: true,
-        cache: true,
         extractComments: false,
         terserOptions: {
-          ecma: 9,
+          ecma: 2018,
           output: {
+            comments: false,
             beautify: false
           }
         }

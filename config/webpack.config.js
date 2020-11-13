@@ -1053,9 +1053,9 @@ class WebpackConfig {
 
   _mergeProduction (config) {
     const terser = () => {
-      if (config.productionSourcemap) {
+      /* if (config.productionSourcemap) {
         config.terserPlugin.sourceMap = true
-      }
+      } */
       return new TerserWebpackPlugin(config.terserPlugin)
     }
 
