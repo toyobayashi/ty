@@ -400,7 +400,15 @@ class WebpackConfig {
           globOptions: {
             ignore: [
               '**/.gitkeep',
-              '**/.DS_Store'
+              '**/.DS_Store',
+              ...(() => {
+                return config.indexHtml.filter(t => (typeof t === 'string' || (t.template != null))).map(t => {
+                  if (typeof t === 'string') {
+                    return this.pathUtil.getPath(t).replace(/\\/g, '/')
+                  }
+                  return this.pathUtil.getPath(t.template).replace(/\\/g, '/')
+                })
+              })()
             ]
           },
           noErrorOnMissing: true
