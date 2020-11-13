@@ -9,6 +9,7 @@ const ProgressPlugin = wrapPlugin('webpack.ProgressPlugin', webpack.ProgressPlug
 const DefinePlugin = wrapPlugin('webpack.DefinePlugin', webpack.DefinePlugin)
 const ProvidePlugin = wrapPlugin('webpack.ProvidePlugin', webpack.ProvidePlugin)
 
+const EslintWebpackPlugin = wrapPlugin('EslintWebpackPlugin', require('eslint-webpack-plugin'))
 const HtmlWebpackPlugin = wrapPlugin('HtmlWebpackPlugin', require('html-webpack-plugin'))
 const CssMinimizerWebpackPlugin = wrapPlugin('CssMinimizerWebpackPlugin', require('css-minimizer-webpack-plugin'))
 const TerserWebpackPlugin = wrapPlugin('TerserWebpackPlugin', require('terser-webpack-plugin'))
@@ -102,19 +103,13 @@ class WebpackConfig {
     ]
   }
 
-  _createEslintLoader (test) {
-    return {
-      test,
-      enforce: 'pre',
-      exclude: /node_modules/,
-      use: [{
-        loader: require.resolve('eslint-loader'),
-        options: {
-          emitWarning: true,
-          emitError: false
-        }
-      }]
-    }
+  _createEslintPlugin (config, extensions) {
+    return new EslintWebpackPlugin({
+      extensions,
+      emitWarning: true,
+      emitError: false,
+      ...(typeof config.eslintPluginOptions === 'object' && config.eslintPluginOptions !== null ? config.eslintPluginOptions : {})
+    })
   }
 
   _createAssetsLoaders (config) {
@@ -614,7 +609,6 @@ class WebpackConfig {
       node: false,
       module: {
         rules: [
-          ...(this._useESLint ? [this._createEslintLoader((!this._useTypeScript) ? /\.(jsx?|mjs)?$/ : /\.((j|t)sx?|mjs)?$/)] : []),
           ...(this._createNodeBaseRules(config.tsconfig.node, config))
         ]
       },
@@ -624,6 +618,7 @@ class WebpackConfig {
         extensions: ['.tsx', '.ts', '.mjs', '.cjs', '.js', '.json', '.node', '.wasm']
       },
       plugins: [
+        ...(this._useESLint ? [this._createEslintPlugin(config, (!this._useTypeScript) ? ['js', 'jsx', 'mjs'] : ['js', 'jsx', 'mjs', 'ts', 'tsx'])] : []),
         this._createDefinePlugin(config),
         ...(config.progress ? [new ProgressPlugin()] : [])
       ]
@@ -643,7 +638,6 @@ class WebpackConfig {
       node: this._defaultNodeLib(),
       module: {
         rules: [
-          ...(this._useESLint ? [this._createEslintLoader((!this._useTypeScript) ? /\.(jsx?|mjs|vue)?$/ : /\.((j|t)sx?|mjs|vue)$/)] : []),
           ...(this._useBabel ? [this._createBabelLoader(/\.jsx?$/)] : []),
           ...(this._createTSXLoader(config, 'web')),
           this._createVueLoader(),
@@ -656,6 +650,7 @@ class WebpackConfig {
         extensions: ['.tsx', '.ts', '.mjs', '.cjs', '.js', ...(this._useBabel ? ['.jsx'] : []), '.vue', '.styl', '.stylus', '.less', '.sass', '.scss', '.css', '.json', '.wasm']
       },
       plugins: [
+        ...(this._useESLint ? [this._createEslintPlugin(config, (!this._useTypeScript) ? ['js', 'jsx', 'mjs', 'vue'] : ['js', 'jsx', 'mjs', 'ts', 'tsx', 'vue'])] : []),
         ...(this._createHtmlPlugins(config)),
         ...(this._createCopyPlugin(config, 'web')),
         this._createDefinePlugin(config),
@@ -684,7 +679,6 @@ class WebpackConfig {
       node: false,
       module: {
         rules: [
-          ...(this._useESLint ? [this._createEslintLoader((!this._useTypeScript) ? /\.(jsx?|mjs)?$/ : /\.((j|t)sx?|mjs)?$/)] : []),
           ...(this._createNodeBaseRules(config.tsconfig.main, config))
         ]
       },
@@ -694,6 +688,7 @@ class WebpackConfig {
         extensions: ['.tsx', '.ts', '.mjs', '.cjs', '.js', '.json', '.node', '.wasm']
       },
       plugins: [
+        ...(this._useESLint ? [this._createEslintPlugin(config, (!this._useTypeScript) ? ['js', 'jsx', 'mjs'] : ['js', 'jsx', 'mjs', 'ts', 'tsx'])] : []),
         new CopyWebpackPlugin({
           patterns: [
             { from: this.pathUtil.getPath('package.json'), to: this.pathUtil.getPath(config.localResourcesPath, 'app/package.json') }
@@ -729,7 +724,6 @@ class WebpackConfig {
       node: config.entry.preload ? this._defaultNodeLib() : false,
       module: {
         rules: [
-          ...(this._useESLint ? [this._createEslintLoader((!this._useTypeScript) ? /\.(jsx?|mjs|vue)?$/ : /\.((j|t)sx?|mjs|vue)$/)] : []),
           ...(this._useBabel ? [this._createBabelLoader(/\.jsx?$/)] : []),
           ...(this._createTSXLoader(config, 'renderer')),
           this._createVueLoader(),
@@ -742,6 +736,7 @@ class WebpackConfig {
         extensions: ['.tsx', '.ts', '.mjs', '.cjs', '.js', ...(this._useBabel ? ['.jsx'] : []), '.vue', '.styl', '.stylus', '.less', '.sass', '.scss', '.css', '.json', '.wasm']
       },
       plugins: [
+        ...(this._useESLint ? [this._createEslintPlugin(config, (!this._useTypeScript) ? ['js', 'jsx', 'mjs', 'vue'] : ['js', 'jsx', 'mjs', 'ts', 'tsx', 'vue'])] : []),
         ...(this._createHtmlPlugins(config)),
         ...(this._createCopyPlugin(config, 'renderer')),
         this._createDefinePlugin(config),
@@ -775,7 +770,6 @@ class WebpackConfig {
       externals: [webpackNodeExternals(config.nodeExternals)],
       module: {
         rules: [
-          ...(this._useESLint ? [this._createEslintLoader((!this._useTypeScript) ? /\.(jsx?|mjs|vue)?$/ : /\.((j|t)sx?|mjs|vue)$/)] : []),
           ...(this._useBabel ? [this._createBabelLoader(/\.jsx?$/)] : []),
           ...(this._createTSXLoader(config, 'preload')),
           this._createVueLoader(),
@@ -788,6 +782,7 @@ class WebpackConfig {
         extensions: ['.tsx', '.ts', '.mjs', '.cjs', '.js', ...(this._useBabel ? ['.jsx'] : []), '.vue', '.styl', '.stylus', '.less', '.sass', '.scss', '.css', '.json', '.wasm']
       },
       plugins: [
+        ...(this._useESLint ? [this._createEslintPlugin(config, (!this._useTypeScript) ? ['js', 'jsx', 'mjs', 'vue'] : ['js', 'jsx', 'mjs', 'ts', 'tsx', 'vue'])] : []),
         this._createDefinePlugin(config),
         ...(config.progress ? [new ProgressPlugin()] : []),
         ...(this._extractCss ? [new MiniCssExtractPlugin({ filename: config.out.css })] : [])
