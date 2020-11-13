@@ -264,12 +264,12 @@ No webpack config. Working in progress.
     }
     ```
 
-* `cssOptimize` - Pass to `new OptimizeCSSAssetsPlugin(cssOptimize)`. Default:
+* `cssOptimize` - Pass to `new CssMinimizerWebpackPlugin(cssOptimize)`. Default:
 
     ``` js
     module.exports = {
       cssOptimize: {
-        cssProcessorPluginOptions: {
+        minimizerOptions: {
           preset: [
             'default',
             {

@@ -296,12 +296,12 @@ $ ty serve
     }
     ```
 
-* `cssOptimize` - 传入 `new OptimizeCSSAssetsPlugin()`。默认：
+* `cssOptimize` - 传入 `new CssMinimizerWebpackPlugin(cssOptimize)`。默认：
 
     ``` js
     module.exports = {
       cssOptimize: {
-        cssProcessorPluginOptions: {
+        minimizerOptions: {
           preset: [
             'default',
             {

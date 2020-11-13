@@ -2,7 +2,7 @@ const { execSync } = require('child_process')
 const { existsSync, mkdirsSync, readJSONSync } = require('fs-extra')
 const { HotModuleReplacementPlugin, ProgressPlugin, DefinePlugin, ProvidePlugin } = require('webpack')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
-const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin')
+const CssMinimizerWebpackPlugin = require('css-minimizer-webpack-plugin')
 const TerserWebpackPlugin = require('terser-webpack-plugin')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
@@ -1060,20 +1060,12 @@ class WebpackConfig {
     }
 
     const cssnano = () => {
-      const option = config.cssOptimize || {}
-      if (config.productionSourcemap) {
-        option.cssProcessorOptions ? (
-          option.cssProcessorOptions.map ? (
-            option.cssProcessorOptions.map.inline = false
-          ) : (
-            option.cssProcessorOptions.map = { inline: false }
-          )
-        ) : (option.cssProcessorOptions = {
-          map: { inline: false }
-        })
+      const option = {
+        ...(config.productionSourcemap ? { sourceMap: true } : {}),
+        ...(config.cssOptimize || {})
       }
 
-      return new OptimizeCSSAssetsPlugin(option)
+      return new CssMinimizerWebpackPlugin(option)
     }
 
     if (this._electronTarget) {

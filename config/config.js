@@ -226,7 +226,7 @@ const defaultConfig = {
   },
 
   cssOptimize: {
-    cssProcessorPluginOptions: {
+    minimizerOptions: {
       preset: [
         'default',
         {
