@@ -1118,6 +1118,7 @@ class WebpackConfig {
         ]
       }
       if (config.productionSourcemap) this.rendererConfig.devtool = this.mainConfig.devtool = config.devtool.production
+      else this.rendererConfig.devtool = this.mainConfig.devtool = false
 
       if (config.entry.preload) {
         this.preloadConfig.optimization = {
@@ -1144,6 +1145,7 @@ class WebpackConfig {
           ]
         }
         if (config.productionSourcemap) this.preloadConfig.devtool = config.devtool.production
+        else this.preloadConfig.devtool = false
       }
     } else if (this._nodeTarget) {
       this.nodeConfig.optimization = {
@@ -1165,6 +1167,7 @@ class WebpackConfig {
         ]
       }
       if (config.productionSourcemap) this.nodeConfig.devtool = config.devtool.production
+      else this.nodeConfig.devtool = false
     } else {
       this.webConfig.optimization = {
         ...(this.webConfig.optimization || {}),
@@ -1192,6 +1195,7 @@ class WebpackConfig {
       }
 
       if (config.productionSourcemap) this.webConfig.devtool = config.devtool.production
+      else this.webConfig.devtool = false
     }
   }
 }
