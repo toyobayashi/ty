@@ -36,7 +36,9 @@ class WebpackConfig {
     return [
       this._extractCss ? {
         loader: MiniCssExtractPlugin.loader
-      } : require.resolve('style-loader'),
+      } : {
+        loader: require.resolve('style-loader')
+      },
       {
         loader: require.resolve('css-loader'),
         options: merge(cssLoaderOptions, (typeof config.cssLoaderOptions === 'object' && config.cssLoaderOptions !== null) ? config.cssLoaderOptions : {})
