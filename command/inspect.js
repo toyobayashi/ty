@@ -1,7 +1,6 @@
 const WebpackConfig = require('../config/webpack.config.js')
 const { stringify } = require('javascript-stringify')
 const { highlight } = require('cli-highlight')
-const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin')
 
 module.exports = function (config) {
   console.log(highlight(stringify(new WebpackConfig(config, false), function (value, space, next) {
@@ -11,8 +10,8 @@ module.exports = function (config) {
       } else {
         return next(value)
       }
-    } else if (value instanceof ForkTsCheckerWebpackPlugin) {
-      return '[ForkTsCheckerWebpackPlugin]'
+    } else if (value.__ty_webpack_plugin_name__) {
+      return `new ${value.__ty_webpack_plugin_name__}(${value.__ty_webpack_plugin_options__ ? stringify(value.__ty_webpack_plugin_options__, null, 2) : ''})`
     }
     return next(value)
   }, 2), { language: 'js' }))

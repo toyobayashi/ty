@@ -1,13 +1,21 @@
 const { execSync } = require('child_process')
 const { existsSync, mkdirsSync, readJSONSync } = require('fs-extra')
-const { HotModuleReplacementPlugin, ProgressPlugin, DefinePlugin, ProvidePlugin } = require('webpack')
-const HtmlWebpackPlugin = require('html-webpack-plugin')
-const CssMinimizerWebpackPlugin = require('css-minimizer-webpack-plugin')
-const TerserWebpackPlugin = require('terser-webpack-plugin')
-const MiniCssExtractPlugin = require('mini-css-extract-plugin')
-const CopyWebpackPlugin = require('copy-webpack-plugin')
 const webpackNodeExternals = require('webpack-node-externals')
-const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin')
+const wrapPlugin = require('../util/plugin.js')
+
+const webpack = require('webpack')
+const HotModuleReplacementPlugin = wrapPlugin('webpack.HotModuleReplacementPlugin', webpack.HotModuleReplacementPlugin)
+const ProgressPlugin = wrapPlugin('webpack.ProgressPlugin', webpack.ProgressPlugin)
+const DefinePlugin = wrapPlugin('webpack.DefinePlugin', webpack.DefinePlugin)
+const ProvidePlugin = wrapPlugin('webpack.ProvidePlugin', webpack.ProvidePlugin)
+
+const HtmlWebpackPlugin = wrapPlugin('HtmlWebpackPlugin', require('html-webpack-plugin'))
+const CssMinimizerWebpackPlugin = wrapPlugin('CssMinimizerWebpackPlugin', require('css-minimizer-webpack-plugin'))
+const TerserWebpackPlugin = wrapPlugin('TerserWebpackPlugin', require('terser-webpack-plugin'))
+const MiniCssExtractPlugin = wrapPlugin('MiniCssExtractPlugin', require('mini-css-extract-plugin'))
+const CopyWebpackPlugin = wrapPlugin('CopyWebpackPlugin', require('copy-webpack-plugin'))
+const ForkTsCheckerWebpackPlugin = wrapPlugin('ForkTsCheckerWebpackPlugin', require('fork-ts-checker-webpack-plugin'))
+
 const PathUtil = require('../util/path.js')
 const path = require('path')
 const { ensureEntry, copyTemplate } = require('../util/file.js')
@@ -180,8 +188,10 @@ class WebpackConfig {
 
   _createDefinePlugin (config) {
     return new DefinePlugin({
-      __classPrivateFieldGet: ['tslib', '__classPrivateFieldGet'],
-      __classPrivateFieldSet: ['tslib', '__classPrivateFieldSet'],
+      ...(this._useTypeScript ? {
+        __classPrivateFieldGet: ['tslib', '__classPrivateFieldGet'],
+        __classPrivateFieldSet: ['tslib', '__classPrivateFieldSet']
+      } : {}),
       ...(config.define || {})
     })
   }
