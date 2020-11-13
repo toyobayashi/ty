@@ -211,6 +211,8 @@ $ ty serve
 
 * `sassLoaderOptions` {any} 默认：`{}`.
 
+* `eslintPluginOptions` {any} 默认：`{}`.
+
 * `alias` {{ [name: string]: string }} 传给 `webpackConfig.resolve.alias`。 默认：`{ '@': path.join(conifg.context || process.env.TY_CONTEXT || process.cwd(), 'src') }`
 
 * `tsconfig` - 指定各构建目标的 `tsconfig.json` 位置。默认：

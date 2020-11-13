@@ -42,7 +42,7 @@ declare namespace ty {
     publicPath?: string
     distPath?: string
     iconSrcDir?: string
-    indexHtml?: any[]
+    indexHtml?: (string | Record<string, any>)[]
     assetsPath?: string
     arch?: 'ia32' | 'x64'
     vue?: undefined | 0 | 1
@@ -61,17 +61,19 @@ declare namespace ty {
     }
 
     productionSourcemap?: boolean
-    cssLoaderOptions?: any
-    postcssLoaderOptions?: any
-    stylusLoaderOptions?: any
-    lessLoaderOptions?: any
-    sassLoaderOptions?: any
+    cssLoaderOptions?: Record<string, any>
+    postcssLoaderOptions?: Record<string, any>
+    stylusLoaderOptions?: Record<string, any>
+    lessLoaderOptions?: Record<string, any>
+    sassLoaderOptions?: Record<string, any>
+
+    eslintPluginOptions?: Record<string, any>
 
     alias?: {
       [name: string]: string
     }
 
-    proxy?: any
+    proxy?: Record<string, any>
 
     inno?: {
       src?: string
@@ -105,7 +107,7 @@ declare namespace ty {
 
     packTempAppDir?: string
 
-    packagerOptions?: { [key: string]: any }
+    packagerOptions?: Record<string, any>
 
     asarOptions?: {
       globOptions?: any
@@ -120,7 +122,7 @@ declare namespace ty {
 
     nodeModulesAsar?: boolean
 
-    nodeExternals?: any
+    nodeExternals?: Record<string, any>
 
     prune?: {
       whitelist?: string[]

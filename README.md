@@ -179,6 +179,8 @@ No webpack config. Working in progress.
 
 * `sassLoaderOptions` {any} Default: `{}`.
 
+* `eslintPluginOptions` {any} Default: `{}`.
+
 * `alias` {{ [name: string]: string }} Pass to `webpackConfig.resolve.alias`. Default: `{ '@': path.join(config.context || process.env.TY_CONTEXT || process.cwd(), 'src') }`
 
 * `tsconfig` - For TypeScript project. Default:

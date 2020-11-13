@@ -136,6 +136,8 @@ const defaultConfig = {
   lessLoaderOptions: {},
   sassLoaderOptions: {},
 
+  eslintPluginOptions: {},
+
   /**
    * @type {{ [name: string]: string }}
    */
