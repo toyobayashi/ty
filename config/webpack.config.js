@@ -962,10 +962,11 @@ class WebpackConfig {
 
   _mergeProduction (config) {
     const terser = () => {
-      /* if (config.productionSourcemap) {
-        config.terserPlugin.sourceMap = true
-      } */
-      return new TerserWebpackPlugin(config.terserPlugin)
+      const option = {
+        ...(config.productionSourcemap ? { sourceMap: true } : {}),
+        ...(config.terserPlugin || {})
+      }
+      return new TerserWebpackPlugin(option)
     }
 
     const cssnano = () => {
