@@ -265,7 +265,7 @@ class WebpackConfig {
 
   _createNodeBaseRules (tsconfig, config) {
     return [
-      this._createCommonTSLoader(tsconfig),
+      ...(this._useTypeScript ? [this._createCommonTSLoader(tsconfig)] : []),
       this._createNodeLoader(config)
     ]
   }
@@ -617,7 +617,7 @@ class WebpackConfig {
       externals: [webpackNodeExternals(config.nodeExternals)],
       resolve: {
         alias: config.alias,
-        extensions: ['.tsx', '.ts', '.mjs', '.cjs', '.js', '.json', '.node', '.wasm']
+        extensions: [...(this._useTypeScript ? ['.tsx', '.ts'] : []), '.mjs', '.cjs', '.js', '.json', '.node', '.wasm']
       },
       plugins: [
         ...(this._useESLint ? [this._createEslintPlugin(config, (!this._useTypeScript) ? ['js', 'jsx', 'mjs'] : ['js', 'jsx', 'mjs', 'ts', 'tsx'])] : []),
@@ -641,15 +641,15 @@ class WebpackConfig {
       module: {
         rules: [
           ...(this._useBabel ? [this._createBabelLoader(/\.jsx?$/)] : []),
-          ...(this._createTSXLoader(config, 'web')),
-          this._createVueLoader(),
+          ...(this._useTypeScript ? [this._createTSXLoader(config, 'web')] : []),
+          ...(this._useVue ? [this._createVueLoader()] : []),
           ...(this._createStyleLoaders(config)),
           ...(this._createAssetsLoaders(config))
         ]
       },
       resolve: {
         alias: config.alias,
-        extensions: ['.tsx', '.ts', '.mjs', '.cjs', '.js', ...(this._useBabel ? ['.jsx'] : []), '.vue', '.styl', '.stylus', '.less', '.sass', '.scss', '.css', '.json', '.wasm']
+        extensions: [...(this._useTypeScript ? ['.tsx', '.ts'] : []), '.mjs', '.cjs', '.js', ...(this._useBabel ? ['.jsx'] : []), ...(this._useVue ? ['.vue'] : []), '.styl', '.stylus', '.less', '.sass', '.scss', '.css', '.json', '.wasm']
       },
       plugins: [
         ...(this._useESLint ? [this._createEslintPlugin(config, (!this._useTypeScript) ? ['js', 'jsx', 'mjs', 'vue'] : ['js', 'jsx', 'mjs', 'ts', 'tsx', 'vue'])] : []),
@@ -687,7 +687,7 @@ class WebpackConfig {
       externals: [webpackNodeExternals(config.nodeExternals)],
       resolve: {
         alias: config.alias,
-        extensions: ['.tsx', '.ts', '.mjs', '.cjs', '.js', '.json', '.node', '.wasm']
+        extensions: [...(this._useTypeScript ? ['.tsx', '.ts'] : []), '.mjs', '.cjs', '.js', '.json', '.node', '.wasm']
       },
       plugins: [
         ...(this._useESLint ? [this._createEslintPlugin(config, (!this._useTypeScript) ? ['js', 'jsx', 'mjs'] : ['js', 'jsx', 'mjs', 'ts', 'tsx'])] : []),
@@ -727,15 +727,15 @@ class WebpackConfig {
       module: {
         rules: [
           ...(this._useBabel ? [this._createBabelLoader(/\.jsx?$/)] : []),
-          ...(this._createTSXLoader(config, 'renderer')),
-          this._createVueLoader(),
+          ...(this._useTypeScript ? [this._createTSXLoader(config, 'renderer')] : []),
+          ...(this._useVue ? [this._createVueLoader()] : []),
           ...(this._createStyleLoaders(config)),
           ...(this._createAssetsLoaders(config))
         ]
       },
       resolve: {
         alias: config.alias,
-        extensions: ['.tsx', '.ts', '.mjs', '.cjs', '.js', ...(this._useBabel ? ['.jsx'] : []), '.vue', '.styl', '.stylus', '.less', '.sass', '.scss', '.css', '.json', '.wasm']
+        extensions: [...(this._useTypeScript ? ['.tsx', '.ts'] : []), '.mjs', '.cjs', '.js', ...(this._useBabel ? ['.jsx'] : []), ...(this._useVue ? ['.vue'] : []), '.styl', '.stylus', '.less', '.sass', '.scss', '.css', '.json', '.wasm']
       },
       plugins: [
         ...(this._useESLint ? [this._createEslintPlugin(config, (!this._useTypeScript) ? ['js', 'jsx', 'mjs', 'vue'] : ['js', 'jsx', 'mjs', 'ts', 'tsx', 'vue'])] : []),
@@ -773,15 +773,15 @@ class WebpackConfig {
       module: {
         rules: [
           ...(this._useBabel ? [this._createBabelLoader(/\.jsx?$/)] : []),
-          ...(this._createTSXLoader(config, 'preload')),
-          this._createVueLoader(),
+          ...(this._useTypeScript ? [this._createTSXLoader(config, 'preload')] : []),
+          ...(this._useVue ? [this._createVueLoader()] : []),
           ...(this._createStyleLoaders(config)),
           ...(this._createAssetsLoaders(config))
         ]
       },
       resolve: {
         alias: config.alias,
-        extensions: ['.tsx', '.ts', '.mjs', '.cjs', '.js', ...(this._useBabel ? ['.jsx'] : []), '.vue', '.styl', '.stylus', '.less', '.sass', '.scss', '.css', '.json', '.wasm']
+        extensions: [...(this._useTypeScript ? ['.tsx', '.ts'] : []), '.mjs', '.cjs', '.js', ...(this._useBabel ? ['.jsx'] : []), ...(this._useVue ? ['.vue'] : []), '.styl', '.stylus', '.less', '.sass', '.scss', '.css', '.json', '.wasm']
       },
       plugins: [
         ...(this._useESLint ? [this._createEslintPlugin(config, (!this._useTypeScript) ? ['js', 'jsx', 'mjs', 'vue'] : ['js', 'jsx', 'mjs', 'ts', 'tsx', 'vue'])] : []),
