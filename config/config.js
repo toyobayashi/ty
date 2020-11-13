@@ -126,15 +126,15 @@ const defaultConfig = {
    * @type {boolean}
    */
   productionSourcemap: false,
-  /**
-   * @type {boolean}
-   */
-  cssModule: false,
 
   /**
    * @type {any}
    */
   cssLoaderOptions: {},
+  postcssLoaderOptions: {},
+  stylusLoaderOptions: {},
+  lessLoaderOptions: {},
+  sassLoaderOptions: {},
 
   /**
    * @type {{ [name: string]: string }}

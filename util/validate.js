@@ -8,7 +8,6 @@ const cliSupportOption = [
   'ts',
   'context',
   'productionSourcemap',
-  'cssModule',
   'generate',
   'progress',
   'define',

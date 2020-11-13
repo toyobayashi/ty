@@ -61,8 +61,11 @@ declare namespace ty {
     }
 
     productionSourcemap?: boolean
-    cssModule?: boolean
     cssLoaderOptions?: any
+    postcssLoaderOptions?: any
+    stylusLoaderOptions?: any
+    lessLoaderOptions?: any
+    sassLoaderOptions?: any
 
     alias?: {
       [name: string]: string

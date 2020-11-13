@@ -15,31 +15,22 @@ const merge = require('deepmerge')
 const semver = require('semver')
 
 class WebpackConfig {
-  _createCssLoaders (config, importLoaders = 0, cssModule = false) {
+  _createCssLoaders (config, importLoaders = 0) {
     const cssLoaderOptions = {
-      sourceMap: config.mode === 'production' ? !!config.productionSourcemap : false,
-      importLoaders: (this._usePostCss ? 1 : 0) + importLoaders,
-      esModule: this._extractCss || !this._useVue // vue-style-loader 4.1.2 does not support esModule: true
+      modules: {
+        auto: true,
+        localIdentName: config.mode === 'production' ? '[hash:base64]' : '[path][name]__[local]'
+      },
+      importLoaders: (this._usePostCss ? 1 : 0) + importLoaders
     }
 
-    if (cssModule) {
-      cssLoaderOptions.modules = {
-        localIdentName: '[name]_[local]_[hash:base64:5]'
-      }
-    }
     return [
       this._extractCss ? {
-        loader: MiniCssExtractPlugin.loader,
-        options: {
-          sourceMap: !!config.productionSourcemap
-        }
-      } : (this._useVue ? require.resolve('vue-style-loader') : require.resolve('style-loader')),
+        loader: MiniCssExtractPlugin.loader
+      } : require.resolve('style-loader'),
       {
         loader: require.resolve('css-loader'),
-        options: {
-          ...cssLoaderOptions,
-          ...(Object.prototype.toString.call(config.cssLoaderOptions) === '[object Object]' ? config.cssLoaderOptions : {})
-        }
+        options: merge(cssLoaderOptions, (typeof config.cssLoaderOptions === 'object' && config.cssLoaderOptions !== null) ? config.cssLoaderOptions : {})
       },
       ...(this._usePostCss ? [this._createPostCssLoader(config)] : [])
     ]
@@ -48,38 +39,28 @@ class WebpackConfig {
   _createPostCssLoader (config) {
     return {
       loader: require.resolve('postcss-loader'),
-      options: {
-        sourceMap: config.mode === 'production' ? !!config.productionSourcemap : false
-      }
+      ...((typeof config.postcssLoaderOptions === 'object' && config.postcssLoaderOptions !== null) ? { options: config.postcssLoaderOptions } : {})
     }
   }
 
   _createStylusLoader (config) {
     return {
       loader: require.resolve('stylus-loader'),
-      options: {
-        sourceMap: config.mode === 'production' ? !!config.productionSourcemap : false,
-        preferPathResolver: 'webpack'
-      }
+      ...((typeof config.stylusLoaderOptions === 'object' && config.stylusLoaderOptions !== null) ? { options: config.stylusLoaderOptions } : {})
     }
   }
 
   _createLessLoader (config) {
     return {
       loader: require.resolve('less-loader'),
-      options: {
-        sourceMap: config.mode === 'production' ? !!config.productionSourcemap : false
-      }
+      ...((typeof config.lessLoaderOptions === 'object' && config.lessLoaderOptions !== null) ? { options: config.lessLoaderOptions } : {})
     }
   }
 
   _createSassLoader (config) {
     return {
       loader: require.resolve('sass-loader'),
-      options: {
-        sourceMap: config.mode === 'production' ? !!config.productionSourcemap : false,
-        indentedSyntax: true
-      }
+      ...((typeof config.sassLoaderOptions === 'object' && config.sassLoaderOptions !== null) ? { options: config.sassLoaderOptions } : {})
     }
   }
 
@@ -87,99 +68,27 @@ class WebpackConfig {
     return [
       {
         test: /\.css$/,
-        oneOf: [
-          {
-            resourceQuery: /module/,
-            use: [
-              ...(this._createCssLoaders(config, 0, true))
-            ]
-          },
-          {
-            test: /\.module\.\w+$/,
-            use: [
-              ...(this._createCssLoaders(config, 0, true))
-            ]
-          },
-          {
-            use: [
-              ...(this._createCssLoaders(config, 0, !!config.cssModule))
-            ]
-          }
-        ]
+        use: this._createCssLoaders(config, 0)
       },
       {
         test: /\.styl(us)?$/,
-        oneOf: [
-          {
-            resourceQuery: /module/,
-            use: [
-              ...(this._createCssLoaders(config, 1, true)),
-              this._createStylusLoader(config)
-            ]
-          },
-          {
-            test: /\.module\.\w+$/,
-            use: [
-              ...(this._createCssLoaders(config, 1, true)),
-              this._createStylusLoader(config)
-            ]
-          },
-          {
-            use: [
-              ...(this._createCssLoaders(config, 1, !!config.cssModule)),
-              this._createStylusLoader(config)
-            ]
-          }
+        use: [
+          ...(this._createCssLoaders(config, 1)),
+          this._createStylusLoader(config)
         ]
       },
       {
         test: /\.less$/,
-        oneOf: [
-          {
-            resourceQuery: /module/,
-            use: [
-              ...(this._createCssLoaders(config, 1, true)),
-              this._createLessLoader(config)
-            ]
-          },
-          {
-            test: /\.module\.\w+$/,
-            use: [
-              ...(this._createCssLoaders(config, 1, true)),
-              this._createLessLoader(config)
-            ]
-          },
-          {
-            use: [
-              ...(this._createCssLoaders(config, 1, !!config.cssModule)),
-              this._createLessLoader(config)
-            ]
-          }
+        use: [
+          ...(this._createCssLoaders(config, 1)),
+          this._createLessLoader(config)
         ]
       },
       {
         test: /\.s[ac]ss$/i,
-        oneOf: [
-          {
-            resourceQuery: /module/,
-            use: [
-              ...(this._createCssLoaders(config, 1, true)),
-              this._createSassLoader(config)
-            ]
-          },
-          {
-            test: /\.module\.\w+$/,
-            use: [
-              ...(this._createCssLoaders(config, 1, true)),
-              this._createSassLoader(config)
-            ]
-          },
-          {
-            use: [
-              ...(this._createCssLoaders(config, 1, !!config.cssModule)),
-              this._createSassLoader(config)
-            ]
-          }
+        use: [
+          ...(this._createCssLoaders(config, 1)),
+          this._createSassLoader(config)
         ]
       }
     ]
@@ -484,7 +393,7 @@ class WebpackConfig {
         license: '',
         devDependencies: {
           ...(config.target === 'electron' ? ({
-            electron: '4.2.10'
+            electron: '9.3.3'
           }) : ({}))
         },
         dependencies: {}

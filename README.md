@@ -169,9 +169,15 @@ No webpack config. Working in progress.
 
 * `extractcss` {undefined | 0 | 1} Whether to extract CSS. Default: `undefined`.
 
-* `cssModule` {boolean} Whether to enable css module. Default: `false`.
-
 * `cssLoaderOptions` {any} Default: `{}`.
+
+* `postcssLoaderOptions` {any} Default: `{}`.
+
+* `stylusLoaderOptions` {any} Default: `{}`.
+
+* `lessLoaderOptions` {any} Default: `{}`.
+
+* `sassLoaderOptions` {any} Default: `{}`.
 
 * `alias` {{ [name: string]: string }} Pass to `webpackConfig.resolve.alias`. Default: `{ '@': path.join(config.context || process.env.TY_CONTEXT || process.cwd(), 'src') }`
 

@@ -201,9 +201,15 @@ $ ty serve
 
 * `extractcss` {undefined | 0 | 1} 强制提取或强制不提取 CSS 文件。默认：`undefined`。
 
-* `cssModule` {boolean} 是否启用 CSS Module。默认：`false`。
-
 * `cssLoaderOptions` {any} 默认：`{}`.
+
+* `postcssLoaderOptions` {any} 默认：`{}`.
+
+* `stylusLoaderOptions` {any} 默认：`{}`.
+
+* `lessLoaderOptions` {any} 默认：`{}`.
+
+* `sassLoaderOptions` {any} 默认：`{}`.
 
 * `alias` {{ [name: string]: string }} 传给 `webpackConfig.resolve.alias`。 默认：`{ '@': path.join(conifg.context || process.env.TY_CONTEXT || process.cwd(), 'src') }`
 
