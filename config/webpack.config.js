@@ -626,7 +626,7 @@ class WebpackConfig {
         extensions: [...(this._useTypeScript ? ['.tsx', '.ts'] : []), '.mjs', '.cjs', '.js', '.json', '.node', '.wasm']
       },
       plugins: [
-        ...(this._useESLint ? [this._createEslintPlugin(config, (!this._useTypeScript) ? ['js', 'jsx', 'mjs'] : ['js', 'jsx', 'mjs', 'ts', 'tsx'])] : []),
+        ...(this._useESLint ? [this._createEslintPlugin(config, ['js', 'jsx', 'mjs', ...(this._useTypeScript ? ['tsx', 'ts'] : [])])] : []),
         this._createDefinePlugin(config),
         ...(config.progress ? [new ProgressPlugin()] : [])
       ]
@@ -658,7 +658,7 @@ class WebpackConfig {
         extensions: [...(this._useTypeScript ? ['.tsx', '.ts'] : []), '.mjs', '.cjs', '.js', ...(this._useBabel ? ['.jsx'] : []), ...(this._useVue ? ['.vue'] : []), '.styl', '.stylus', '.less', '.sass', '.scss', '.css', '.json', '.wasm']
       },
       plugins: [
-        ...(this._useESLint ? [this._createEslintPlugin(config, (!this._useTypeScript) ? ['js', 'jsx', 'mjs', 'vue'] : ['js', 'jsx', 'mjs', 'ts', 'tsx', 'vue'])] : []),
+        ...(this._useESLint ? [this._createEslintPlugin(config, ['js', 'jsx', 'mjs', ...(this._useTypeScript ? ['tsx', 'ts'] : []), ...(this._useVue ? ['vue'] : [])])] : []),
         ...(this._createHtmlPlugins(config)),
         ...(this._createCopyPlugin(config, 'web')),
         this._createDefinePlugin(config),
@@ -696,7 +696,7 @@ class WebpackConfig {
         extensions: [...(this._useTypeScript ? ['.tsx', '.ts'] : []), '.mjs', '.cjs', '.js', '.json', '.node', '.wasm']
       },
       plugins: [
-        ...(this._useESLint ? [this._createEslintPlugin(config, (!this._useTypeScript) ? ['js', 'jsx', 'mjs'] : ['js', 'jsx', 'mjs', 'ts', 'tsx'])] : []),
+        ...(this._useESLint ? [this._createEslintPlugin(config, ['js', 'jsx', 'mjs', ...(this._useTypeScript ? ['tsx', 'ts'] : [])])] : []),
         new CopyWebpackPlugin({
           patterns: [
             { from: this.pathUtil.getPath('package.json'), to: this.pathUtil.getPath(config.localResourcesPath, 'app/package.json') }
@@ -744,7 +744,7 @@ class WebpackConfig {
         extensions: [...(this._useTypeScript ? ['.tsx', '.ts'] : []), '.mjs', '.cjs', '.js', ...(this._useBabel ? ['.jsx'] : []), ...(this._useVue ? ['.vue'] : []), '.styl', '.stylus', '.less', '.sass', '.scss', '.css', '.json', '.wasm']
       },
       plugins: [
-        ...(this._useESLint ? [this._createEslintPlugin(config, (!this._useTypeScript) ? ['js', 'jsx', 'mjs', 'vue'] : ['js', 'jsx', 'mjs', 'ts', 'tsx', 'vue'])] : []),
+        ...(this._useESLint ? [this._createEslintPlugin(config, ['js', 'jsx', 'mjs', ...(this._useTypeScript ? ['tsx', 'ts'] : []), ...(this._useVue ? ['vue'] : [])])] : []),
         ...(this._createHtmlPlugins(config)),
         ...(this._createCopyPlugin(config, 'renderer')),
         this._createDefinePlugin(config),
@@ -790,7 +790,7 @@ class WebpackConfig {
         extensions: [...(this._useTypeScript ? ['.tsx', '.ts'] : []), '.mjs', '.cjs', '.js', ...(this._useBabel ? ['.jsx'] : []), ...(this._useVue ? ['.vue'] : []), '.styl', '.stylus', '.less', '.sass', '.scss', '.css', '.json', '.wasm']
       },
       plugins: [
-        ...(this._useESLint ? [this._createEslintPlugin(config, (!this._useTypeScript) ? ['js', 'jsx', 'mjs', 'vue'] : ['js', 'jsx', 'mjs', 'ts', 'tsx', 'vue'])] : []),
+        ...(this._useESLint ? [this._createEslintPlugin(config, ['js', 'jsx', 'mjs', ...(this._useTypeScript ? ['tsx', 'ts'] : []), ...(this._useVue ? ['vue'] : [])])] : []),
         this._createDefinePlugin(config),
         ...(config.progress ? [new ProgressPlugin()] : []),
         ...(this._extractCss ? [new MiniCssExtractPlugin({ filename: config.out.css })] : [])
