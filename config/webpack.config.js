@@ -34,11 +34,9 @@ class WebpackConfig {
     }
 
     return [
-      this._extractCss ? {
-        loader: MiniCssExtractPlugin.loader
-      } : {
-        loader: require.resolve('style-loader')
-      },
+      this._extractCss
+        ? { loader: MiniCssExtractPlugin.loader }
+        : { loader: require.resolve('style-loader') },
       {
         loader: require.resolve('css-loader'),
         options: merge(cssLoaderOptions, (typeof config.cssLoaderOptions === 'object' && config.cssLoaderOptions !== null) ? config.cssLoaderOptions : {})
@@ -185,10 +183,12 @@ class WebpackConfig {
 
   _createDefinePlugin (config) {
     return new DefinePlugin({
-      ...(this._useTypeScript ? {
-        __classPrivateFieldGet: ['tslib', '__classPrivateFieldGet'],
-        __classPrivateFieldSet: ['tslib', '__classPrivateFieldSet']
-      } : {}),
+      ...(this._useTypeScript
+        ? {
+            __classPrivateFieldGet: ['tslib', '__classPrivateFieldGet'],
+            __classPrivateFieldSet: ['tslib', '__classPrivateFieldSet']
+          }
+        : {}),
       ...(config.define || {})
     })
   }
@@ -307,30 +307,32 @@ class WebpackConfig {
   _createCopyPlugin (config, output) {
     const from = this.pathUtil.getPath(config.staticDir || 'public')
     const to = this.pathUtil.getPath(config.output[output])
-    return (existsSync(from) ? [new CopyWebpackPlugin({
-      patterns: [
-        {
-          from,
-          to,
-          toType: 'dir',
-          globOptions: {
-            ignore: [
-              '**/.gitkeep',
-              '**/.DS_Store',
-              ...(() => {
-                return config.indexHtml.filter(t => (typeof t === 'string' || (t.template != null))).map(t => {
-                  if (typeof t === 'string') {
-                    return this.pathUtil.getPath(t).replace(/\\/g, '/')
-                  }
-                  return this.pathUtil.getPath(t.template).replace(/\\/g, '/')
-                })
-              })()
-            ]
-          },
-          noErrorOnMissing: true
-        }
-      ]
-    })] : [])
+    return (existsSync(from)
+      ? [new CopyWebpackPlugin({
+          patterns: [
+            {
+              from,
+              to,
+              toType: 'dir',
+              globOptions: {
+                ignore: [
+                  '**/.gitkeep',
+                  '**/.DS_Store',
+                  ...(() => {
+                    return config.indexHtml.filter(t => (typeof t === 'string' || (t.template != null))).map(t => {
+                      if (typeof t === 'string') {
+                        return this.pathUtil.getPath(t).replace(/\\/g, '/')
+                      }
+                      return this.pathUtil.getPath(t.template).replace(/\\/g, '/')
+                    })
+                  })()
+                ]
+              },
+              noErrorOnMissing: true
+            }
+          ]
+        })]
+      : [])
   }
 
   _createVueLoader () {
@@ -399,9 +401,11 @@ class WebpackConfig {
         author: '',
         license: '',
         devDependencies: {
-          ...(config.target === 'electron' ? ({
-            electron: '9.3.3'
-          }) : ({}))
+          ...(config.target === 'electron'
+            ? {
+                electron: '9.3.3'
+              }
+            : {})
         },
         dependencies: {}
       }
@@ -426,12 +430,14 @@ class WebpackConfig {
       tsconfigFileExists.rendererTSConfig = existsSync(this.pathUtil.getPath(config.tsconfig.renderer))
       tsconfigFileExists.mainTSConfig = existsSync(this.pathUtil.getPath(config.tsconfig.main))
       tsconfigFileExists.preloadTSConfig = existsSync(this.pathUtil.getPath(config.tsconfig.preload))
-      this._useTypeScript = config.ts !== undefined ? !!config.ts : !!(
-        existsTypeScriptInPackageJson ||
-        tsconfigFileExists.rendererTSConfig ||
-        tsconfigFileExists.mainTSConfig ||
-        tsconfigFileExists.preloadTSConfig
-      )
+      this._useTypeScript = config.ts !== undefined
+        ? !!config.ts
+        : !!(
+            existsTypeScriptInPackageJson ||
+            tsconfigFileExists.rendererTSConfig ||
+            tsconfigFileExists.mainTSConfig ||
+            tsconfigFileExists.preloadTSConfig
+          )
     } else if (this._nodeTarget) {
       tsconfigFileExists.nodeTSConfig = existsSync(this.pathUtil.getPath(config.tsconfig.node))
       this._useTypeScript = config.ts !== undefined ? !!config.ts : !!(existsTypeScriptInPackageJson || tsconfigFileExists.nodeTSConfig)
