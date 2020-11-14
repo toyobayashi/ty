@@ -79,27 +79,33 @@ class WebpackConfig {
         test: /\.css$/,
         use: this._createCssLoaders(config, 0)
       },
-      {
-        test: /\.styl(us)?$/,
-        use: [
-          ...(this._createCssLoaders(config, 1)),
-          this._createStylusLoader(config)
-        ]
-      },
-      {
-        test: /\.less$/,
-        use: [
-          ...(this._createCssLoaders(config, 1)),
-          this._createLessLoader(config)
-        ]
-      },
-      {
-        test: /\.s[ac]ss$/i,
-        use: [
-          ...(this._createCssLoaders(config, 1)),
-          this._createSassLoader(config)
-        ]
-      }
+      ...(this._useStylus
+        ? [{
+            test: /\.styl(us)?$/,
+            use: [
+              ...(this._createCssLoaders(config, 1)),
+              this._createStylusLoader(config)
+            ]
+          }]
+        : []),
+      ...(this._useLess
+        ? [{
+            test: /\.less$/,
+            use: [
+              ...(this._createCssLoaders(config, 1)),
+              this._createLessLoader(config)
+            ]
+          }]
+        : []),
+      ...(this._useSass
+        ? [{
+            test: /\.s[ac]ss$/i,
+            use: [
+              ...(this._createCssLoaders(config, 1)),
+              this._createSassLoader(config)
+            ]
+          }]
+        : [])
     ]
   }
 
@@ -339,13 +345,15 @@ class WebpackConfig {
     return {
       test: /\.vue$/,
       use: [
-        require.resolve('vue-loader')
+        {
+          loader: require.resolve('vue-loader')
+        }
       ]
     }
   }
 
   _insertVueLoaderPlugin (webpackConfig) {
-    const { VueLoaderPlugin } = require('vue-loader')
+    const VueLoaderPlugin = wrapPlugin('VueLoaderPlugin', require('vue-loader').VueLoaderPlugin)
     if (Array.isArray(webpackConfig.plugins)) {
       webpackConfig.plugins.push(new VueLoaderPlugin())
     } else {
@@ -417,6 +425,10 @@ class WebpackConfig {
     this._nodeTarget = (config.target === 'node')
     this._extractCss = config.extractcss !== undefined ? !!config.extractcss : (config.mode === 'production')
 
+    this._useSass = config.sass !== undefined ? !!config.sass : !!(this.pkg.devDependencies && (this.pkg.devDependencies.sass || this.pkg.devDependencies['node-sass']))
+    this._useStylus = config.stylus !== undefined ? !!config.stylus : !!(this.pkg.devDependencies && this.pkg.devDependencies.stylus)
+    this._useLess = config.less !== undefined ? !!config.less : !!(this.pkg.devDependencies && this.pkg.devDependencies.less)
+
     const existsTypeScriptInPackageJson = !!(this.pkg.devDependencies && this.pkg.devDependencies.typescript)
     const tsconfigFileExists = {
       rendererTSConfig: false,
@@ -446,14 +458,16 @@ class WebpackConfig {
       this._useTypeScript = config.ts !== undefined ? !!config.ts : !!(existsTypeScriptInPackageJson || tsconfigFileExists.webTSConfig)
     }
 
-    this._useESLint = !!((this.pkg.devDependencies && this.pkg.devDependencies.eslint) || (
-      existsSync(this.pathUtil.getPath('.eslintrc.js')) ||
-      existsSync(this.pathUtil.getPath('.eslintrc.yml')) ||
-      existsSync(this.pathUtil.getPath('.eslintrc.yaml')) ||
-      existsSync(this.pathUtil.getPath('.eslintrc.json')) ||
-      existsSync(this.pathUtil.getPath('.eslintrc')) ||
-      (this.pkg.eslintConfig !== undefined)
-    ))
+    this._useESLint = config.eslint !== undefined
+      ? !!config.eslint
+      : !!((this.pkg.devDependencies && this.pkg.devDependencies.eslint) || (
+          existsSync(this.pathUtil.getPath('.eslintrc.js')) ||
+          existsSync(this.pathUtil.getPath('.eslintrc.yml')) ||
+          existsSync(this.pathUtil.getPath('.eslintrc.yaml')) ||
+          existsSync(this.pathUtil.getPath('.eslintrc.json')) ||
+          existsSync(this.pathUtil.getPath('.eslintrc')) ||
+          (this.pkg.eslintConfig !== undefined)
+        ))
     this._useBabel = !!((this.pkg.devDependencies && this.pkg.devDependencies['@babel/core']) || (
       existsSync(this.pathUtil.getPath('babel.config.js')) ||
       existsSync(this.pathUtil.getPath('.babelrc'))
@@ -655,7 +669,7 @@ class WebpackConfig {
       },
       resolve: {
         alias: config.alias,
-        extensions: [...(this._useTypeScript ? ['.tsx', '.ts'] : []), '.mjs', '.cjs', '.js', ...(this._useBabel ? ['.jsx'] : []), ...(this._useVue ? ['.vue'] : []), '.styl', '.stylus', '.less', '.sass', '.scss', '.css', '.json', '.wasm']
+        extensions: [...(this._useTypeScript ? ['.tsx', '.ts'] : []), '.mjs', '.cjs', '.js', ...(this._useBabel ? ['.jsx'] : []), ...(this._useVue ? ['.vue'] : []), ...(this._useStylus ? ['.styl', '.stylus'] : []), ...(this._useLess ? ['.less'] : []), ...(this._useSass ? ['.scss', '.sass'] : []), '.css', '.json', '.wasm']
       },
       plugins: [
         ...(this._useESLint ? [this._createEslintPlugin(config, ['js', 'jsx', 'mjs', ...(this._useTypeScript ? ['tsx', 'ts'] : []), ...(this._useVue ? ['vue'] : [])])] : []),
@@ -741,7 +755,7 @@ class WebpackConfig {
       },
       resolve: {
         alias: config.alias,
-        extensions: [...(this._useTypeScript ? ['.tsx', '.ts'] : []), '.mjs', '.cjs', '.js', ...(this._useBabel ? ['.jsx'] : []), ...(this._useVue ? ['.vue'] : []), '.styl', '.stylus', '.less', '.sass', '.scss', '.css', '.json', '.wasm']
+        extensions: [...(this._useTypeScript ? ['.tsx', '.ts'] : []), '.mjs', '.cjs', '.js', ...(this._useBabel ? ['.jsx'] : []), ...(this._useVue ? ['.vue'] : []), ...(this._useStylus ? ['.styl', '.stylus'] : []), ...(this._useLess ? ['.less'] : []), ...(this._useSass ? ['.scss', '.sass'] : []), '.css', '.json', '.wasm']
       },
       plugins: [
         ...(this._useESLint ? [this._createEslintPlugin(config, ['js', 'jsx', 'mjs', ...(this._useTypeScript ? ['tsx', 'ts'] : []), ...(this._useVue ? ['vue'] : [])])] : []),
@@ -787,7 +801,7 @@ class WebpackConfig {
       },
       resolve: {
         alias: config.alias,
-        extensions: [...(this._useTypeScript ? ['.tsx', '.ts'] : []), '.mjs', '.cjs', '.js', ...(this._useBabel ? ['.jsx'] : []), ...(this._useVue ? ['.vue'] : []), '.styl', '.stylus', '.less', '.sass', '.scss', '.css', '.json', '.wasm']
+        extensions: [...(this._useTypeScript ? ['.tsx', '.ts'] : []), '.mjs', '.cjs', '.js', ...(this._useBabel ? ['.jsx'] : []), ...(this._useVue ? ['.vue'] : []), ...(this._useStylus ? ['.styl', '.stylus'] : []), ...(this._useLess ? ['.less'] : []), ...(this._useSass ? ['.scss', '.sass'] : []), '.css', '.json', '.wasm']
       },
       plugins: [
         ...(this._useESLint ? [this._createEslintPlugin(config, ['js', 'jsx', 'mjs', ...(this._useTypeScript ? ['tsx', 'ts'] : []), ...(this._useVue ? ['vue'] : [])])] : []),

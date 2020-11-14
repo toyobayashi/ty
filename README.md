@@ -155,6 +155,14 @@ No webpack config. Working in progress.
 
 * `ts` {undefined | 0 | 1} Force to use typescript or not. Default: `undefined`.
 
+* `eslint` {undefined | 0 | 1} Force to use ESLint or not. Default: `undefined`.
+
+* `sass` {undefined | 0 | 1} Force to use sass or not. Default: `undefined`.
+
+* `less` {undefined | 0 | 1} Force to use less or not. Default: `undefined`.
+
+* `stylus` {undefined | 0 | 1} Force to use stylus or not. Default: `undefined`.
+
 * `generate` {undefined | 0 | 1} Force to generate missing files or not. Default: `undefined`.
 
 * `context` {string} Project root directory. Default: `''`.
@@ -332,6 +340,11 @@ No webpack config. Working in progress.
 * `--target`
 * `--arch`
 * `--ts` - Force to use typescript or not.
+* `--vue` - Force to use vue or not.
+* `--eslint` - Force to use eslint or not.
+* `--sass` - Force to use sass or not.
+* `--less` - Force to use less or not.
+* `--stylus` - Force to use stylus or not.
 * `--generate` - Force to generate missing files or not.
 * `--context` - Project root directory.
 * `--dev-server-port`

@@ -1,13 +1,18 @@
 const WebpackConfig = require('../config/webpack.config.js')
 const { stringify } = require('javascript-stringify')
 const { highlight } = require('cli-highlight')
+const { EOL } = require('os')
+const { isAbsolute, relative } = require('path')
 
 module.exports = function (config) {
-  const modules = new Set()
+  const pluginNames = new Set()
+  const builtins = new Set()
   const webpackPlugins = new Set()
   const htmls = new Set()
   const wc = new WebpackConfig(config, false)
-
+  const context = wc.pathUtil.getPath()
+  console.log(`// @tybys/ty version ${require('../package.json').version}`)
+  console.log(`// https://github.com/toyobayashi/ty${EOL}`)
   Object.keys(wc).forEach(k => {
     if (k[0] === '_') {
       console.log(`// ${k}: ${wc[k]}`)
@@ -21,6 +26,15 @@ module.exports = function (config) {
     conf = wc.nodeConfig
   } else {
     conf = wc
+  }
+
+  const ignorePathKey = ['publicPath']
+
+  const toRelative = (value) => {
+    builtins.add('path')
+    const joinpath = relative(context, value)
+    if (!joinpath) return 'context'
+    return `path.join(context, '${joinpath.replace(/\\/g, '/')}')`
   }
 
   let code = stringify(conf, function (value, space, next, key) {
@@ -41,30 +55,62 @@ module.exports = function (config) {
       if (value.__ty_webpack_plugin_name__.indexOf('webpack.') === 0) {
         webpackPlugins.add(value.__ty_webpack_plugin_name__.split('.')[1])
       } else {
-        modules.add(value.__ty_webpack_plugin_name__)
+        pluginNames.add(value.__ty_webpack_plugin_name__)
       }
       if (value.__ty_webpack_plugin_name__ === 'HtmlWebpackPlugin') {
         htmls.add(value.__ty_webpack_plugin_options__.template)
       }
-      return `new ${value.__ty_webpack_plugin_name__}(${value.__ty_webpack_plugin_options__ ? stringify(value.__ty_webpack_plugin_options__, null, 2) : ''})`
+      return `new ${value.__ty_webpack_plugin_name__}(${value.__ty_webpack_plugin_options__
+        ? stringify(value.__ty_webpack_plugin_options__, (value, space, next, key) => {
+            if (typeof value === 'string' && isAbsolute(value)) {
+              return toRelative(value)
+            }
+            if (key === 'ignore' && Array.isArray(value)) {
+              return next(value.map(g => {
+                if (isAbsolute(g)) {
+                  return `##{${toRelative(g) + ".replace(/\\/g, '/')"}}`
+                }
+                return g
+              }))
+            }
+            return next(value)
+          }, 2).replace(/'##\{(.*?)\}'/g, function (a, b) {
+            return b.replace(/\\'/g, '\'')
+          })
+        : ''})`
     } else if (value && (key === 'loader')) {
       const patharr = value.split(/[\\/]/)
       const pkgname = patharr[patharr.indexOf('node_modules') + 1]
+      if (pkgname === 'mini-css-extract-plugin') {
+        return 'MiniCssExtractPlugin.loader'
+      }
       return `require.resolve('${pkgname}')`
+    } else if (typeof value === 'string' && !ignorePathKey.includes(key) && isAbsolute(value)) {
+      return toRelative(value)
     }
     return next(value)
   }, 2)
   let pre = ''
-  if (webpackPlugins.size > 0) {
-    pre += 'const webpack = require(\'webpack\')\n'
-  }
-  if (modules.size > 0) {
-    for (const pluginName of modules) {
-      pre += `const ${pluginName} = require('${decamelize(pluginName)}')\n`
+  if (builtins.size > 0) {
+    for (const name of builtins) {
+      pre += `const ${name} = require('${name}')${EOL}`
     }
   }
-  if (htmls.size > 0) {
-    pre += `const htmls = [${Array.from(htmls).map(p => `'${p.replace(/(\\)/g, '\\$1')}'`).join(', ')}]\n`
+  if (webpackPlugins.size > 0) {
+    pre += `const webpack = require('webpack')${EOL}`
+  }
+  if (pluginNames.size > 0) {
+    for (const pluginName of pluginNames) {
+      if (pluginName === 'VueLoaderPlugin') {
+        pre += `const ${pluginName} = require('vue-loader').${pluginName}${EOL}`
+      } else {
+        pre += `const ${pluginName} = require('${decamelize(pluginName)}')${EOL}`
+      }
+    }
+  }
+  pre += `const context = '${context.replace(/\\/g, '\\\\')}'${EOL}`
+  if (config.mode === 'development' && htmls.size > 0) {
+    pre += `const htmls = [${Array.from(htmls).map(p => `${toRelative(p)}`).join(', ')}]${EOL}`
   }
 
   pre += 'module.exports = '

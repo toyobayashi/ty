@@ -103,6 +103,26 @@ const defaultConfig = {
   /**
    * @type {undefined | 0 | 1}
    */
+  eslint: undefined,
+
+  /**
+   * @type {undefined | 0 | 1}
+   */
+  sass: undefined,
+
+  /**
+   * @type {undefined | 0 | 1}
+   */
+  less: undefined,
+
+  /**
+   * @type {undefined | 0 | 1}
+   */
+  stylus: undefined,
+
+  /**
+   * @type {undefined | 0 | 1}
+   */
   vue: undefined,
 
   /**

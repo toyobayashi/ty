@@ -47,6 +47,10 @@ declare namespace ty {
     arch?: 'ia32' | 'x64'
     vue?: undefined | 0 | 1
     ts?: undefined | 0 | 1
+    eslint?: undefined | 0 | 1
+    sass?: undefined | 0 | 1
+    less?: undefined | 0 | 1
+    stylus?: undefined | 0 | 1
     generate?: undefined | 0 | 1
     context?: string
     progress?: boolean

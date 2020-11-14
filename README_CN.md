@@ -187,6 +187,14 @@ $ ty serve
 
 * `ts` {undefined | 0 | 1} 强制使用或强制不使用 TypeScript，传数字。默认：`undefined`。
 
+* `eslint` {undefined | 0 | 1} 强制使用或强制不使用 ESLint，传数字。默认：`undefined`。
+
+* `sass` {undefined | 0 | 1} 强制使用或强制不使用 Sass，传数字。默认：`undefined`。
+
+* `less` {undefined | 0 | 1} 强制使用或强制不使用 Less，传数字。默认：`undefined`。
+
+* `stylus` {undefined | 0 | 1} 强制使用或强制不使用 Stylus，传数字。默认：`undefined`。
+
 * `generate` {undefined | 0 | 1} 强制生成或强制不生成缺失的文件。默认：`undefined`。
 
 * `context` {string} 修改打包器的上下文根目录。默认：`''`。
@@ -370,6 +378,11 @@ $ ty serve
 * `--target`
 * `--arch`
 * `--ts` - 强制使用或强制不使用 TypeScript。
+* `--vue` - 强制使用或强制不使用 Vue。
+* `--eslint` - 强制使用或强制不使用 ESLint。
+* `--sass` - 强制使用或强制不使用 Sass。
+* `--less` - 强制使用或强制不使用 Less。
+* `--stylus` - 强制使用或强制不使用 Stylus。
 * `--generate` - 强制生成或强制不生成缺失的文件。
 * `--context` - 项目的根目录。
 * `--dev-server-port`
