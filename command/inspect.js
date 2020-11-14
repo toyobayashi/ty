@@ -19,15 +19,6 @@ module.exports = function (config) {
     }
   })
 
-  let conf
-  if (wc._webTarget) {
-    conf = wc.webConfig
-  } else if (wc._nodeTarget) {
-    conf = wc.nodeConfig
-  } else {
-    conf = wc
-  }
-
   const ignorePathKey = ['publicPath']
 
   const toRelative = (value) => {
@@ -37,7 +28,7 @@ module.exports = function (config) {
     return `path.join(context, '${joinpath.replace(/\\/g, '/')}')`
   }
 
-  let code = stringify(conf, function (value, space, next, key) {
+  const stringifyWebpackConfig = function (value, space, next, key) {
     if (typeof value === 'function') {
       let str = value.toString()
       if (str.indexOf('this._watchHtml(config, server)') !== -1) {
@@ -89,33 +80,54 @@ module.exports = function (config) {
       return toRelative(value)
     }
     return next(value)
-  }, 2)
-  let pre = ''
-  if (builtins.size > 0) {
-    for (const name of builtins) {
-      pre += `const ${name} = require('${name}')${EOL}`
-    }
   }
-  if (webpackPlugins.size > 0) {
-    pre += `const webpack = require('webpack')${EOL}`
-  }
-  if (pluginNames.size > 0) {
-    for (const pluginName of pluginNames) {
-      if (pluginName === 'VueLoaderPlugin') {
-        pre += `const ${pluginName} = require('vue-loader').${pluginName}${EOL}`
-      } else {
-        pre += `const ${pluginName} = require('${decamelize(pluginName)}')${EOL}`
+
+  const genPreCode = () => {
+    let pre = ''
+    if (builtins.size > 0) {
+      for (const name of builtins) {
+        pre += `const ${name} = require('${name}')${EOL}`
       }
     }
-  }
-  pre += `const context = '${context.replace(/\\/g, '\\\\')}'${EOL}`
-  if (config.mode === 'development' && htmls.size > 0) {
-    pre += `const htmls = [${Array.from(htmls).map(p => `${toRelative(p)}`).join(', ')}]${EOL}`
+    if (webpackPlugins.size > 0) {
+      pre += `const webpack = require('webpack')${EOL}`
+    }
+    if (pluginNames.size > 0) {
+      for (const pluginName of pluginNames) {
+        if (pluginName === 'VueLoaderPlugin') {
+          pre += `const ${pluginName} = require('vue-loader').${pluginName}${EOL}`
+        } else {
+          pre += `const ${pluginName} = require('${decamelize(pluginName)}')${EOL}`
+        }
+      }
+    }
+    pre += `const context = '${context.replace(/\\/g, '\\\\')}'${EOL}`
+    if (config.mode === 'development' && htmls.size > 0) {
+      pre += `const htmls = [${Array.from(htmls).map(p => `${toRelative(p)}`).join(', ')}]${EOL}`
+    }
+    return pre
   }
 
-  pre += 'module.exports = '
+  let code = ''
+  let confCode = ''
+  if (wc._webTarget) {
+    confCode = `const webConfig = ${stringify(wc.webConfig, stringifyWebpackConfig, 2)}${EOL}`
+    code = `${genPreCode()}${confCode}`
+    code += 'module.exports = webConfig'
+  } else if (wc._nodeTarget) {
+    confCode = `const nodeConfig = ${stringify(wc.nodeConfig, stringifyWebpackConfig, 2)}${EOL}`
+    code = `${genPreCode()}${confCode}`
+    code += 'module.exports = nodeConfig'
+  } else if (wc._electronTarget) {
+    confCode = `const mainConfig = ${stringify(wc.mainConfig, stringifyWebpackConfig, 2)}${EOL}`
+    confCode += `const rendererConfig = ${stringify(wc.rendererConfig, stringifyWebpackConfig, 2)}${EOL}`
+    if (config.entry.preload) confCode += `const preloadConfig = ${stringify(wc.preloadConfig, stringifyWebpackConfig, 2)}${EOL}`
+    code = `${genPreCode()}${confCode}`
+    code += `module.exports = [mainConfig, rendererConfig${config.entry.preload ? ' ,preloadConfig' : ''}]`
+  } else {
+    throw new Error('Unknown target')
+  }
 
-  code = pre + code
   console.log(highlight(code, { language: 'js' }))
 }
 

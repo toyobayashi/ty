@@ -138,7 +138,7 @@ $ ty serve
 
 * `extraResourcesPath` {string} 打包时会把这里面的东西复制到 `resources` 目录。默认：`'resources'`。
 
-* `publicPath` {string} 本地开发时静态资源的相对路径。默认：`'/'` 或 `'/app/renderer/'`。
+* `publicPath` {string} 输出的静态资源路径前缀。默认：开发环境为 `'/'` 或 `'/app/renderer/'`，生产环境为 `''`。
 
 * `staticDir` {string} 被复制到网站根目录下。默认： `'public'`。
 

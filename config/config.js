@@ -70,9 +70,9 @@ const defaultConfig = {
    */
   staticDir: 'public',
   /**
-   * @type {string}
+   * @type {string | undefined}
    */
-  publicPath: '',
+  publicPath: undefined,
   /**
    * @type {string}
    */
@@ -361,7 +361,7 @@ function readTyConfig (configPath, getPath) {
       process.exit(1)
     }
     setDefault(mergedConfig, 'contentBase', mergedConfig.localResourcesPath)
-    setDefault(mergedConfig, 'publicPath', '/app/renderer/')
+    // setDefault(mergedConfig, 'publicPath', '/app/renderer/')
     if (!mergedConfig.output.main) {
       mergedConfig.output.main = posix.join(mergedConfig.localResourcesPath, 'app/main')
     }
@@ -373,7 +373,7 @@ function readTyConfig (configPath, getPath) {
     }
   } else {
     setDefault(mergedConfig, 'contentBase', mergedConfig.output.web || 'dist')
-    setDefault(mergedConfig, 'publicPath', '/')
+    // setDefault(mergedConfig, 'publicPath', '/')
   }
 
   if (!mergedConfig.entry) {

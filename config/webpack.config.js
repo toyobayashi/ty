@@ -285,7 +285,7 @@ class WebpackConfig {
           {
             loader: require.resolve('ts-loader'),
             options: {
-              appendTsSuffixTo: [/\.vue$/],
+              ...(this._useVue ? { appendTsSuffixTo: [/\.vue$/] } : {}),
               transpileOnly: true,
               configFile: this.pathUtil.getPath(config.tsconfig[tsconfig])
             }
@@ -300,7 +300,7 @@ class WebpackConfig {
           {
             loader: require.resolve('ts-loader'),
             options: {
-              appendTsSuffixTo: [/\.vue$/],
+              ...(this._useVue ? { appendTsSuffixTo: [/\.vue$/] } : {}),
               transpileOnly: true,
               configFile: this.pathUtil.getPath(config.tsconfig[tsconfig])
             }
@@ -382,6 +382,10 @@ class WebpackConfig {
     }
   }
 
+  _computePublicPath (config) {
+    return typeof config.publicPath === 'string' ? config.publicPath : (this._electronTarget ? '/app/renderer/' : '/')
+  }
+
   _createDevServerConfig (config, before) {
     return {
       stats: config.statsOptions,
@@ -390,7 +394,7 @@ class WebpackConfig {
       inline: true,
       ...(this._webTarget ? { open: config.devServerOpenBrowser } : {}),
       contentBase: [this.pathUtil.getPath(config.contentBase)],
-      publicPath: config.publicPath,
+      publicPath: this._computePublicPath(config),
       ...(config.proxy ? { proxy: config.proxy } : {}),
       ...(typeof before === 'function' ? { before } : {})
     }
@@ -598,7 +602,7 @@ class WebpackConfig {
     const tplOptions = {
       host: config.devServerHost,
       port: config.devServerPort,
-      publicPath: config.publicPath
+      publicPath: this._computePublicPath(config)
     }
 
     if (this._electronTarget) {
@@ -893,9 +897,8 @@ class WebpackConfig {
         new HotModuleReplacementPlugin()
       ]
 
-      if (config.publicPath) {
-        this.rendererConfig.output && (this.rendererConfig.output.publicPath = config.publicPath)
-      }
+      this.rendererConfig.output = this.rendererConfig.output || {}
+      this.rendererConfig.output.publicPath = this._computePublicPath(config)
 
       if (this._useTypeScript) {
         this.rendererConfig.plugins = [
@@ -924,9 +927,10 @@ class WebpackConfig {
 
       if (config.entry.preload) {
         this.preloadConfig.devtool = config.devtool.development
-        if (config.publicPath) {
-          this.preloadConfig.output && (this.preloadConfig.output.publicPath = config.publicPath)
-        }
+
+        this.preloadConfig.output = this.preloadConfig.output || {}
+        this.preloadConfig.output.publicPath = this._computePublicPath(config)
+
         if (this._useTypeScript) {
           this.preloadConfig.plugins = [
             ...(this.preloadConfig.plugins || []),
@@ -966,9 +970,8 @@ class WebpackConfig {
         new HotModuleReplacementPlugin()
       ]
 
-      if (config.publicPath) {
-        this.webConfig.output && (this.webConfig.output.publicPath = config.publicPath)
-      }
+      this.webConfig.output = this.webConfig.output || {}
+      this.webConfig.output.publicPath = this._computePublicPath(config)
 
       if (this._useTypeScript) {
         this.webConfig.plugins = [
@@ -1013,6 +1016,12 @@ class WebpackConfig {
           cssnano()
         ]
       }
+
+      if (typeof config.publicPath === 'string') {
+        this.rendererConfig.output = this.rendererConfig.output || {}
+        this.rendererConfig.output.publicPath = config.publicPath
+      }
+
       this.mainConfig.optimization = {
         ...(this.mainConfig.optimization || {}),
         minimizer: [terser()]
@@ -1056,6 +1065,10 @@ class WebpackConfig {
             terser(),
             cssnano()
           ]
+        }
+        if (typeof config.publicPath === 'string') {
+          this.preloadConfig.output = this.preloadConfig.output || {}
+          this.preloadConfig.output.publicPath = config.publicPath
         }
         if (this._useTypeScript) {
           this.preloadConfig.plugins = [
@@ -1104,6 +1117,11 @@ class WebpackConfig {
           terser(),
           cssnano()
         ]
+      }
+
+      if (typeof config.publicPath === 'string') {
+        this.webConfig.output = this.webConfig.output || {}
+        this.webConfig.output.publicPath = config.publicPath
       }
 
       if (this._useTypeScript) {

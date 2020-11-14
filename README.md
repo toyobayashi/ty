@@ -106,7 +106,7 @@ No webpack config. Working in progress.
 
 * `extraResourcesPath` {string} Extra contents to be copied to `resources` dir. Default: `'resources'`.
 
-* `publicPath` {string} Default: `'/'` (web target) or `'/app/renderer/'` (electron target).
+* `publicPath` {string} Default: `'/'` (web target) or `'/app/renderer/'` (electron target) in development environment, `''` in production.
 
 * `staticDir` {string} Be copied to web root. Default: `'public'`.
 
