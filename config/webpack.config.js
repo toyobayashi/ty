@@ -665,7 +665,7 @@ class WebpackConfig {
       module: {
         rules: [
           ...(this._useBabel ? [this._createBabelLoader(/\.jsx?$/)] : []),
-          ...(this._useTypeScript ? [this._createTSXLoader(config, 'web')] : []),
+          ...(this._useTypeScript ? this._createTSXLoader(config, 'web') : []),
           ...(this._useVue ? [this._createVueLoader()] : []),
           ...(this._createStyleLoaders(config)),
           ...(this._createAssetsLoaders(config))
@@ -751,7 +751,7 @@ class WebpackConfig {
       module: {
         rules: [
           ...(this._useBabel ? [this._createBabelLoader(/\.jsx?$/)] : []),
-          ...(this._useTypeScript ? [this._createTSXLoader(config, 'renderer')] : []),
+          ...(this._useTypeScript ? this._createTSXLoader(config, 'renderer') : []),
           ...(this._useVue ? [this._createVueLoader()] : []),
           ...(this._createStyleLoaders(config)),
           ...(this._createAssetsLoaders(config))
@@ -797,7 +797,7 @@ class WebpackConfig {
       module: {
         rules: [
           ...(this._useBabel ? [this._createBabelLoader(/\.jsx?$/)] : []),
-          ...(this._useTypeScript ? [this._createTSXLoader(config, 'preload')] : []),
+          ...(this._useTypeScript ? this._createTSXLoader(config, 'preload') : []),
           ...(this._useVue ? [this._createVueLoader()] : []),
           ...(this._createStyleLoaders(config)),
           ...(this._createAssetsLoaders(config))
