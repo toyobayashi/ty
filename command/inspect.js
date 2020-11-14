@@ -7,6 +7,7 @@ const { isAbsolute, relative } = require('path')
 module.exports = function (config) {
   const pluginNames = new Set()
   const builtins = new Set()
+  const nodeModules = new Set()
   const webpackPlugins = new Set()
   const htmls = new Set()
   const wc = new WebpackConfig(config, false)
@@ -35,6 +36,11 @@ module.exports = function (config) {
         str = str.replace('this._watchHtml(config, server)', 'htmls.forEach(item => server._watch(item))')
         str = str.replace('this.pathUtil.getPath(config.contentBase))', wc.pathUtil.getPath(config.contentBase))
         str = str.replace(/(\r?\n) {6}/g, '$1')
+        if (str.indexOf('app.use(require(\'express-serve-asar\')(') !== -1) {
+          str = str.replace(/app\.use\(require\('express-serve-asar'\)\((.*?)\)/g, function (a, b) {
+            return 'app.use(require(\'express-serve-asar\')(' + toRelative(b) + '))'
+          })
+        }
         return str
       }
       if (str.length > 1000) {
@@ -42,6 +48,9 @@ module.exports = function (config) {
       } else {
         return next(value)
       }
+    } else if (key === 'externals') {
+      nodeModules.add('webpackNodeExternals')
+      return `[webpackNodeExternals(${next(config.nodeExternals)})]`
     } else if (value.__ty_webpack_plugin_name__) {
       if (value.__ty_webpack_plugin_name__.indexOf('webpack.') === 0) {
         webpackPlugins.add(value.__ty_webpack_plugin_name__.split('.')[1])
@@ -89,6 +98,11 @@ module.exports = function (config) {
         pre += `const ${name} = require('${name}')${EOL}`
       }
     }
+    if (nodeModules.size > 0) {
+      for (const name of nodeModules) {
+        pre += `const ${name} = require('${decamelize(name)}')${EOL}`
+      }
+    }
     if (webpackPlugins.size > 0) {
       pre += `const webpack = require('webpack')${EOL}`
     }
@@ -123,7 +137,7 @@ module.exports = function (config) {
     confCode += `const rendererConfig = ${stringify(wc.rendererConfig, stringifyWebpackConfig, 2)}${EOL}`
     if (config.entry.preload) confCode += `const preloadConfig = ${stringify(wc.preloadConfig, stringifyWebpackConfig, 2)}${EOL}`
     code = `${genPreCode()}${confCode}`
-    code += `module.exports = [mainConfig, rendererConfig${config.entry.preload ? ' ,preloadConfig' : ''}]`
+    code += `module.exports = [mainConfig, rendererConfig${config.entry.preload ? ', preloadConfig' : ''}]`
   } else {
     throw new Error('Unknown target')
   }
