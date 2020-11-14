@@ -1,6 +1,8 @@
 # ty
 
-No webpack config. Working in progress.
+[中文文档](https://github.com/toyobayashi/ty/blob/master/README_CN.md)
+
+Zero config CLI bundler based on webpack for web, nodejs and electron application.
 
 ## Usage
 

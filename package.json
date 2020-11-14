@@ -5,8 +5,9 @@
   "bin": {
     "ty": "./bin/ty.js"
   },
+  "description": "Zero config CLI bundler based on webpack for web, nodejs and electron application",
   "scripts": {
-    "test": "node index.js"
+    "lint": "eslint **/{bin,command,util,config}/**/*.js"
   },
   "author": "toyobayashi",
   "license": "MIT",
