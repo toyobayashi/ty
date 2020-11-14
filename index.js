@@ -9,16 +9,16 @@ try {
 } catch (_) {}
 
 module.exports = function (command, args = { _: [] }, userConfig = {}) {
+  const defaultProduction = ['build', 'pack']
+  if (args.mode === 'production' || defaultProduction.indexOf(command) !== -1) {
+    process.env.NODE_ENV = 'production'
+  }
+
   const readTyConfig = require('./config/config.js')
   const merge = require('deepmerge')
   const PathUtil = require('./util/path.js')
   const pu = new PathUtil(args.context || userConfig.context)
   let config = readTyConfig(args.config, pu.getPath.bind(pu))
-
-  const defaultProduction = ['build', 'pack']
-  if (defaultProduction.indexOf(command) !== -1) {
-    process.env.NODE_ENV = config.mode = 'production'
-  }
 
   const cliConfig = require('./util/validate.js').cliSupportOption
   cliConfig.forEach((key) => {
