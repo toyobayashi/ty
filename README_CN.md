@@ -413,9 +413,7 @@ $ ty serve
 
 ## 例子
 
-* [electron-vue-ts](https://github.com/toyobayashi/webpack-template/tree/master/electron-vue-ts)
-* [electron-vue-js](https://github.com/toyobayashi/webpack-template/tree/master/electron-vue-js)
-* [react-js](https://github.com/toyobayashi/webpack-template/tree/master/react-js)
+看 [example 目录](https://github.com/toyobayashi/ty/tree/master/example)。
 
 ## 许可
 

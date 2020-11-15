@@ -375,9 +375,7 @@ Zero config CLI bundler based on webpack for web, nodejs and electron applicatio
 
 ## Example
 
-* [electron-vue-ts](https://github.com/toyobayashi/webpack-template/tree/master/electron-vue-ts)
-* [electron-vue-js](https://github.com/toyobayashi/webpack-template/tree/master/electron-vue-js)
-* [react-js](https://github.com/toyobayashi/webpack-template/tree/master/react-js)
+See [example folder](https://github.com/toyobayashi/ty/tree/master/example).
 
 ## License
 
