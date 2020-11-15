@@ -12,7 +12,7 @@ Vue 单文件组件和 React TSX 开箱即用，但是 JSX 需要自己配 babel
 
 但适配所有场景当然是不可能的，如果需要，你仍然可以配置内部的 Webpack。
 
-现支持 Webpack 4，准备开始支持 Webpack 5。
+支持 Webpack 4+。
 
 暂不支持 Node.js API，只能通过命令行使用。
 
@@ -23,7 +23,7 @@ Vue 单文件组件和 React TSX 开箱即用，但是 JSX 需要自己配 babel
     1. 在项目里安装
 
         ``` bash
-        $ npm install -D @tybys/ty
+        $ npm install -D @tybys/ty webpack webpack-dev-server
         ```
 
     2. 写在 NPM 脚本里
@@ -186,6 +186,8 @@ $ ty serve
     ```
 
 * `vue` {undefined | 0 | 1} 强制使用或强制不使用 Vue.js，传数字。默认：`undefined`。
+
+* `webpack` {undefined | number} 强制指定 webpack 版本，传数字。默认：`undefined`。
 
 * `ts` {undefined | 0 | 1} 强制使用或强制不使用 TypeScript，传数字。默认：`undefined`。
 
@@ -379,6 +381,7 @@ $ ty serve
 * `--mode`
 * `--target`
 * `--arch`
+* `--webpack` - 强制指定 webpack 版本。
 * `--ts` - 强制使用或强制不使用 TypeScript。
 * `--vue` - 强制使用或强制不使用 Vue。
 * `--eslint` - 强制使用或强制不使用 ESLint。

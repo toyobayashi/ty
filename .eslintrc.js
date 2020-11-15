@@ -3,6 +3,9 @@ module.exports = {
   env: {
     node: true
   },
+  rules: {
+    'multiline-ternary': 'off'
+  },
   extends: [
     'standard'
   ]

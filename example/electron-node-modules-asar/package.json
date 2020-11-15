@@ -7,6 +7,8 @@
   },
   "devDependencies": {
     "asar-node": "^2.1.0",
-    "electron": "6.0.7"
+    "electron": "6.0.7",
+    "webpack": "^5.4.0",
+    "webpack-dev-server": "^3.11.0"
   }
 }

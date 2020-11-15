@@ -11,7 +11,7 @@ Zero config CLI bundler based on webpack for web, nodejs and electron applicatio
     1. Install
 
         ``` bash
-        $ npm install -D @tybys/ty
+        $ npm install -D @tybys/ty webpack webpack-dev-server
         ```
 
     2. Writing scripts in package.json
@@ -154,6 +154,8 @@ Zero config CLI bundler based on webpack for web, nodejs and electron applicatio
     ```
 
 * `vue` {undefined | 0 | 1} Force to use Vue.js or not. Default: `undefined`.
+
+* `webpack` {undefined | number} Force to specify the webpack version. Default: `undefined`.
 
 * `ts` {undefined | 0 | 1} Force to use typescript or not. Default: `undefined`.
 
@@ -341,6 +343,7 @@ Zero config CLI bundler based on webpack for web, nodejs and electron applicatio
 * `--mode`
 * `--target`
 * `--arch`
+* `--webpack` - Force to specify webpack version.
 * `--ts` - Force to use typescript or not.
 * `--vue` - Force to use vue or not.
 * `--eslint` - Force to use eslint or not.

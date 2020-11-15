@@ -1,4 +1,8 @@
 {
   "name": "ty-example-web",
-  "version": "1.0.0"
+  "version": "1.0.0",
+  "devDependencies": {
+    "webpack": "^4.44.2",
+    "webpack-dev-server": "^3.11.0"
+  }
 }

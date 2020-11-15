@@ -96,6 +96,11 @@ const defaultConfig = {
   arch: process.arch,
 
   /**
+   * @type {undefined | number}
+   */
+  webpack: undefined,
+
+  /**
    * @type {undefined | 0 | 1}
    */
   ts: undefined,

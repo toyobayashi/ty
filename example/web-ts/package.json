@@ -2,6 +2,8 @@
   "name": "ty-example-web-ts",
   "version": "1.0.0",
   "devDependencies": {
-    "typescript": "^4.0.2"
+    "typescript": "^4.0.2",
+    "webpack": "^5.4.0",
+    "webpack-dev-server": "^3.11.0"
   }
 }

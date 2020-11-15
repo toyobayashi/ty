@@ -5,6 +5,7 @@ const cliSupportOption = [
   'devServerHost',
   'devServerPort',
   'devServerOpenBrowser',
+  'webpack',
   'ts',
   'vue',
   'eslint',

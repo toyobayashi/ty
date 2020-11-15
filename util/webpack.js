@@ -1,5 +1,10 @@
-const webpack = require('webpack')
-const WebpackDevServer = require('webpack-dev-server')
+let webpack
+try {
+  webpack = require('webpack')
+} catch (_) {
+  throw new Error('webpack is not found, try to run `npm install -D webpack` first')
+}
+const webpackVersion = Number(webpack.version.charAt(0))
 
 function compile (config, statsOptions) {
   return new Promise((resolve, reject) => {
@@ -24,6 +29,13 @@ function watch (config, handler) {
 }
 
 function startDevServer (configuration, port, host, callback) {
+  let WebpackDevServer
+  try {
+    WebpackDevServer = require('webpack-dev-server')
+  } catch (_) {
+    throw new Error('webpack-dev-server is not found, try to run `npm install -D webpack-dev-server` first')
+  }
+
   const devServerOptions = configuration.devServer || {}
   WebpackDevServer.addDevServerEntrypoints(configuration, devServerOptions)
   const server = new WebpackDevServer(webpack(configuration), devServerOptions)
@@ -72,6 +84,8 @@ function copyExtraResources (config, webpackConfig, needWatch, watchCallback) {
 }
 
 module.exports = {
+  webpack,
+  webpackVersion,
   compile,
   watch,
   startDevServer,

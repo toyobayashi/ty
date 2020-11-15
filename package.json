@@ -1,6 +1,6 @@
 {
   "name": "@tybys/ty",
-  "version": "0.13.2",
+  "version": "0.14.0",
   "main": "index.js",
   "bin": {
     "ty": "./bin/ty.js"
@@ -56,9 +56,11 @@
     "ts-loader": "^8.0.11",
     "url-loader": "^4.1.1",
     "vue-loader": "^15.9.5",
-    "webpack": "^4.44.2",
-    "webpack-dev-server": "^3.11.0",
     "webpack-node-externals": "^2.5.2"
+  },
+  "peerDependencies": {
+    "webpack": ">= 4.0.0",
+    "webpack-dev-server": "^3.10.0"
   },
   "devDependencies": {
     "eslint": "^7.13.0",

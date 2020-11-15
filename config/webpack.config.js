@@ -3,7 +3,8 @@ const { existsSync, mkdirsSync, readJSONSync } = require('fs-extra')
 const webpackNodeExternals = require('webpack-node-externals')
 const wrapPlugin = require('../util/plugin.js')
 
-const webpack = require('webpack')
+const { webpack, webpackVersion } = require('../util/webpack.js')
+
 const HotModuleReplacementPlugin = wrapPlugin('webpack.HotModuleReplacementPlugin', webpack.HotModuleReplacementPlugin)
 const ProgressPlugin = wrapPlugin('webpack.ProgressPlugin', webpack.ProgressPlugin)
 const DefinePlugin = wrapPlugin('webpack.DefinePlugin', webpack.DefinePlugin)
@@ -24,6 +25,10 @@ const merge = require('deepmerge')
 const semver = require('semver')
 
 class WebpackConfig {
+  _isWebpack5plus (config) {
+    return typeof config.webpack === 'number' ? (config.webpackVersion > 4) : (webpackVersion > 4)
+  }
+
   _createCssLoaders (config, importLoaders = 0) {
     const cssLoaderOptions = {
       modules: {
@@ -213,10 +218,10 @@ class WebpackConfig {
         chunks: 'all',
         name: false,
         cacheGroups: {
-          'node-modules': {
+          node_modules: {
             name: 'node-modules',
             test: /[\\/]node_modules[\\/]/,
-            priority: -10,
+            priority: -9,
             chunks: 'all'
           }
         }
@@ -363,12 +368,41 @@ class WebpackConfig {
 
   _defaultNodeLib () {
     return {
+      global: false,
+      __dirname: false,
+      __filename: false,
+      Buffer: false,
+      process: false,
+      console: false,
       setImmediate: false,
+
       dgram: 'empty',
       fs: 'empty',
       net: 'empty',
       tls: 'empty',
       child_process: 'empty'
+    }
+  }
+
+  _defaultResolveFallback () {
+    return {
+      dgram: false,
+      fs: false,
+      net: false,
+      tls: false,
+      child_process: false
+    }
+  }
+
+  _defaultEs5OutputEnvironment () {
+    return {
+      arrowFunction: false,
+      bigIntLiteral: false,
+      const: false,
+      destructuring: false,
+      dynamicImport: false,
+      forOf: false,
+      module: false
     }
   }
 
@@ -622,6 +656,7 @@ class WebpackConfig {
   }
 
   _initNode (config) {
+    const webpack5plus = this._isWebpack5plus(config)
     this.nodeConfig = {
       mode: config.mode,
       context: this.pathUtil.getPath(),
@@ -630,7 +665,15 @@ class WebpackConfig {
       output: {
         filename: config.out.js,
         path: this.pathUtil.getPath(config.output.node),
-        libraryTarget: 'commonjs2'
+        ...(webpack5plus
+          ? {
+              library: {
+                type: 'commonjs2'
+              }
+            }
+          : {
+              libraryTarget: 'commonjs2'
+            })
       },
       node: false,
       module: {
@@ -652,6 +695,7 @@ class WebpackConfig {
   }
 
   _initWeb (config) {
+    const webpack5plus = this._isWebpack5plus(config)
     this.webConfig = {
       mode: config.mode,
       context: this.pathUtil.getPath(),
@@ -659,9 +703,10 @@ class WebpackConfig {
       entry: config.entry.web,
       output: {
         filename: config.out.js,
-        path: this.pathUtil.getPath(config.output.web)
+        path: this.pathUtil.getPath(config.output.web),
+        ...(webpack5plus ? { environment: this._defaultEs5OutputEnvironment() } : {})
       },
-      node: this._defaultNodeLib(),
+      node: webpack5plus ? false : this._defaultNodeLib(),
       module: {
         rules: [
           ...(this._useBabel ? [this._createBabelLoader(/\.jsx?$/)] : []),
@@ -673,7 +718,8 @@ class WebpackConfig {
       },
       resolve: {
         alias: config.alias,
-        extensions: [...(this._useTypeScript ? ['.tsx', '.ts'] : []), '.mjs', '.cjs', '.js', ...(this._useBabel ? ['.jsx'] : []), ...(this._useVue ? ['.vue'] : []), ...(this._useStylus ? ['.styl', '.stylus'] : []), ...(this._useLess ? ['.less'] : []), ...(this._useSass ? ['.scss', '.sass'] : []), '.css', '.json', '.wasm']
+        extensions: [...(this._useTypeScript ? ['.tsx', '.ts'] : []), '.mjs', '.cjs', '.js', ...(this._useBabel ? ['.jsx'] : []), ...(this._useVue ? ['.vue'] : []), ...(this._useStylus ? ['.styl', '.stylus'] : []), ...(this._useLess ? ['.less'] : []), ...(this._useSass ? ['.scss', '.sass'] : []), '.css', '.json', '.wasm'],
+        ...(webpack5plus ? { fallback: this._defaultResolveFallback() } : {})
       },
       plugins: [
         ...(this._useESLint ? [this._createEslintPlugin(config, ['js', 'jsx', 'mjs', ...(this._useTypeScript ? ['tsx', 'ts'] : []), ...(this._useVue ? ['vue'] : [])])] : []),
@@ -692,6 +738,7 @@ class WebpackConfig {
   }
 
   _initMain (config) {
+    const webpack5plus = this._isWebpack5plus(config)
     this.mainConfig = {
       mode: config.mode,
       context: this.pathUtil.getPath(),
@@ -700,7 +747,15 @@ class WebpackConfig {
       output: {
         filename: config.out.js,
         path: this.pathUtil.getPath(config.output.main),
-        libraryTarget: 'commonjs2'
+        ...(webpack5plus
+          ? {
+              library: {
+                type: 'commonjs2'
+              }
+            }
+          : {
+              libraryTarget: 'commonjs2'
+            })
       },
       node: false,
       module: {
@@ -738,6 +793,7 @@ class WebpackConfig {
   }
 
   _initRenderer (config) {
+    const webpack5plus = this._isWebpack5plus(config)
     this.rendererConfig = {
       mode: config.mode,
       context: this.pathUtil.getPath(),
@@ -745,9 +801,10 @@ class WebpackConfig {
       entry: config.entry.renderer,
       output: {
         filename: config.out.js,
-        path: this.pathUtil.getPath(config.output.renderer)
+        path: this.pathUtil.getPath(config.output.renderer),
+        ...((config.entry.preload && webpack5plus) ? { environment: this._defaultEs5OutputEnvironment() } : {})
       },
-      node: config.entry.preload ? this._defaultNodeLib() : false,
+      node: config.entry.preload ? (webpack5plus ? false : this._defaultNodeLib()) : false,
       module: {
         rules: [
           ...(this._useBabel ? [this._createBabelLoader(/\.jsx?$/)] : []),
@@ -759,7 +816,8 @@ class WebpackConfig {
       },
       resolve: {
         alias: config.alias,
-        extensions: [...(this._useTypeScript ? ['.tsx', '.ts'] : []), '.mjs', '.cjs', '.js', ...(this._useBabel ? ['.jsx'] : []), ...(this._useVue ? ['.vue'] : []), ...(this._useStylus ? ['.styl', '.stylus'] : []), ...(this._useLess ? ['.less'] : []), ...(this._useSass ? ['.scss', '.sass'] : []), '.css', '.json', '.wasm']
+        extensions: [...(this._useTypeScript ? ['.tsx', '.ts'] : []), '.mjs', '.cjs', '.js', ...(this._useBabel ? ['.jsx'] : []), ...(this._useVue ? ['.vue'] : []), ...(this._useStylus ? ['.styl', '.stylus'] : []), ...(this._useLess ? ['.less'] : []), ...(this._useSass ? ['.scss', '.sass'] : []), '.css', '.json', '.wasm'],
+        ...((config.entry.preload && webpack5plus) ? { fallback: this._defaultResolveFallback() } : {})
       },
       plugins: [
         ...(this._useESLint ? [this._createEslintPlugin(config, ['js', 'jsx', 'mjs', ...(this._useTypeScript ? ['tsx', 'ts'] : []), ...(this._useVue ? ['vue'] : [])])] : []),
@@ -782,6 +840,7 @@ class WebpackConfig {
       this.preloadConfig = null
       return
     }
+    const webpack5plus = this._isWebpack5plus(config)
     this.preloadConfig = {
       mode: config.mode,
       context: this.pathUtil.getPath(),
@@ -790,7 +849,15 @@ class WebpackConfig {
       output: {
         filename: config.out.js,
         path: this.pathUtil.getPath(config.output.preload),
-        libraryTarget: 'commonjs2'
+        ...(webpack5plus
+          ? {
+              library: {
+                type: 'commonjs2'
+              }
+            }
+          : {
+              libraryTarget: 'commonjs2'
+            })
       },
       node: false,
       externals: [webpackNodeExternals(config.nodeExternals)],

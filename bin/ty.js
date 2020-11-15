@@ -44,8 +44,69 @@ for (const key in args) {
   }
 }
 
-require('../util/module.js')(args.context)
-require('../index.js')(process.argv[2], args)
+const register = require('../util/module.js')
+register(args.context)
+const context = args.context
+
+const childProcess = require('child_process')
+const oldFork = childProcess.fork
+childProcess.fork = function (modulePath, args, options) {
+  return oldFork.call(this, require('path').join(__dirname, 'fork.js'), [context || '', modulePath, ...args], options)
+}
+
+require('../util/ts.js')
+main(process.argv[2], args)
+
+function main (command, args = { _: [] }, userConfig = {}) {
+  const defaultProduction = ['build', 'pack']
+  if (args.mode === 'production' || defaultProduction.indexOf(command) !== -1) {
+    process.env.NODE_ENV = 'production'
+  }
+
+  const readTyConfig = require('../config/config.js')
+  const merge = require('deepmerge')
+  const PathUtil = require('../util/path.js')
+  const pu = new PathUtil(args.context || userConfig.context)
+  let config = readTyConfig(args.config, pu.getPath.bind(pu))
+
+  const cliConfig = require('../util/validate.js').cliSupportOption
+  cliConfig.forEach((key) => {
+    if (key in args) {
+      if (Object.prototype.toString.call(args[key]) === '[object Object]') {
+        config[key] = {
+          ...(config[key] || {}),
+          ...args[key]
+        }
+      } else {
+        config[key] = args[key]
+      }
+      if (key === 'mode') {
+        process.env.NODE_ENV = args[key]
+      }
+    }
+  })
+
+  if (Object.prototype.toString.call(userConfig) === '[object Object]') {
+    config = merge(config, userConfig)
+  }
+
+  const getCommand = (c) => {
+    if (config.command && typeof config.command[c] === 'function') {
+      return config.command[c]
+    }
+
+    const cmdscript = require.resolve('../command/' + c)
+    if (!require('fs').existsSync(cmdscript)) {
+      throw new Error(`Command "${command}" is not supported.`)
+    }
+
+    return require(cmdscript)
+  }
+
+  const fn = getCommand(command)
+
+  return fn(config, args, getCommand)
+}
 
 function printHelp () {
   console.log('Version: ' + require('../package.json').version)
@@ -66,6 +127,7 @@ function printHelp () {
   console.log('  --mode=[development|production]')
   console.log('  --target=[web|electron]')
   console.log('  --arch=[ia32|x64]')
+  console.log('  --webpack=4')
   console.log('  --ts=[0|1]')
   console.log('  --vue=[0|1]')
   console.log('  --eslint=[0|1]')

@@ -3,6 +3,10 @@
 declare namespace ty {
   type WebpackEntry = string | string[] | { [name: string]: string | string[] }
 
+  interface Plugin {
+    apply (...args: any[]): void
+  }
+
   interface minimistArgs {
     [arg: string]: any
     '--'?: string[]
@@ -45,6 +49,7 @@ declare namespace ty {
     indexHtml?: (string | Record<string, any>)[]
     assetsPath?: string
     arch?: 'ia32' | 'x64'
+    webpack?: undefined | number
     vue?: undefined | 0 | 1
     ts?: undefined | 0 | 1
     eslint?: undefined | 0 | 1
@@ -151,16 +156,18 @@ declare namespace ty {
       preload? (preloadConfig: any): void
     }
   }
+
+  export function wrapPlugin<P extends Plugin> (name: string, Constructor: P): P
 }
 
-declare function ty (command: 'build', args?: ty.minimistArgs, config?: ty.Configuration): void
-declare function ty (command: 'dev', args?: ty.minimistArgs, config?: ty.Configuration): void
-declare function ty (command: 'inspect', args?: ty.minimistArgs, config?: ty.Configuration): void
-declare function ty (command: 'pack', args?: ty.minimistArgs, config?: ty.Configuration): void
-declare function ty (command: 'serve', args?: ty.minimistArgs, config?: ty.Configuration): void
-declare function ty (command: 'start', args?: ty.minimistArgs, config?: ty.Configuration): void
-declare function ty (command: 'vscode', args?: ty.minimistArgs, config?: ty.Configuration): void
-declare function ty (command: 'watch', args?: ty.minimistArgs, config?: ty.Configuration): void
-declare function ty (command: string, args?: ty.minimistArgs, config?: ty.Configuration): void
+// declare function ty (command: 'build', args?: ty.minimistArgs, config?: ty.Configuration): void
+// declare function ty (command: 'dev', args?: ty.minimistArgs, config?: ty.Configuration): void
+// declare function ty (command: 'inspect', args?: ty.minimistArgs, config?: ty.Configuration): void
+// declare function ty (command: 'pack', args?: ty.minimistArgs, config?: ty.Configuration): void
+// declare function ty (command: 'serve', args?: ty.minimistArgs, config?: ty.Configuration): void
+// declare function ty (command: 'start', args?: ty.minimistArgs, config?: ty.Configuration): void
+// declare function ty (command: 'vscode', args?: ty.minimistArgs, config?: ty.Configuration): void
+// declare function ty (command: 'watch', args?: ty.minimistArgs, config?: ty.Configuration): void
+// declare function ty (command: string, args?: ty.minimistArgs, config?: ty.Configuration): void
 
 export = ty

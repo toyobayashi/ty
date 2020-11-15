@@ -11,6 +11,8 @@
     "@vue/babel-helper-vue-jsx-merge-props": "^1.0.0",
     "typescript": "4.0.2",
     "vue": "^2.6.10",
-    "vue-template-compiler": "^2.6.10"
+    "vue-template-compiler": "^2.6.10",
+    "webpack": "^5.4.0",
+    "webpack-dev-server": "^3.11.0"
   }
 }
