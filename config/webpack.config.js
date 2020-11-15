@@ -11,7 +11,6 @@ const DefinePlugin = wrapPlugin('webpack.DefinePlugin', webpack.DefinePlugin)
 const ProvidePlugin = wrapPlugin('webpack.ProvidePlugin', webpack.ProvidePlugin)
 
 const EslintWebpackPlugin = wrapPlugin('EslintWebpackPlugin', require('eslint-webpack-plugin'))
-const HtmlWebpackPlugin = wrapPlugin('HtmlWebpackPlugin', require('html-webpack-plugin'))
 const CssMinimizerWebpackPlugin = wrapPlugin('CssMinimizerWebpackPlugin', require('css-minimizer-webpack-plugin'))
 const TerserWebpackPlugin = wrapPlugin('TerserWebpackPlugin', require('terser-webpack-plugin'))
 const MiniCssExtractPlugin = wrapPlugin('MiniCssExtractPlugin', require('mini-css-extract-plugin'))
@@ -172,6 +171,11 @@ class WebpackConfig {
   }
 
   _createHtmlPlugins (config) {
+    const HtmlWebpackPlugin = wrapPlugin('HtmlWebpackPlugin',
+      typeof config.pluginImplementation.HtmlWebpackPlugin === 'function'
+        ? config.pluginImplementation.HtmlWebpackPlugin
+        : require('html-webpack-plugin')
+    )
     return config.indexHtml.map(htmlOption => {
       if (typeof htmlOption === 'string') {
         return new HtmlWebpackPlugin({

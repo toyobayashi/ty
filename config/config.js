@@ -270,7 +270,9 @@ const defaultConfig = {
     renderer (rendererConfig) {},
     main (mainConfig) {},
     preload (preloadConfig) {}
-  }
+  },
+
+  pluginImplementation: {}
 }
 
 function setDefault (config, key, value) {

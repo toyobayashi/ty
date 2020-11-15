@@ -155,6 +155,11 @@ declare namespace ty {
       main? (mainConfig: any): void
       preload? (preloadConfig: any): void
     }
+
+    pluginImplementation?: {
+      HtmlWebpackPlugin?: { new (options: any): Plugin }
+      [name: string]: { new (options: any): Plugin }
+    }
   }
 
   export function wrapPlugin<P extends Plugin> (name: string, Constructor: P): P
