@@ -305,7 +305,7 @@ class WebpackConfig {
         test: /\.tsx$/,
         exclude: /node_modules/,
         use: [
-          ...((this._useBabel && this._useVue) ? [require.resolve('babel-loader')] : []),
+          ...((this._useBabel && this._useVue) ? [{ loader: require.resolve('babel-loader') }] : []),
           {
             loader: require.resolve('ts-loader'),
             options: {
