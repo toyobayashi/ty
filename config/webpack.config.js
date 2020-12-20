@@ -815,12 +815,14 @@ class WebpackConfig {
           ...(this._useTypeScript ? this._createTSXLoader(config, 'renderer') : []),
           ...(this._useVue ? [this._createVueLoader()] : []),
           ...(this._createStyleLoaders(config)),
-          ...(this._createAssetsLoaders(config))
+          ...(this._createAssetsLoaders(config)),
+          ...(config.entry.preload ? [] : [this._createNodeLoader(config)])
         ]
       },
+      ...(config.entry.preload ? {} : { externals: [webpackNodeExternals(config.nodeExternals)] }),
       resolve: {
         alias: config.alias,
-        extensions: [...(this._useTypeScript ? ['.tsx', '.ts'] : []), '.mjs', '.cjs', '.js', ...(this._useBabel ? ['.jsx'] : []), ...(this._useVue ? ['.vue'] : []), ...(this._useStylus ? ['.styl', '.stylus'] : []), ...(this._useLess ? ['.less'] : []), ...(this._useSass ? ['.scss', '.sass'] : []), '.css', '.json', '.wasm'],
+        extensions: [...(this._useTypeScript ? ['.tsx', '.ts'] : []), '.mjs', '.cjs', '.js', ...(this._useBabel ? ['.jsx'] : []), ...(config.entry.preload ? [] : ['.node']), ...(this._useVue ? ['.vue'] : []), ...(this._useStylus ? ['.styl', '.stylus'] : []), ...(this._useLess ? ['.less'] : []), ...(this._useSass ? ['.scss', '.sass'] : []), '.css', '.json', '.wasm'],
         ...((config.entry.preload && webpack5plus) ? { fallback: this._defaultResolveFallback() } : {})
       },
       plugins: [
@@ -871,12 +873,13 @@ class WebpackConfig {
           ...(this._useTypeScript ? this._createTSXLoader(config, 'preload') : []),
           ...(this._useVue ? [this._createVueLoader()] : []),
           ...(this._createStyleLoaders(config)),
-          ...(this._createAssetsLoaders(config))
+          ...(this._createAssetsLoaders(config)),
+          ...(this._createNodeLoader(config))
         ]
       },
       resolve: {
         alias: config.alias,
-        extensions: [...(this._useTypeScript ? ['.tsx', '.ts'] : []), '.mjs', '.cjs', '.js', ...(this._useBabel ? ['.jsx'] : []), ...(this._useVue ? ['.vue'] : []), ...(this._useStylus ? ['.styl', '.stylus'] : []), ...(this._useLess ? ['.less'] : []), ...(this._useSass ? ['.scss', '.sass'] : []), '.css', '.json', '.wasm']
+        extensions: [...(this._useTypeScript ? ['.tsx', '.ts'] : []), '.mjs', '.cjs', '.js', ...(this._useBabel ? ['.jsx'] : []), '.node', ...(this._useVue ? ['.vue'] : []), ...(this._useStylus ? ['.styl', '.stylus'] : []), ...(this._useLess ? ['.less'] : []), ...(this._useSass ? ['.scss', '.sass'] : []), '.css', '.json', '.wasm']
       },
       plugins: [
         ...(this._useESLint ? [this._createEslintPlugin(config, ['js', 'jsx', 'mjs', ...(this._useTypeScript ? ['tsx', 'ts'] : []), ...(this._useVue ? ['vue'] : [])])] : []),
