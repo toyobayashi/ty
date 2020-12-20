@@ -685,7 +685,7 @@ class WebpackConfig {
           ...(this._createNodeBaseRules(config.tsconfig.node, config))
         ]
       },
-      externals: [webpackNodeExternals(config.nodeExternals)],
+      externals: [webpackNodeExternals(config.nodeExternals.node)],
       resolve: {
         alias: config.alias,
         extensions: [...(this._useTypeScript ? ['.tsx', '.ts'] : []), '.mjs', '.cjs', '.js', '.json', '.node', '.wasm']
@@ -767,7 +767,7 @@ class WebpackConfig {
           ...(this._createNodeBaseRules(config.tsconfig.main, config))
         ]
       },
-      externals: [webpackNodeExternals(config.nodeExternals)],
+      externals: [webpackNodeExternals(config.nodeExternals.main)],
       resolve: {
         alias: config.alias,
         extensions: [...(this._useTypeScript ? ['.tsx', '.ts'] : []), '.mjs', '.cjs', '.js', '.json', '.node', '.wasm']
@@ -819,7 +819,7 @@ class WebpackConfig {
           ...(config.entry.preload ? [] : [this._createNodeLoader(config)])
         ]
       },
-      ...(config.entry.preload ? {} : { externals: [webpackNodeExternals(config.nodeExternals)] }),
+      ...(config.entry.preload ? {} : { externals: [webpackNodeExternals(config.nodeExternals.renderer)] }),
       resolve: {
         alias: config.alias,
         extensions: [...(this._useTypeScript ? ['.tsx', '.ts'] : []), '.mjs', '.cjs', '.js', ...(this._useBabel ? ['.jsx'] : []), ...(config.entry.preload ? [] : ['.node']), ...(this._useVue ? ['.vue'] : []), ...(this._useStylus ? ['.styl', '.stylus'] : []), ...(this._useLess ? ['.less'] : []), ...(this._useSass ? ['.scss', '.sass'] : []), '.css', '.json', '.wasm'],
@@ -866,7 +866,7 @@ class WebpackConfig {
             })
       },
       node: false,
-      externals: [webpackNodeExternals(config.nodeExternals)],
+      externals: [webpackNodeExternals(config.nodeExternals.preload)],
       module: {
         rules: [
           ...(this._useBabel ? [this._createBabelLoader(/\.jsx?$/)] : []),
