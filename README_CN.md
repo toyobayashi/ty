@@ -409,8 +409,6 @@ $ ty serve
 
 * 不支持 TSLint 检查 TypeScript 代码，请使用 ESLint 检查，未来是 ESLint 的天下。
 
-* 默认情况下，原生模块 `.node` 文件只能用于 Electron 主进程和 node 项目中。不推荐在 Electron 渲染进程里加载原生模块。
-
 ## 例子
 
 看 [example 目录](https://github.com/toyobayashi/ty/tree/master/example)。

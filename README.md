@@ -371,8 +371,6 @@ Zero config CLI bundler based on webpack for web, nodejs and electron applicatio
 
 * Use ESLint to check typescript code instead of TSLint.
 
-* By default, `.node` file can only be used in electron main process.
-
 ## Example
 
 See [example folder](https://github.com/toyobayashi/ty/tree/master/example).
