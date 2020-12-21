@@ -131,7 +131,12 @@ declare namespace ty {
 
     nodeModulesAsar?: boolean
 
-    nodeExternals?: Record<string, any>
+    nodeExternals?: {
+      node?: Record<string, any>
+      renderer?: Record<string, any>
+      main?: Record<string, any>
+      preload?: Record<string, any>
+    }
 
     prune?: {
       whitelist?: string[]
