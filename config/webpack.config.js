@@ -12,7 +12,6 @@ const ProvidePlugin = wrapPlugin('webpack.ProvidePlugin', webpack.ProvidePlugin)
 
 const EslintWebpackPlugin = wrapPlugin('EslintWebpackPlugin', require('eslint-webpack-plugin'))
 const CssMinimizerWebpackPlugin = wrapPlugin('CssMinimizerWebpackPlugin', require('css-minimizer-webpack-plugin'))
-const TerserWebpackPlugin = wrapPlugin('TerserWebpackPlugin', require('terser-webpack-plugin'))
 const MiniCssExtractPlugin = wrapPlugin('MiniCssExtractPlugin', require('mini-css-extract-plugin'))
 const CopyWebpackPlugin = wrapPlugin('CopyWebpackPlugin', require('copy-webpack-plugin'))
 const ForkTsCheckerWebpackPlugin = wrapPlugin('ForkTsCheckerWebpackPlugin', require('fork-ts-checker-webpack-plugin'))
@@ -25,7 +24,7 @@ const semver = require('semver')
 
 class WebpackConfig {
   _isWebpack5plus (config) {
-    return typeof config.webpack === 'number' ? (config.webpackVersion > 4) : (webpackVersion > 4)
+    return typeof config.webpack === 'number' ? (config.webpack > 4) : (webpackVersion > 4)
   }
 
   _createCssLoaders (config, importLoaders = 0) {
@@ -171,6 +170,7 @@ class WebpackConfig {
   }
 
   _createHtmlPlugins (config) {
+    if (!config.indexHtml || config.indexHtml.length === 0) return []
     const HtmlWebpackPlugin = wrapPlugin('HtmlWebpackPlugin',
       typeof config.pluginImplementation.HtmlWebpackPlugin === 'function'
         ? config.pluginImplementation.HtmlWebpackPlugin
@@ -1066,8 +1066,17 @@ class WebpackConfig {
 
   _mergeProduction (config) {
     const terser = () => {
+      let TerserWebpackPlugin
+      if (typeof config.pluginImplementation.TerserWebpackPlugin === 'function') {
+        TerserWebpackPlugin = wrapPlugin('HtmlWebpackPlugin', config.pluginImplementation.TerserWebpackPlugin)
+        return new TerserWebpackPlugin(config.terserPlugin || {})
+      }
+
+      TerserWebpackPlugin = wrapPlugin('HtmlWebpackPlugin', require('terser-webpack-plugin'))
+      const { findPrefixSync } = require('@tybys/find-npm-prefix')
+      const terserPlugin5 = semver.gte(readJSONSync(path.join(findPrefixSync(require.resolve('terser-webpack-plugin')), 'package.json')).version, '5.0.0')
       const option = {
-        ...(config.productionSourcemap ? { sourceMap: true } : {}),
+        ...((config.productionSourcemap && !terserPlugin5) ? { sourceMap: true } : {}),
         ...(config.terserPlugin || {})
       }
       return new TerserWebpackPlugin(option)
