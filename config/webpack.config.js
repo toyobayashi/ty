@@ -1074,7 +1074,7 @@ class WebpackConfig {
 
       TerserWebpackPlugin = wrapPlugin('HtmlWebpackPlugin', require('terser-webpack-plugin'))
       const { findPrefixSync } = require('@tybys/find-npm-prefix')
-      const terserPlugin5 = semver.gte(readJSONSync(path.join(findPrefixSync(require.resolve('terser-webpack-plugin')), 'package.json')).version, '5.0.0')
+      const terserPlugin5 = semver.gte(readJSONSync(path.join(findPrefixSync(path.dirname(require.resolve('terser-webpack-plugin'))), 'package.json')).version, '5.0.0')
       const option = {
         ...((config.productionSourcemap && !terserPlugin5) ? { sourceMap: true } : {}),
         ...(config.terserPlugin || {})
