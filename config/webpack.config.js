@@ -1071,11 +1071,11 @@ class WebpackConfig {
     const terser = () => {
       let TerserWebpackPlugin
       if (typeof config.pluginImplementation.TerserWebpackPlugin === 'function') {
-        TerserWebpackPlugin = wrapPlugin('HtmlWebpackPlugin', config.pluginImplementation.TerserWebpackPlugin)
+        TerserWebpackPlugin = wrapPlugin('TerserWebpackPlugin', config.pluginImplementation.TerserWebpackPlugin)
         return new TerserWebpackPlugin(config.terserPlugin || {})
       }
 
-      TerserWebpackPlugin = wrapPlugin('HtmlWebpackPlugin', require('terser-webpack-plugin'))
+      TerserWebpackPlugin = wrapPlugin('TerserWebpackPlugin', require('terser-webpack-plugin'))
       const { findPrefixSync } = require('@tybys/find-npm-prefix')
       const terserPlugin5 = semver.gte(readJSONSync(path.join(findPrefixSync(path.dirname(require.resolve('terser-webpack-plugin'))), 'package.json')).version, '5.0.0')
       const option = {
