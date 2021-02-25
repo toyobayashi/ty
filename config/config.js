@@ -275,7 +275,8 @@ const defaultConfig = {
     preload (preloadConfig) {}
   },
 
-  pluginImplementation: {}
+  pluginImplementation: {},
+  loaderPath: {}
 }
 
 function setDefault (config, key, value) {

@@ -6,6 +6,9 @@ try {
 }
 const webpackVersion = Number(webpack.version.charAt(0))
 
+const camelcase = require('camelcase')
+const uppercamelcase = require('uppercamelcase')
+
 function compile (config, statsOptions) {
   return new Promise((resolve, reject) => {
     webpack(config, (err, stats) => {
@@ -83,11 +86,29 @@ function copyExtraResources (config, webpackConfig, needWatch, watchCallback) {
   }
 }
 
+function getLoaderPath (config, name) {
+  const camel = camelcase(name)
+  if (typeof config.loaderPath[camel] === 'string') {
+    return config.loaderPath[camel]
+  }
+  return require.resolve(name)
+}
+
+function getPluginImplementation (config, name) {
+  const uppercame = uppercamelcase(name)
+  if (typeof config.pluginImplementation[uppercame] === 'function') {
+    return config.pluginImplementation[uppercame]
+  }
+  return require(name)
+}
+
 module.exports = {
   webpack,
   webpackVersion,
   compile,
   watch,
   startDevServer,
-  copyExtraResources
+  copyExtraResources,
+  getLoaderPath,
+  getPluginImplementation
 }

@@ -162,9 +162,11 @@ declare namespace ty {
     }
 
     pluginImplementation?: {
-      HtmlWebpackPlugin?: { new (options: any): Plugin }
-      TerserWebpackPlugin?: { new (options: any): Plugin }
       [name: string]: { new (options: any): Plugin }
+    }
+
+    loaderPath?: {
+      [name: string]: any
     }
   }
 

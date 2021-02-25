@@ -3,18 +3,12 @@ const { existsSync, mkdirsSync, readJSONSync } = require('fs-extra')
 const webpackNodeExternals = require('webpack-node-externals')
 const wrapPlugin = require('../util/plugin.js')
 
-const { webpack, webpackVersion } = require('../util/webpack.js')
+const { webpack, webpackVersion, getLoaderPath, getPluginImplementation } = require('../util/webpack.js')
 
 const HotModuleReplacementPlugin = wrapPlugin('webpack.HotModuleReplacementPlugin', webpack.HotModuleReplacementPlugin)
 const ProgressPlugin = wrapPlugin('webpack.ProgressPlugin', webpack.ProgressPlugin)
 const DefinePlugin = wrapPlugin('webpack.DefinePlugin', webpack.DefinePlugin)
 const ProvidePlugin = wrapPlugin('webpack.ProvidePlugin', webpack.ProvidePlugin)
-
-const EslintWebpackPlugin = wrapPlugin('EslintWebpackPlugin', require('eslint-webpack-plugin'))
-const CssMinimizerWebpackPlugin = wrapPlugin('CssMinimizerWebpackPlugin', require('css-minimizer-webpack-plugin'))
-const MiniCssExtractPlugin = wrapPlugin('MiniCssExtractPlugin', require('mini-css-extract-plugin'))
-const CopyWebpackPlugin = wrapPlugin('CopyWebpackPlugin', require('copy-webpack-plugin'))
-const ForkTsCheckerWebpackPlugin = wrapPlugin('ForkTsCheckerWebpackPlugin', require('fork-ts-checker-webpack-plugin'))
 
 const PathUtil = require('../util/path.js')
 const path = require('path')
@@ -36,12 +30,14 @@ class WebpackConfig {
       importLoaders: (this._usePostCss ? 1 : 0) + importLoaders
     }
 
+    const MiniCssExtractPlugin = wrapPlugin('MiniCssExtractPlugin', getPluginImplementation(config, 'mini-css-extract-plugin'))
+
     return [
       this._extractCss
         ? { loader: MiniCssExtractPlugin.loader }
-        : { loader: require.resolve('style-loader') },
+        : { loader: getLoaderPath(config, 'style-loader') },
       {
-        loader: require.resolve('css-loader'),
+        loader: getLoaderPath(config, 'css-loader'),
         options: merge(cssLoaderOptions, (typeof config.cssLoaderOptions === 'object' && config.cssLoaderOptions !== null) ? config.cssLoaderOptions : {})
       },
       ...(this._usePostCss ? [this._createPostCssLoader(config)] : [])
@@ -50,28 +46,28 @@ class WebpackConfig {
 
   _createPostCssLoader (config) {
     return {
-      loader: require.resolve('postcss-loader'),
+      loader: getLoaderPath(config, 'postcss-loader'),
       ...((typeof config.postcssLoaderOptions === 'object' && config.postcssLoaderOptions !== null) ? { options: config.postcssLoaderOptions } : {})
     }
   }
 
   _createStylusLoader (config) {
     return {
-      loader: require.resolve('stylus-loader'),
+      loader: getLoaderPath(config, 'stylus-loader'),
       ...((typeof config.stylusLoaderOptions === 'object' && config.stylusLoaderOptions !== null) ? { options: config.stylusLoaderOptions } : {})
     }
   }
 
   _createLessLoader (config) {
     return {
-      loader: require.resolve('less-loader'),
+      loader: getLoaderPath(config, 'less-loader'),
       ...((typeof config.lessLoaderOptions === 'object' && config.lessLoaderOptions !== null) ? { options: config.lessLoaderOptions } : {})
     }
   }
 
   _createSassLoader (config) {
     return {
-      loader: require.resolve('sass-loader'),
+      loader: getLoaderPath(config, 'sass-loader'),
       ...((typeof config.sassLoaderOptions === 'object' && config.sassLoaderOptions !== null) ? { options: config.sassLoaderOptions } : {})
     }
   }
@@ -113,6 +109,7 @@ class WebpackConfig {
   }
 
   _createEslintPlugin (config, extensions) {
+    const EslintWebpackPlugin = wrapPlugin('EslintWebpackPlugin', getPluginImplementation(config, 'eslint-webpack-plugin'))
     return new EslintWebpackPlugin({
       extensions,
       emitWarning: true,
@@ -152,7 +149,7 @@ class WebpackConfig {
 
   _createUrlLoader (dir, config) {
     return {
-      loader: require.resolve('url-loader'),
+      loader: getLoaderPath(config, 'url-loader'),
       options: {
         limit: 4096,
         fallback: this._createFileLoader(dir, config)
@@ -162,7 +159,7 @@ class WebpackConfig {
 
   _createFileLoader (dir, config) {
     return {
-      loader: require.resolve('file-loader'),
+      loader: getLoaderPath(config, 'file-loader'),
       options: {
         name: path.posix.join(config.assetsPath || '', dir, config.out.assets)
       }
@@ -171,11 +168,7 @@ class WebpackConfig {
 
   _createHtmlPlugins (config) {
     if (!config.indexHtml || config.indexHtml.length === 0) return []
-    const HtmlWebpackPlugin = wrapPlugin('HtmlWebpackPlugin',
-      typeof config.pluginImplementation.HtmlWebpackPlugin === 'function'
-        ? config.pluginImplementation.HtmlWebpackPlugin
-        : require('html-webpack-plugin')
-    )
+    const HtmlWebpackPlugin = wrapPlugin('HtmlWebpackPlugin', getPluginImplementation(config, 'html-webpack-plugin'))
     return config.indexHtml.map(htmlOption => {
       if (typeof htmlOption === 'string') {
         return new HtmlWebpackPlugin({
@@ -233,13 +226,13 @@ class WebpackConfig {
     }
   }
 
-  _createCommonTSLoader (tsconfig) {
+  _createCommonTSLoader (config, tsconfig) {
     return {
       test: /\.tsx?$/,
       exclude: /node_modules/,
       use: [
         {
-          loader: require.resolve('ts-loader'),
+          loader: getLoaderPath(config, 'ts-loader'),
           options: {
             transpileOnly: true,
             configFile: this.pathUtil.getPath(tsconfig)
@@ -255,7 +248,7 @@ class WebpackConfig {
       exclude: /node_modules/,
       use: [
         {
-          loader: require.resolve('native-addon-loader'),
+          loader: getLoaderPath(config, 'native-addon-loader'),
           options: {
             name: config.out.node,
             from: '.'
@@ -280,7 +273,7 @@ class WebpackConfig {
 
   _createNodeBaseRules (tsconfig, config) {
     return [
-      ...(this._useTypeScript ? [this._createCommonTSLoader(tsconfig)] : []),
+      ...(this._useTypeScript ? [this._createCommonTSLoader(config, tsconfig)] : []),
       this._createNodeLoader(config)
     ]
   }
@@ -292,7 +285,7 @@ class WebpackConfig {
         exclude: /node_modules/,
         use: [
           {
-            loader: require.resolve('ts-loader'),
+            loader: getLoaderPath(config, 'ts-loader'),
             options: {
               ...(this._useVue ? { appendTsSuffixTo: [/\.vue$/] } : {}),
               transpileOnly: true,
@@ -305,9 +298,9 @@ class WebpackConfig {
         test: /\.tsx$/,
         exclude: /node_modules/,
         use: [
-          ...((this._useBabel && this._useVue) ? [{ loader: require.resolve('babel-loader') }] : []),
+          ...((this._useBabel && this._useVue) ? [{ loader: getLoaderPath(config, 'babel-loader') }] : []),
           {
-            loader: require.resolve('ts-loader'),
+            loader: getLoaderPath(config, 'ts-loader'),
             options: {
               ...(this._useVue ? { appendTsSuffixTo: [/\.vue$/] } : {}),
               transpileOnly: true,
@@ -322,6 +315,7 @@ class WebpackConfig {
   _createCopyPlugin (config, output) {
     const from = this.pathUtil.getPath(config.staticDir || 'public')
     const to = this.pathUtil.getPath(config.output[output])
+    const CopyWebpackPlugin = wrapPlugin('CopyWebpackPlugin', getPluginImplementation(config, 'copy-webpack-plugin'))
     return (existsSync(from)
       ? [new CopyWebpackPlugin({
           patterns: [
@@ -350,19 +344,19 @@ class WebpackConfig {
       : [])
   }
 
-  _createVueLoader () {
+  _createVueLoader (config) {
     return {
       test: /\.vue$/,
       use: [
         {
-          loader: require.resolve('vue-loader')
+          loader: getLoaderPath(config, 'vue-loader')
         }
       ]
     }
   }
 
-  _insertVueLoaderPlugin (webpackConfig) {
-    const VueLoaderPlugin = wrapPlugin('VueLoaderPlugin', require('vue-loader').VueLoaderPlugin)
+  _insertVueLoaderPlugin (config, webpackConfig) {
+    const VueLoaderPlugin = wrapPlugin('VueLoaderPlugin', require(getLoaderPath(config, 'vue-loader')).VueLoaderPlugin)
     if (Array.isArray(webpackConfig.plugins)) {
       webpackConfig.plugins.push(new VueLoaderPlugin())
     } else {
@@ -410,12 +404,12 @@ class WebpackConfig {
     }
   }
 
-  _createBabelLoader (test) {
+  _createBabelLoader (config, test) {
     return {
       test,
       exclude: /node_modules/,
       use: [
-        require.resolve('babel-loader')
+        getLoaderPath(config, 'babel-loader')
       ]
     }
   }
@@ -436,6 +430,11 @@ class WebpackConfig {
       ...(config.proxy ? { proxy: config.proxy } : {}),
       ...(typeof before === 'function' ? { before } : {})
     }
+  }
+
+  _cssExtract (config) {
+    const MiniCssExtractPlugin = wrapPlugin('MiniCssExtractPlugin', getPluginImplementation(config, 'mini-css-extract-plugin'))
+    return (this._extractCss ? [new MiniCssExtractPlugin({ filename: config.out.css })] : [])
   }
 
   constructor (config, generate = true) {
@@ -462,6 +461,7 @@ class WebpackConfig {
     }
     this.pkg = pkg
     this._useVue = config.vue !== undefined ? !!config.vue : !!((this.pkg.devDependencies && this.pkg.devDependencies.vue) || (this.pkg.dependencies && this.pkg.dependencies.vue))
+    this._useVue3 = this._useVue && !!((this.pkg.devDependencies && this.pkg.devDependencies.vue && semver.gte(semver.clean(this.pkg.devDependencies.vue), '3.0.0')) || (this.pkg.dependencies && this.pkg.dependencies.vue && semver.gte(semver.clean(this.pkg.dependencies.vue), '3.0.0')))
     this._electronTarget = (config.target === 'electron')
     this._webTarget = (config.target === 'web')
     this._nodeTarget = (config.target === 'node')
@@ -713,9 +713,9 @@ class WebpackConfig {
       node: webpack5plus ? false : this._defaultNodeLib(),
       module: {
         rules: [
-          ...(this._useBabel ? [this._createBabelLoader(/\.jsx?$/)] : []),
+          ...(this._useBabel ? [this._createBabelLoader(config, /\.jsx?$/)] : []),
           ...(this._useTypeScript ? this._createTSXLoader(config, 'web') : []),
-          ...(this._useVue ? [this._createVueLoader()] : []),
+          ...(this._useVue ? [this._createVueLoader(config)] : []),
           ...(this._createStyleLoaders(config)),
           ...(this._createAssetsLoaders(config))
         ]
@@ -731,18 +731,19 @@ class WebpackConfig {
         ...(this._createCopyPlugin(config, 'web')),
         this._createDefinePlugin(config),
         ...(config.progress ? [new ProgressPlugin()] : []),
-        ...(this._extractCss ? [new MiniCssExtractPlugin({ filename: config.out.css })] : [])
+        ...(this._cssExtract(config))
       ],
       optimization: this._createBaseOptimization()
     }
 
     if (this._useVue) {
-      this._insertVueLoaderPlugin(this.webConfig)
+      this._insertVueLoaderPlugin(config, this.webConfig)
     }
   }
 
   _initMain (config) {
     const webpack5plus = this._isWebpack5plus(config)
+    const CopyWebpackPlugin = wrapPlugin('CopyWebpackPlugin', getPluginImplementation(config, 'copy-webpack-plugin'))
     this.mainConfig = {
       mode: config.mode,
       context: this.pathUtil.getPath(),
@@ -811,9 +812,9 @@ class WebpackConfig {
       node: config.entry.preload ? (webpack5plus ? false : this._defaultNodeLib()) : false,
       module: {
         rules: [
-          ...(this._useBabel ? [this._createBabelLoader(/\.jsx?$/)] : []),
+          ...(this._useBabel ? [this._createBabelLoader(config, /\.jsx?$/)] : []),
           ...(this._useTypeScript ? this._createTSXLoader(config, 'renderer') : []),
-          ...(this._useVue ? [this._createVueLoader()] : []),
+          ...(this._useVue ? [this._createVueLoader(config)] : []),
           ...(this._createStyleLoaders(config)),
           ...(this._createAssetsLoaders(config)),
           ...(config.entry.preload ? [] : [this._createNodeLoader(config)])
@@ -831,13 +832,13 @@ class WebpackConfig {
         ...(this._createCopyPlugin(config, 'renderer')),
         this._createDefinePlugin(config),
         ...(config.progress ? [new ProgressPlugin()] : []),
-        ...(this._extractCss ? [new MiniCssExtractPlugin({ filename: config.out.css })] : [])
+        ...(this._cssExtract(config))
       ],
       optimization: this._createBaseOptimization()
     }
 
     if (this._useVue) {
-      this._insertVueLoaderPlugin(this.rendererConfig)
+      this._insertVueLoaderPlugin(config, this.rendererConfig)
     }
   }
 
@@ -869,9 +870,9 @@ class WebpackConfig {
       externals: [webpackNodeExternals(config.nodeExternals.preload)],
       module: {
         rules: [
-          ...(this._useBabel ? [this._createBabelLoader(/\.jsx?$/)] : []),
+          ...(this._useBabel ? [this._createBabelLoader(config, /\.jsx?$/)] : []),
           ...(this._useTypeScript ? this._createTSXLoader(config, 'preload') : []),
-          ...(this._useVue ? [this._createVueLoader()] : []),
+          ...(this._useVue ? [this._createVueLoader(config)] : []),
           ...(this._createStyleLoaders(config)),
           ...(this._createAssetsLoaders(config)),
           ...(this._createNodeLoader(config))
@@ -885,12 +886,12 @@ class WebpackConfig {
         ...(this._useESLint ? [this._createEslintPlugin(config, ['js', 'jsx', 'mjs', ...(this._useTypeScript ? ['tsx', 'ts'] : []), ...(this._useVue ? ['vue'] : [])])] : []),
         this._createDefinePlugin(config),
         ...(config.progress ? [new ProgressPlugin()] : []),
-        ...(this._extractCss ? [new MiniCssExtractPlugin({ filename: config.out.css })] : [])
+        ...(this._cssExtract(config))
       ]
     }
 
     if (this._useVue) {
-      this._insertVueLoaderPlugin(this.preloadConfig)
+      this._insertVueLoaderPlugin(config, this.preloadConfig)
     }
   }
 
@@ -959,6 +960,7 @@ class WebpackConfig {
   }
 
   _mergeDevelopment (config) {
+    const ForkTsCheckerWebpackPlugin = wrapPlugin('ForkTsCheckerWebpackPlugin', getPluginImplementation(config, 'fork-ts-checker-webpack-plugin'))
     if (this._electronTarget) {
       this.rendererConfig.devServer = this._createDevServerConfig(config, (app, server) => {
         app.use(require('express-serve-asar')(this.pathUtil.getPath(config.contentBase)))
@@ -982,7 +984,7 @@ class WebpackConfig {
             typescript: {
               configFile: this.pathUtil.getPath(config.tsconfig.renderer),
               extensions: {
-                vue: this._useVue
+                vue: this._useVue && !this._useVue3
               }
             }
           })
@@ -1013,7 +1015,7 @@ class WebpackConfig {
               typescript: {
                 configFile: this.pathUtil.getPath(config.tsconfig.preload),
                 extensions: {
-                  vue: this._useVue
+                  vue: this._useVue && !this._useVue3
                 }
               }
             })
@@ -1055,7 +1057,7 @@ class WebpackConfig {
             typescript: {
               configFile: this.pathUtil.getPath(config.tsconfig.web),
               extensions: {
-                vue: this._useVue
+                vue: this._useVue && !this._useVue3
               }
             }
           })
@@ -1065,6 +1067,7 @@ class WebpackConfig {
   }
 
   _mergeProduction (config) {
+    const ForkTsCheckerWebpackPlugin = wrapPlugin('ForkTsCheckerWebpackPlugin', getPluginImplementation(config, 'fork-ts-checker-webpack-plugin'))
     const terser = () => {
       let TerserWebpackPlugin
       if (typeof config.pluginImplementation.TerserWebpackPlugin === 'function') {
@@ -1088,6 +1091,7 @@ class WebpackConfig {
         ...(config.cssOptimize || {})
       }
 
+      const CssMinimizerWebpackPlugin = wrapPlugin('CssMinimizerWebpackPlugin', getPluginImplementation(config, 'css-minimizer-webpack-plugin'))
       return new CssMinimizerWebpackPlugin(option)
     }
 
@@ -1120,7 +1124,7 @@ class WebpackConfig {
               memoryLimit: 4096,
               configFile: this.pathUtil.getPath(config.tsconfig.renderer),
               extensions: {
-                vue: this._useVue
+                vue: this._useVue && !this._useVue3
               }
             }
           })
@@ -1163,7 +1167,7 @@ class WebpackConfig {
                 memoryLimit: 4096,
                 configFile: this.pathUtil.getPath(config.tsconfig.preload),
                 extensions: {
-                  vue: this._useVue
+                  vue: this._useVue && !this._useVue3
                 }
               }
             })
@@ -1217,7 +1221,7 @@ class WebpackConfig {
               memoryLimit: 4096,
               configFile: this.pathUtil.getPath(config.tsconfig.web),
               extensions: {
-                vue: this._useVue
+                vue: this._useVue && !this._useVue3
               }
             }
           })

@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "react",
+    "jsxFactory": "h",
+    "jsxFragmentFactory": "Fragment",
+    "module": "esnext",
+    "target": "es5",
+    "importHelpers": true,
+    "noEmitHelpers": true
+  },
+  "include": [
+    "./src/**/*"
+  ]
+}
