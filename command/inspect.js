@@ -115,7 +115,12 @@ module.exports = function (config) {
         }
       }
     }
-    pre += `const context = '${context.replace(/\\/g, '\\\\')}'${EOL}`
+    builtins.add('path')
+    const joinpath = relative(process.cwd(), context)
+    let contextString = ''
+    if (!joinpath) contextString = '__dirname'
+    else contextString = `path.join(__dirname, '${joinpath.replace(/\\/g, '/')}')`
+    pre += `const context = ${contextString} // ${context.replace(/\\/g, '\\\\')}${EOL}`
     if (config.mode === 'development' && htmls.size > 0) {
       pre += `const htmls = [${Array.from(htmls).map(p => `${toRelative(p)}`).join(', ')}]${EOL}`
     }

@@ -171,19 +171,23 @@ class WebpackConfig {
     const HtmlWebpackPlugin = wrapPlugin('HtmlWebpackPlugin', getPluginImplementation(config, 'html-webpack-plugin'))
     return config.indexHtml.map(htmlOption => {
       if (typeof htmlOption === 'string') {
+        const template = this.pathUtil.getPath(htmlOption)
         return new HtmlWebpackPlugin({
           title: this.pkg.name,
-          template: this.pathUtil.getPath(htmlOption),
+          template: template,
+          filename: path.basename(template),
           minify: config.mode === 'production' ? config.htmlMinify : false,
           cache: false
         })
       }
 
+      const template = this.pathUtil.getPath(htmlOption.template)
       return new HtmlWebpackPlugin({
         cache: false,
         ...htmlOption,
         title: htmlOption.title || this.pkg.name,
-        template: this.pathUtil.getPath(htmlOption.template),
+        template: template,
+        filename: htmlOption.filename || path.basename(template),
         minify: config.mode === 'production' ? (htmlOption.minify || config.htmlMinify) : false
       })
     })
