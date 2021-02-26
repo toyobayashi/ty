@@ -1,19 +1,22 @@
-import { defineComponent, ref, h, Fragment } from 'vue'
+import {
+  defineComponent/* ,
+  h,
+  Fragment */
+} from 'vue'
+
+import { useTextInput } from './hooks'
 
 export default defineComponent({
   name: 'App',
   setup () {
-    const inputValue = ref('aaa')
-    const log = () => {
-      console.log(inputValue.value)
-    }
-    const onInput = (e: Event) => {
-      inputValue.value = (e.target as any).value
-    }
-    // return { inputValue, log }
+    const {
+      inputValue,
+      log
+    } = useTextInput()
     return () => {
+      console.log('App render')
       return (<>
-        <input type="text" value={inputValue.value} onInput={onInput} />
+        <input type="text" v-model={inputValue.value} />
         <p onClick={log}>{inputValue.value}</p>
       </>)
     }

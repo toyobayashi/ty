@@ -4,15 +4,13 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from 'vue'
+import { defineComponent } from 'vue'
+import { useTextInput } from './hooks'
 
 export default defineComponent({
   name: 'App',
   setup () {
-    const inputValue = ref('aaa')
-    const log = () => {
-      console.log(inputValue.value)
-    }
+    const { inputValue, log } = useTextInput()
     return { inputValue, log }
   }
 })
