@@ -1,6 +1,6 @@
 {
   "name": "@tybys/ty",
-  "version": "0.16.2",
+  "version": "0.16.3",
   "main": "index.js",
   "typings": "./index.d.ts",
   "bin": {

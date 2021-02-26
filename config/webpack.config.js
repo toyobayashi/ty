@@ -413,7 +413,7 @@ class WebpackConfig {
       test,
       exclude: /node_modules/,
       use: [
-        getLoaderPath(config, 'babel-loader')
+        { loader: getLoaderPath(config, 'babel-loader') }
       ]
     }
   }
