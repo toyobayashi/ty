@@ -11,7 +11,7 @@ Log.info = function (msg) {
 }
 
 Log.warn = function (msg) {
-  console.log(chalk.yellowBright(`[${new Date().toLocaleString()}] ${msg}`))
+  console.error(chalk.yellowBright(`[${new Date().toLocaleString()}] ${msg}`))
 }
 
 Log.error = function (msg) {

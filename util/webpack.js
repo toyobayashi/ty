@@ -102,6 +102,10 @@ function getPluginImplementation (config, name) {
   return require(name)
 }
 
+function isWebpack5plus (config) {
+  return typeof config.webpack === 'number' ? (config.webpack > 4) : (webpackVersion > 4)
+}
+
 module.exports = {
   webpack,
   webpackVersion,
@@ -110,5 +114,6 @@ module.exports = {
   startDevServer,
   copyExtraResources,
   getLoaderPath,
-  getPluginImplementation
+  getPluginImplementation,
+  isWebpack5plus
 }

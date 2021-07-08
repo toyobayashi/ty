@@ -287,7 +287,7 @@ function setDefault (config, key, value) {
 
 function checkObject (o, msg) {
   if (Object.prototype.toString.call(o) !== '[object Object]') {
-    console.log(chalk.redBright(msg))
+    console.error(chalk.redBright(msg))
     process.exit(1)
   }
 }
@@ -297,7 +297,7 @@ function readTypeScriptConfigFile (fullPath) {
   try {
     tsnode = require('ts-node')
   } catch (err) {
-    console.log(chalk.redBright('Please install ts-node and typescript first if you want to use typescript config file.'))
+    console.error(chalk.redBright('Please install ts-node and typescript first if you want to use typescript config file.'))
     process.exit(1)
   }
   tsnode.register({ compilerOptions: { module: 'commonjs' } })
@@ -309,7 +309,7 @@ function readTyConfig (configPath, getPath) {
   if (typeof configPath === 'string' && configPath !== '') {
     configPath = getPath(configPath)
     if (!existsSync(configPath)) {
-      console.log(chalk.redBright(`Can not find config file: "${configPath}".`))
+      console.error(chalk.redBright(`Can not find config file: "${configPath}".`))
       process.exit(1)
     }
     const ext = extname(configPath)
@@ -318,7 +318,7 @@ function readTyConfig (configPath, getPath) {
     } else if (ext === '.ts') {
       tyconfig = readTypeScriptConfigFile(configPath)
     } else {
-      console.log(chalk.redBright(`Can not resolve "${ext}" config file.`))
+      console.error(chalk.redBright(`Can not resolve "${ext}" config file.`))
       process.exit(1)
     }
     checkObject(tyconfig, `${configPath} should export an object.`)
@@ -368,7 +368,7 @@ function readTyConfig (configPath, getPath) {
   setDefault(mergedConfig, 'packTempAppDir', posix.join(mergedConfig.distPath, '_app'))
   if (mergedConfig.target === 'electron') {
     if (mergedConfig.localResourcesPath === mergedConfig.extraResourcesPath) {
-      console.log(chalk.redBright('Error: localResourcesPath === extraResourcesPath'))
+      console.error(chalk.redBright('Error: localResourcesPath === extraResourcesPath'))
       process.exit(1)
     }
     setDefault(mergedConfig, 'contentBase', mergedConfig.localResourcesPath)
@@ -417,7 +417,7 @@ function readTyConfig (configPath, getPath) {
     mergedConfig.indexHtml = ['public/index.html']
   } else {
     if (!Array.isArray(mergedConfig.indexHtml)) {
-      console.log(chalk.redBright('module.exports.indexHtml should be an array.'))
+      console.error(chalk.redBright('module.exports.indexHtml should be an array.'))
       process.exit(1)
     }
   }

@@ -9,6 +9,7 @@
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "experimentalDecorators": true,
+    "importsNotUsedAsValues": "error",
     "sourceMap": true,
     "baseUrl": ".",
     "paths": {

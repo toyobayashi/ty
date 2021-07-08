@@ -3,12 +3,10 @@ const { existsSync, mkdirsSync, readJSONSync } = require('fs-extra')
 const webpackNodeExternals = require('webpack-node-externals')
 const wrapPlugin = require('../util/plugin.js')
 
-const { webpack, webpackVersion, getLoaderPath, getPluginImplementation } = require('../util/webpack.js')
+const { webpack, getPluginImplementation, isWebpack5plus } = require('../util/webpack.js')
 
 const HotModuleReplacementPlugin = wrapPlugin('webpack.HotModuleReplacementPlugin', webpack.HotModuleReplacementPlugin)
 const ProgressPlugin = wrapPlugin('webpack.ProgressPlugin', webpack.ProgressPlugin)
-const DefinePlugin = wrapPlugin('webpack.DefinePlugin', webpack.DefinePlugin)
-const ProvidePlugin = wrapPlugin('webpack.ProvidePlugin', webpack.ProvidePlugin)
 
 const PathUtil = require('../util/path.js')
 const path = require('path')
@@ -16,431 +14,25 @@ const { ensureEntry, copyTemplate } = require('../util/file.js')
 const merge = require('deepmerge')
 const semver = require('semver')
 
+const {
+  createBaseOptimization,
+  createDefinePlugin,
+  createCopyPlugin,
+  defaultResolveFallback,
+  defaultEs5OutputEnvironment,
+  computePublicPath,
+  createDevServerConfig,
+  getCjsLibraryTarget
+} = require('./common.js')
+const { createStyleLoaders, cssExtract } = require('./css.js')
+const { createAssetsLoaders } = require('./asset.js')
+const { createEslintPlugin, createBabelLoader } = require('./javascript.js')
+const { createTypeScriptHelperProvidePlugin, createTSXLoader } = require('./typescript.js')
+const { createNodeLoader, createNodeBaseRules, defaultNodeLib } = require('./node.js')
+const { createHtmlPlugins, watchHtml } = require('./html.js')
+const { createVueLoader, insertVueLoaderPlugin } = require('./vue.js')
+
 class WebpackConfig {
-  _isWebpack5plus (config) {
-    return typeof config.webpack === 'number' ? (config.webpack > 4) : (webpackVersion > 4)
-  }
-
-  _createCssLoaders (config, importLoaders = 0) {
-    const cssLoaderOptions = {
-      modules: {
-        auto: true,
-        localIdentName: config.mode === 'production' ? '[hash:base64]' : '[path][name]__[local]'
-      },
-      importLoaders: (this._usePostCss ? 1 : 0) + importLoaders
-    }
-
-    const MiniCssExtractPlugin = wrapPlugin('MiniCssExtractPlugin', getPluginImplementation(config, 'mini-css-extract-plugin'))
-
-    return [
-      this._extractCss
-        ? { loader: MiniCssExtractPlugin.loader }
-        : { loader: getLoaderPath(config, 'style-loader') },
-      {
-        loader: getLoaderPath(config, 'css-loader'),
-        options: merge(cssLoaderOptions, (typeof config.cssLoaderOptions === 'object' && config.cssLoaderOptions !== null) ? config.cssLoaderOptions : {})
-      },
-      ...(this._usePostCss ? [this._createPostCssLoader(config)] : [])
-    ]
-  }
-
-  _createPostCssLoader (config) {
-    return {
-      loader: getLoaderPath(config, 'postcss-loader'),
-      ...((typeof config.postcssLoaderOptions === 'object' && config.postcssLoaderOptions !== null) ? { options: config.postcssLoaderOptions } : {})
-    }
-  }
-
-  _createStylusLoader (config) {
-    return {
-      loader: getLoaderPath(config, 'stylus-loader'),
-      ...((typeof config.stylusLoaderOptions === 'object' && config.stylusLoaderOptions !== null) ? { options: config.stylusLoaderOptions } : {})
-    }
-  }
-
-  _createLessLoader (config) {
-    return {
-      loader: getLoaderPath(config, 'less-loader'),
-      ...((typeof config.lessLoaderOptions === 'object' && config.lessLoaderOptions !== null) ? { options: config.lessLoaderOptions } : {})
-    }
-  }
-
-  _createSassLoader (config) {
-    return {
-      loader: getLoaderPath(config, 'sass-loader'),
-      ...((typeof config.sassLoaderOptions === 'object' && config.sassLoaderOptions !== null) ? { options: config.sassLoaderOptions } : {})
-    }
-  }
-
-  _createStyleLoaders (config) {
-    return [
-      {
-        test: /\.css$/,
-        use: this._createCssLoaders(config, 0)
-      },
-      ...(this._useStylus
-        ? [{
-            test: /\.styl(us)?$/,
-            use: [
-              ...(this._createCssLoaders(config, 1)),
-              this._createStylusLoader(config)
-            ]
-          }]
-        : []),
-      ...(this._useLess
-        ? [{
-            test: /\.less$/,
-            use: [
-              ...(this._createCssLoaders(config, 1)),
-              this._createLessLoader(config)
-            ]
-          }]
-        : []),
-      ...(this._useSass
-        ? [{
-            test: /\.s[ac]ss$/i,
-            use: [
-              ...(this._createCssLoaders(config, 1)),
-              this._createSassLoader(config)
-            ]
-          }]
-        : [])
-    ]
-  }
-
-  _createEslintPlugin (config, extensions) {
-    const EslintWebpackPlugin = wrapPlugin('EslintWebpackPlugin', getPluginImplementation(config, 'eslint-webpack-plugin'))
-    return new EslintWebpackPlugin({
-      extensions,
-      emitWarning: true,
-      emitError: false,
-      ...(typeof config.eslintPluginOptions === 'object' && config.eslintPluginOptions !== null ? config.eslintPluginOptions : {})
-    })
-  }
-
-  _createAssetsLoaders (config) {
-    return [
-      {
-        test: /\.(png|jpe?g|gif|webp)(\?.*)?$/,
-        use: [
-          this._createUrlLoader('img', config)
-        ]
-      },
-      {
-        test: /\.(svg)(\?.*)?$/,
-        use: [
-          this._createFileLoader('img', config)
-        ]
-      },
-      {
-        test: /\.(mp4|webm|ogg|mp3|wav|flac|aac)(\?.*)?$/,
-        use: [
-          this._createUrlLoader('media', config)
-        ]
-      },
-      {
-        test: /\.(woff2?|eot|ttf|otf)(\?.*)?$/i,
-        use: [
-          this._createUrlLoader('fonts', config)
-        ]
-      }
-    ]
-  }
-
-  _createUrlLoader (dir, config) {
-    return {
-      loader: getLoaderPath(config, 'url-loader'),
-      options: {
-        limit: 4096,
-        fallback: this._createFileLoader(dir, config)
-      }
-    }
-  }
-
-  _createFileLoader (dir, config) {
-    return {
-      loader: getLoaderPath(config, 'file-loader'),
-      options: {
-        name: path.posix.join(config.assetsPath || '', dir, config.out.assets)
-      }
-    }
-  }
-
-  _createHtmlPlugins (config) {
-    if (!config.indexHtml || config.indexHtml.length === 0) return []
-    const HtmlWebpackPlugin = wrapPlugin('HtmlWebpackPlugin', getPluginImplementation(config, 'html-webpack-plugin'))
-    return config.indexHtml.map(htmlOption => {
-      if (typeof htmlOption === 'string') {
-        const template = this.pathUtil.getPath(htmlOption)
-        return new HtmlWebpackPlugin({
-          title: this.pkg.name,
-          template: template,
-          filename: path.basename(template),
-          minify: config.mode === 'production' ? config.htmlMinify : false,
-          cache: false
-        })
-      }
-
-      const template = this.pathUtil.getPath(htmlOption.template)
-      return new HtmlWebpackPlugin({
-        cache: false,
-        ...htmlOption,
-        title: htmlOption.title || this.pkg.name,
-        template: template,
-        filename: htmlOption.filename || path.basename(template),
-        minify: config.mode === 'production' ? (htmlOption.minify || config.htmlMinify) : false
-      })
-    })
-  }
-
-  _createDefinePlugin (config) {
-    return new DefinePlugin({
-      ...(this._useTypeScript
-        ? {
-            __classPrivateFieldGet: ['tslib', '__classPrivateFieldGet'],
-            __classPrivateFieldSet: ['tslib', '__classPrivateFieldSet']
-          }
-        : {}),
-      ...(config.define || {})
-    })
-  }
-
-  _watchHtml (config, server) {
-    for (let i = 0; i < config.indexHtml.length; i++) {
-      const item = config.indexHtml[i]
-      const tpl = typeof item === 'string' ? item : item.template
-      server._watch(this.pathUtil.getPath(tpl))
-    }
-  }
-
-  _createBaseOptimization () {
-    return {
-      splitChunks: {
-        chunks: 'all',
-        name: false,
-        cacheGroups: {
-          node_modules: {
-            name: 'node-modules',
-            test: /[\\/]node_modules[\\/]/,
-            priority: -9,
-            chunks: 'all'
-          }
-        }
-      }
-    }
-  }
-
-  _createCommonTSLoader (config, tsconfig) {
-    return {
-      test: /\.tsx?$/,
-      exclude: /node_modules/,
-      use: [
-        {
-          loader: getLoaderPath(config, 'ts-loader'),
-          options: {
-            transpileOnly: true,
-            configFile: this.pathUtil.getPath(tsconfig)
-          }
-        }
-      ]
-    }
-  }
-
-  _createNodeLoader (config) {
-    return {
-      test: /\.node$/,
-      exclude: /node_modules/,
-      use: [
-        {
-          loader: getLoaderPath(config, 'native-addon-loader'),
-          options: {
-            name: config.out.node,
-            from: '.'
-          }
-        }
-      ]
-    }
-  }
-
-  _createTypeScriptHelperProvidePlugin () {
-    const typescript = (this.pkg.devDependencies && this.pkg.devDependencies.typescript) || (this.pkg.dependencies && this.pkg.dependencies.typescript)
-    if (typeof typescript === 'string' && semver.lt(typescript.replace(/^[~^]/, ''), '4.0.0')) {
-      return [
-        new ProvidePlugin({
-          __classPrivateFieldGet: ['tslib', '__classPrivateFieldGet'],
-          __classPrivateFieldSet: ['tslib', '__classPrivateFieldSet']
-        })
-      ]
-    }
-    return []
-  }
-
-  _createNodeBaseRules (tsconfig, config) {
-    return [
-      ...(this._useTypeScript ? [this._createCommonTSLoader(config, tsconfig)] : []),
-      this._createNodeLoader(config)
-    ]
-  }
-
-  _createTSXLoader (config, tsconfig) {
-    return [
-      {
-        test: /\.ts$/,
-        exclude: /node_modules/,
-        use: [
-          {
-            loader: getLoaderPath(config, 'ts-loader'),
-            options: {
-              ...(this._useVue ? { appendTsSuffixTo: [/\.vue$/] } : {}),
-              transpileOnly: true,
-              configFile: this.pathUtil.getPath(config.tsconfig[tsconfig])
-            }
-          }
-        ]
-      },
-      {
-        test: /\.tsx$/,
-        exclude: /node_modules/,
-        use: [
-          ...((this._useBabel && this._useVue) ? [{ loader: getLoaderPath(config, 'babel-loader') }] : []),
-          {
-            loader: getLoaderPath(config, 'ts-loader'),
-            options: {
-              ...(this._useVue ? { appendTsSuffixTo: [/\.vue$/] } : {}),
-              transpileOnly: true,
-              configFile: this.pathUtil.getPath(config.tsconfig[tsconfig])
-            }
-          }
-        ]
-      }
-    ]
-  }
-
-  _createCopyPlugin (config, output) {
-    const from = this.pathUtil.getPath(config.staticDir || 'public')
-    const to = this.pathUtil.getPath(config.output[output])
-    const CopyWebpackPlugin = wrapPlugin('CopyWebpackPlugin', getPluginImplementation(config, 'copy-webpack-plugin'))
-    return (existsSync(from)
-      ? [new CopyWebpackPlugin({
-          patterns: [
-            {
-              from,
-              to,
-              toType: 'dir',
-              globOptions: {
-                ignore: [
-                  '**/.gitkeep',
-                  '**/.DS_Store',
-                  ...(() => {
-                    return config.indexHtml.filter(t => (typeof t === 'string' || (t.template != null))).map(t => {
-                      if (typeof t === 'string') {
-                        return this.pathUtil.getPath(t).replace(/\\/g, '/')
-                      }
-                      return this.pathUtil.getPath(t.template).replace(/\\/g, '/')
-                    })
-                  })()
-                ]
-              },
-              noErrorOnMissing: true
-            }
-          ]
-        })]
-      : [])
-  }
-
-  _createVueLoader (config) {
-    return {
-      test: /\.vue$/,
-      use: [
-        {
-          loader: getLoaderPath(config, 'vue-loader')
-        }
-      ]
-    }
-  }
-
-  _insertVueLoaderPlugin (config, webpackConfig) {
-    const VueLoaderPlugin = wrapPlugin('VueLoaderPlugin', require(getLoaderPath(config, 'vue-loader')).VueLoaderPlugin)
-    if (Array.isArray(webpackConfig.plugins)) {
-      webpackConfig.plugins.push(new VueLoaderPlugin())
-    } else {
-      webpackConfig.plugins = [new VueLoaderPlugin()]
-    }
-  }
-
-  _defaultNodeLib () {
-    return {
-      global: false,
-      __dirname: false,
-      __filename: false,
-      Buffer: false,
-      process: false,
-      console: false,
-      setImmediate: false,
-
-      dgram: 'empty',
-      fs: 'empty',
-      net: 'empty',
-      tls: 'empty',
-      child_process: 'empty'
-    }
-  }
-
-  _defaultResolveFallback () {
-    return {
-      dgram: false,
-      fs: false,
-      net: false,
-      tls: false,
-      child_process: false
-    }
-  }
-
-  _defaultEs5OutputEnvironment () {
-    return {
-      arrowFunction: false,
-      bigIntLiteral: false,
-      const: false,
-      destructuring: false,
-      dynamicImport: false,
-      forOf: false,
-      module: false
-    }
-  }
-
-  _createBabelLoader (config, test) {
-    return {
-      test,
-      exclude: /node_modules/,
-      use: [
-        { loader: getLoaderPath(config, 'babel-loader') }
-      ]
-    }
-  }
-
-  _computePublicPath (config) {
-    return typeof config.publicPath === 'string' ? config.publicPath : (this._electronTarget ? '/app/renderer/' : '/')
-  }
-
-  _createDevServerConfig (config, before) {
-    return {
-      stats: config.statsOptions,
-      hot: true,
-      host: config.devServerHost,
-      inline: true,
-      ...(this._webTarget ? { open: config.devServerOpenBrowser } : {}),
-      contentBase: [this.pathUtil.getPath(config.contentBase)],
-      publicPath: this._computePublicPath(config),
-      ...(config.proxy ? { proxy: config.proxy } : {}),
-      ...(typeof before === 'function' ? { before } : {})
-    }
-  }
-
-  _cssExtract (config) {
-    const MiniCssExtractPlugin = wrapPlugin('MiniCssExtractPlugin', getPluginImplementation(config, 'mini-css-extract-plugin'))
-    return (this._extractCss ? [new MiniCssExtractPlugin({ filename: config.out.css })] : [])
-  }
-
   constructor (config, generate = true) {
     this.pathUtil = new PathUtil(config.context)
     let pkg
@@ -456,7 +48,7 @@ class WebpackConfig {
         devDependencies: {
           ...(config.target === 'electron'
             ? {
-                electron: '9.3.3'
+                electron: '12.0.7'
               }
             : {})
         },
@@ -464,6 +56,7 @@ class WebpackConfig {
       }
     }
     this.pkg = pkg
+    this._webpack5 = isWebpack5plus(config)
     this._useVue = config.vue !== undefined ? !!config.vue : !!((this.pkg.devDependencies && this.pkg.devDependencies.vue) || (this.pkg.dependencies && this.pkg.dependencies.vue))
     this._useVue3 = this._useVue && !!((this.pkg.devDependencies && this.pkg.devDependencies.vue && semver.gte(semver.clean(this.pkg.devDependencies.vue), '3.0.0')) || (this.pkg.dependencies && this.pkg.dependencies.vue && semver.gte(semver.clean(this.pkg.dependencies.vue), '3.0.0')))
     this._electronTarget = (config.target === 'electron')
@@ -644,7 +237,7 @@ class WebpackConfig {
     const tplOptions = {
       host: config.devServerHost,
       port: config.devServerPort,
-      publicPath: this._computePublicPath(config)
+      publicPath: computePublicPath(this, config)
     }
 
     if (this._electronTarget) {
@@ -664,7 +257,6 @@ class WebpackConfig {
   }
 
   _initNode (config) {
-    const webpack5plus = this._isWebpack5plus(config)
     this.nodeConfig = {
       mode: config.mode,
       context: this.pathUtil.getPath(),
@@ -673,20 +265,12 @@ class WebpackConfig {
       output: {
         filename: config.out.js,
         path: this.pathUtil.getPath(config.output.node),
-        ...(webpack5plus
-          ? {
-              library: {
-                type: 'commonjs2'
-              }
-            }
-          : {
-              libraryTarget: 'commonjs2'
-            })
+        ...getCjsLibraryTarget(this)
       },
       node: false,
       module: {
         rules: [
-          ...(this._createNodeBaseRules(config.tsconfig.node, config))
+          ...(createNodeBaseRules(this, config.tsconfig.node, config))
         ]
       },
       externals: [webpackNodeExternals(config.nodeExternals.node)],
@@ -695,15 +279,15 @@ class WebpackConfig {
         extensions: [...(this._useTypeScript ? ['.tsx', '.ts'] : []), '.mjs', '.cjs', '.js', '.json', '.node', '.wasm']
       },
       plugins: [
-        ...(this._useESLint ? [this._createEslintPlugin(config, ['js', 'jsx', 'mjs', ...(this._useTypeScript ? ['tsx', 'ts'] : [])])] : []),
-        this._createDefinePlugin(config),
+        ...(this._useESLint ? [createEslintPlugin(config, ['js', 'jsx', 'mjs', ...(this._useTypeScript ? ['tsx', 'ts'] : [])])] : []),
+        createDefinePlugin(this, config),
         ...(config.progress ? [new ProgressPlugin()] : [])
       ]
     }
   }
 
   _initWeb (config) {
-    const webpack5plus = this._isWebpack5plus(config)
+    const webpack5plus = this._webpack5
     this.webConfig = {
       mode: config.mode,
       context: this.pathUtil.getPath(),
@@ -712,41 +296,40 @@ class WebpackConfig {
       output: {
         filename: config.out.js,
         path: this.pathUtil.getPath(config.output.web),
-        ...(webpack5plus ? { environment: this._defaultEs5OutputEnvironment() } : {})
+        ...(webpack5plus ? { environment: defaultEs5OutputEnvironment() } : {})
       },
-      node: webpack5plus ? false : this._defaultNodeLib(),
+      node: webpack5plus ? false : defaultNodeLib(),
       module: {
         rules: [
-          ...(this._useBabel ? [this._createBabelLoader(config, /\.jsx?$/)] : []),
-          ...(this._useTypeScript ? this._createTSXLoader(config, 'web') : []),
-          ...(this._useVue ? [this._createVueLoader(config)] : []),
-          ...(this._createStyleLoaders(config)),
-          ...(this._createAssetsLoaders(config))
+          ...(this._useBabel ? [createBabelLoader(config, /\.jsx?$/)] : []),
+          ...(this._useTypeScript ? createTSXLoader(this, config, 'web') : []),
+          ...(this._useVue ? [createVueLoader(config)] : []),
+          ...(createStyleLoaders(this, config)),
+          ...(createAssetsLoaders(config))
         ]
       },
       resolve: {
         alias: config.alias,
         extensions: [...(this._useTypeScript ? ['.tsx', '.ts'] : []), '.mjs', '.cjs', '.js', ...(this._useBabel ? ['.jsx'] : []), ...(this._useVue ? ['.vue'] : []), ...(this._useStylus ? ['.styl', '.stylus'] : []), ...(this._useLess ? ['.less'] : []), ...(this._useSass ? ['.scss', '.sass'] : []), '.css', '.json', '.wasm'],
-        ...(webpack5plus ? { fallback: this._defaultResolveFallback() } : {})
+        ...(webpack5plus ? { fallback: defaultResolveFallback() } : {})
       },
       plugins: [
-        ...(this._useESLint ? [this._createEslintPlugin(config, ['js', 'jsx', 'mjs', ...(this._useTypeScript ? ['tsx', 'ts'] : []), ...(this._useVue ? ['vue'] : [])])] : []),
-        ...(this._createHtmlPlugins(config)),
-        ...(this._createCopyPlugin(config, 'web')),
-        this._createDefinePlugin(config),
+        ...(this._useESLint ? [createEslintPlugin(config, ['js', 'jsx', 'mjs', ...(this._useTypeScript ? ['tsx', 'ts'] : []), ...(this._useVue ? ['vue'] : [])])] : []),
+        ...(createHtmlPlugins(this, config)),
+        ...(createCopyPlugin(this, config, 'web')),
+        createDefinePlugin(this, config),
         ...(config.progress ? [new ProgressPlugin()] : []),
-        ...(this._cssExtract(config))
+        ...(cssExtract(this, config))
       ],
-      optimization: this._createBaseOptimization()
+      optimization: createBaseOptimization()
     }
 
     if (this._useVue) {
-      this._insertVueLoaderPlugin(config, this.webConfig)
+      insertVueLoaderPlugin(config, this.webConfig)
     }
   }
 
   _initMain (config) {
-    const webpack5plus = this._isWebpack5plus(config)
     const CopyWebpackPlugin = wrapPlugin('CopyWebpackPlugin', getPluginImplementation(config, 'copy-webpack-plugin'))
     this.mainConfig = {
       mode: config.mode,
@@ -756,20 +339,12 @@ class WebpackConfig {
       output: {
         filename: config.out.js,
         path: this.pathUtil.getPath(config.output.main),
-        ...(webpack5plus
-          ? {
-              library: {
-                type: 'commonjs2'
-              }
-            }
-          : {
-              libraryTarget: 'commonjs2'
-            })
+        ...getCjsLibraryTarget(this)
       },
       node: false,
       module: {
         rules: [
-          ...(this._createNodeBaseRules(config.tsconfig.main, config))
+          ...(createNodeBaseRules(this, config.tsconfig.main, config))
         ]
       },
       externals: [webpackNodeExternals(config.nodeExternals.main)],
@@ -778,13 +353,13 @@ class WebpackConfig {
         extensions: [...(this._useTypeScript ? ['.tsx', '.ts'] : []), '.mjs', '.cjs', '.js', '.json', '.node', '.wasm']
       },
       plugins: [
-        ...(this._useESLint ? [this._createEslintPlugin(config, ['js', 'jsx', 'mjs', ...(this._useTypeScript ? ['tsx', 'ts'] : [])])] : []),
+        ...(this._useESLint ? [createEslintPlugin(config, ['js', 'jsx', 'mjs', ...(this._useTypeScript ? ['tsx', 'ts'] : [])])] : []),
         new CopyWebpackPlugin({
           patterns: [
             { from: this.pathUtil.getPath('package.json'), to: this.pathUtil.getPath(config.localResourcesPath, 'app/package.json') }
           ]
         }),
-        this._createDefinePlugin(config),
+        createDefinePlugin(this, config),
         ...(config.progress ? [new ProgressPlugin()] : [])
       ]
     }
@@ -802,7 +377,7 @@ class WebpackConfig {
   }
 
   _initRenderer (config) {
-    const webpack5plus = this._isWebpack5plus(config)
+    const webpack5plus = this._webpack5
     this.rendererConfig = {
       mode: config.mode,
       context: this.pathUtil.getPath(),
@@ -811,38 +386,38 @@ class WebpackConfig {
       output: {
         filename: config.out.js,
         path: this.pathUtil.getPath(config.output.renderer),
-        ...((config.entry.preload && webpack5plus) ? { environment: this._defaultEs5OutputEnvironment() } : {})
+        ...((config.entry.preload && webpack5plus) ? { environment: defaultEs5OutputEnvironment() } : {})
       },
-      node: config.entry.preload ? (webpack5plus ? false : this._defaultNodeLib()) : false,
+      node: config.entry.preload ? (webpack5plus ? false : defaultNodeLib()) : false,
       module: {
         rules: [
-          ...(this._useBabel ? [this._createBabelLoader(config, /\.jsx?$/)] : []),
-          ...(this._useTypeScript ? this._createTSXLoader(config, 'renderer') : []),
-          ...(this._useVue ? [this._createVueLoader(config)] : []),
-          ...(this._createStyleLoaders(config)),
-          ...(this._createAssetsLoaders(config)),
-          ...(config.entry.preload ? [] : [this._createNodeLoader(config)])
+          ...(this._useBabel ? [createBabelLoader(config, /\.jsx?$/)] : []),
+          ...(this._useTypeScript ? createTSXLoader(this, config, 'renderer') : []),
+          ...(this._useVue ? [createVueLoader(config)] : []),
+          ...(createStyleLoaders(this, config)),
+          ...(createAssetsLoaders(config)),
+          ...(config.entry.preload ? [] : [createNodeLoader(config)])
         ]
       },
       ...(config.entry.preload ? {} : { externals: [webpackNodeExternals(config.nodeExternals.renderer)] }),
       resolve: {
         alias: config.alias,
         extensions: [...(this._useTypeScript ? ['.tsx', '.ts'] : []), '.mjs', '.cjs', '.js', ...(this._useBabel ? ['.jsx'] : []), ...(config.entry.preload ? [] : ['.node']), ...(this._useVue ? ['.vue'] : []), ...(this._useStylus ? ['.styl', '.stylus'] : []), ...(this._useLess ? ['.less'] : []), ...(this._useSass ? ['.scss', '.sass'] : []), '.css', '.json', '.wasm'],
-        ...((config.entry.preload && webpack5plus) ? { fallback: this._defaultResolveFallback() } : {})
+        ...((config.entry.preload && webpack5plus) ? { fallback: defaultResolveFallback() } : {})
       },
       plugins: [
-        ...(this._useESLint ? [this._createEslintPlugin(config, ['js', 'jsx', 'mjs', ...(this._useTypeScript ? ['tsx', 'ts'] : []), ...(this._useVue ? ['vue'] : [])])] : []),
-        ...(this._createHtmlPlugins(config)),
-        ...(this._createCopyPlugin(config, 'renderer')),
-        this._createDefinePlugin(config),
+        ...(this._useESLint ? [createEslintPlugin(config, ['js', 'jsx', 'mjs', ...(this._useTypeScript ? ['tsx', 'ts'] : []), ...(this._useVue ? ['vue'] : [])])] : []),
+        ...(createHtmlPlugins(this, config)),
+        ...(createCopyPlugin(this, config, 'renderer')),
+        createDefinePlugin(this, config),
         ...(config.progress ? [new ProgressPlugin()] : []),
-        ...(this._cssExtract(config))
+        ...(cssExtract(this, config))
       ],
-      optimization: this._createBaseOptimization()
+      optimization: createBaseOptimization()
     }
 
     if (this._useVue) {
-      this._insertVueLoaderPlugin(config, this.rendererConfig)
+      insertVueLoaderPlugin(config, this.rendererConfig)
     }
   }
 
@@ -851,7 +426,6 @@ class WebpackConfig {
       this.preloadConfig = null
       return
     }
-    const webpack5plus = this._isWebpack5plus(config)
     this.preloadConfig = {
       mode: config.mode,
       context: this.pathUtil.getPath(),
@@ -860,26 +434,18 @@ class WebpackConfig {
       output: {
         filename: config.out.js,
         path: this.pathUtil.getPath(config.output.preload),
-        ...(webpack5plus
-          ? {
-              library: {
-                type: 'commonjs2'
-              }
-            }
-          : {
-              libraryTarget: 'commonjs2'
-            })
+        ...getCjsLibraryTarget(this)
       },
       node: false,
       externals: [webpackNodeExternals(config.nodeExternals.preload)],
       module: {
         rules: [
-          ...(this._useBabel ? [this._createBabelLoader(config, /\.jsx?$/)] : []),
-          ...(this._useTypeScript ? this._createTSXLoader(config, 'preload') : []),
-          ...(this._useVue ? [this._createVueLoader(config)] : []),
-          ...(this._createStyleLoaders(config)),
-          ...(this._createAssetsLoaders(config)),
-          ...(this._createNodeLoader(config))
+          ...(this._useBabel ? [createBabelLoader(config, /\.jsx?$/)] : []),
+          ...(this._useTypeScript ? createTSXLoader(this, config, 'preload') : []),
+          ...(this._useVue ? [createVueLoader(config)] : []),
+          ...(createStyleLoaders(this, config)),
+          ...(createAssetsLoaders(config)),
+          ...(createNodeLoader(config))
         ]
       },
       resolve: {
@@ -887,15 +453,15 @@ class WebpackConfig {
         extensions: [...(this._useTypeScript ? ['.tsx', '.ts'] : []), '.mjs', '.cjs', '.js', ...(this._useBabel ? ['.jsx'] : []), '.node', ...(this._useVue ? ['.vue'] : []), ...(this._useStylus ? ['.styl', '.stylus'] : []), ...(this._useLess ? ['.less'] : []), ...(this._useSass ? ['.scss', '.sass'] : []), '.css', '.json', '.wasm']
       },
       plugins: [
-        ...(this._useESLint ? [this._createEslintPlugin(config, ['js', 'jsx', 'mjs', ...(this._useTypeScript ? ['tsx', 'ts'] : []), ...(this._useVue ? ['vue'] : [])])] : []),
-        this._createDefinePlugin(config),
+        ...(this._useESLint ? [createEslintPlugin(config, ['js', 'jsx', 'mjs', ...(this._useTypeScript ? ['tsx', 'ts'] : []), ...(this._useVue ? ['vue'] : [])])] : []),
+        createDefinePlugin(this, config),
         ...(config.progress ? [new ProgressPlugin()] : []),
-        ...(this._cssExtract(config))
+        ...(cssExtract(this, config))
       ]
     }
 
     if (this._useVue) {
-      this._insertVueLoaderPlugin(config, this.preloadConfig)
+      insertVueLoaderPlugin(config, this.preloadConfig)
     }
   }
 
@@ -966,9 +532,9 @@ class WebpackConfig {
   _mergeDevelopment (config) {
     const ForkTsCheckerWebpackPlugin = wrapPlugin('ForkTsCheckerWebpackPlugin', getPluginImplementation(config, 'fork-ts-checker-webpack-plugin'))
     if (this._electronTarget) {
-      this.rendererConfig.devServer = this._createDevServerConfig(config, (app, server) => {
+      this.rendererConfig.devServer = createDevServerConfig(this, config, (app, server) => {
         app.use(require('express-serve-asar')(this.pathUtil.getPath(config.contentBase)))
-        this._watchHtml(config, server)
+        watchHtml(this, config, server)
       })
 
       this.rendererConfig.devtool = this.mainConfig.devtool = config.devtool.development
@@ -978,12 +544,12 @@ class WebpackConfig {
       ]
 
       this.rendererConfig.output = this.rendererConfig.output || {}
-      this.rendererConfig.output.publicPath = this._computePublicPath(config)
+      this.rendererConfig.output.publicPath = computePublicPath(this, config)
 
       if (this._useTypeScript) {
         this.rendererConfig.plugins = [
           ...(this.rendererConfig.plugins || []),
-          ...(this._createTypeScriptHelperProvidePlugin()),
+          ...(createTypeScriptHelperProvidePlugin(this)),
           new ForkTsCheckerWebpackPlugin({
             typescript: {
               configFile: this.pathUtil.getPath(config.tsconfig.renderer),
@@ -996,7 +562,7 @@ class WebpackConfig {
 
         this.mainConfig.plugins = [
           ...(this.mainConfig.plugins || []),
-          ...(this._createTypeScriptHelperProvidePlugin()),
+          ...(createTypeScriptHelperProvidePlugin(this)),
           new ForkTsCheckerWebpackPlugin({
             typescript: {
               configFile: this.pathUtil.getPath(config.tsconfig.main)
@@ -1009,12 +575,12 @@ class WebpackConfig {
         this.preloadConfig.devtool = config.devtool.development
 
         this.preloadConfig.output = this.preloadConfig.output || {}
-        this.preloadConfig.output.publicPath = this._computePublicPath(config)
+        this.preloadConfig.output.publicPath = computePublicPath(this, config)
 
         if (this._useTypeScript) {
           this.preloadConfig.plugins = [
             ...(this.preloadConfig.plugins || []),
-            ...(this._createTypeScriptHelperProvidePlugin()),
+            ...(createTypeScriptHelperProvidePlugin(this)),
             new ForkTsCheckerWebpackPlugin({
               typescript: {
                 configFile: this.pathUtil.getPath(config.tsconfig.preload),
@@ -1031,7 +597,7 @@ class WebpackConfig {
       if (this._useTypeScript) {
         this.nodeConfig.plugins = [
           ...(this.nodeConfig.plugins || []),
-          ...(this._createTypeScriptHelperProvidePlugin()),
+          ...(createTypeScriptHelperProvidePlugin(this)),
           new ForkTsCheckerWebpackPlugin({
             typescript: {
               configFile: this.pathUtil.getPath(config.tsconfig.node)
@@ -1040,8 +606,8 @@ class WebpackConfig {
         ]
       }
     } else {
-      this.webConfig.devServer = this._createDevServerConfig(config, (_app, server) => {
-        this._watchHtml(config, server)
+      this.webConfig.devServer = createDevServerConfig(this, config, (_app, server) => {
+        watchHtml(this, config, server)
       })
 
       this.webConfig.devtool = config.devtool.development
@@ -1051,12 +617,12 @@ class WebpackConfig {
       ]
 
       this.webConfig.output = this.webConfig.output || {}
-      this.webConfig.output.publicPath = this._computePublicPath(config)
+      this.webConfig.output.publicPath = computePublicPath(this, config)
 
       if (this._useTypeScript) {
         this.webConfig.plugins = [
           ...(this.webConfig.plugins || []),
-          ...(this._createTypeScriptHelperProvidePlugin()),
+          ...(createTypeScriptHelperProvidePlugin(this)),
           new ForkTsCheckerWebpackPlugin({
             typescript: {
               configFile: this.pathUtil.getPath(config.tsconfig.web),
@@ -1121,7 +687,7 @@ class WebpackConfig {
       if (this._useTypeScript) {
         this.rendererConfig.plugins = [
           ...(this.rendererConfig.plugins || []),
-          ...(this._createTypeScriptHelperProvidePlugin()),
+          ...(createTypeScriptHelperProvidePlugin(this)),
           new ForkTsCheckerWebpackPlugin({
             async: false,
             typescript: {
@@ -1136,7 +702,7 @@ class WebpackConfig {
 
         this.mainConfig.plugins = [
           ...(this.mainConfig.plugins || []),
-          ...(this._createTypeScriptHelperProvidePlugin()),
+          ...(createTypeScriptHelperProvidePlugin(this)),
           new ForkTsCheckerWebpackPlugin({
             async: false,
             typescript: {
@@ -1164,7 +730,7 @@ class WebpackConfig {
         if (this._useTypeScript) {
           this.preloadConfig.plugins = [
             ...(this.preloadConfig.plugins || []),
-            ...(this._createTypeScriptHelperProvidePlugin()),
+            ...(createTypeScriptHelperProvidePlugin(this)),
             new ForkTsCheckerWebpackPlugin({
               async: false,
               typescript: {
@@ -1189,7 +755,7 @@ class WebpackConfig {
       if (this._useTypeScript) {
         this.nodeConfig.plugins = [
           ...(this.nodeConfig.plugins || []),
-          ...(this._createTypeScriptHelperProvidePlugin()),
+          ...(createTypeScriptHelperProvidePlugin(this)),
           new ForkTsCheckerWebpackPlugin({
             async: false,
             typescript: {
@@ -1218,7 +784,7 @@ class WebpackConfig {
       if (this._useTypeScript) {
         this.webConfig.plugins = [
           ...(this.webConfig.plugins || []),
-          ...(this._createTypeScriptHelperProvidePlugin()),
+          ...(createTypeScriptHelperProvidePlugin(this)),
           new ForkTsCheckerWebpackPlugin({
             async: false,
             typescript: {
