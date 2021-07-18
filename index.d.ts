@@ -1,24 +1,30 @@
 /// <reference types="node" />
 
 declare namespace ty {
-  type WebpackEntry = string | string[] | { [name: string]: string | string[] }
+  export type WebpackEntry = string | string[] | { [name: string]: string | string[] }
 
-  interface Plugin {
+  export interface Plugin {
     apply (...args: any[]): void
   }
 
-  interface minimistArgs {
+  /* interface minimistArgs {
     [arg: string]: any
     '--'?: string[]
     _: string[]
-  } 
+  } */
+
+  export type Mode = 'production' | 'development'
+
+  export type Target = 'electron' | 'web' | 'node'
+
+  export type Arch = 'ia32' | 'x64'
 
   export interface Configuration {
-    mode?: 'production' | 'development'
+    mode?: Mode
     devServerHost?: string
     devServerPort?: number
     devServerOpenBrowser?: boolean | string
-    target?: 'electron' | 'web' | 'node'
+    target?: Target
     entry?: {
       web?: WebpackEntry
       node?: WebpackEntry
@@ -48,7 +54,7 @@ declare namespace ty {
     iconSrcDir?: string
     indexHtml?: (string | Record<string, any>)[]
     assetsPath?: string
-    arch?: 'ia32' | 'x64'
+    arch?: Arch
     webpack?: undefined | number
     vue?: undefined | 0 | 1
     ts?: undefined | 0 | 1
@@ -169,6 +175,10 @@ declare namespace ty {
       [name: string]: any
     }
   }
+
+  export type ConfigurationFactory = (mode: Mode) => Configuration
+
+  export function defineConfiguration<T extends Configuration | ConfigurationFactory> (config: T): T
 
   export function wrapPlugin<P extends Plugin> (name: string, Constructor: P): P
 }

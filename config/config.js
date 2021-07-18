@@ -292,6 +292,11 @@ function checkObject (o, msg) {
   }
 }
 
+function requireDefault (id) {
+  const mod = require(id)
+  return (mod && mod.__esModule) ? mod.default : mod
+}
+
 function readTypeScriptConfigFile (fullPath) {
   let tsnode
   try {
@@ -301,11 +306,11 @@ function readTypeScriptConfigFile (fullPath) {
     process.exit(1)
   }
   tsnode.register({ compilerOptions: { module: 'commonjs' } })
-  return (require(fullPath).default || require(fullPath))
+  return requireDefault(fullPath)
 }
 
 function readTyConfig (configPath, getPath) {
-  let tyconfig = {}
+  let tyconfig
   if (typeof configPath === 'string' && configPath !== '') {
     configPath = getPath(configPath)
     if (!existsSync(configPath)) {
@@ -314,12 +319,15 @@ function readTyConfig (configPath, getPath) {
     }
     const ext = extname(configPath)
     if (ext === '.js') {
-      tyconfig = require(configPath)
+      tyconfig = requireDefault(configPath)
     } else if (ext === '.ts') {
       tyconfig = readTypeScriptConfigFile(configPath)
     } else {
       console.error(chalk.redBright(`Can not resolve "${ext}" config file.`))
       process.exit(1)
+    }
+    if (typeof tyconfig === 'function') {
+      tyconfig = tyconfig(defaultConfig.mode)
     }
     checkObject(tyconfig, `${configPath} should export an object.`)
   } else {
@@ -327,9 +335,12 @@ function readTyConfig (configPath, getPath) {
     const tyconfigTsPath = getPath('./tyconfig.ts')
 
     if (existsSync(tyconfigPath)) {
-      tyconfig = require(tyconfigPath)
+      tyconfig = requireDefault(tyconfigPath)
     } else if (existsSync(tyconfigTsPath)) {
       tyconfig = readTypeScriptConfigFile(tyconfigTsPath)
+    }
+    if (typeof tyconfig === 'function') {
+      tyconfig = tyconfig(defaultConfig.mode)
     }
     checkObject(tyconfig, `tyconfig.${tyconfigTsPath ? 't' : 'j'}s should export an object.`)
   }
