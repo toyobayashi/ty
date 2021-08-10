@@ -310,7 +310,7 @@ function readTypeScriptConfigFile (fullPath) {
 }
 
 function readTyConfig (configPath, getPath) {
-  let tyconfig
+  let tyconfig = {}
   if (typeof configPath === 'string' && configPath !== '') {
     configPath = getPath(configPath)
     if (!existsSync(configPath)) {
