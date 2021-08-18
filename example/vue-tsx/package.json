@@ -6,13 +6,13 @@
     "build": "ty build"
   },
   "devDependencies": {
-    "@babel/core": "^7.6.0",
-    "@vue/babel-preset-jsx": "^1.1.0",
-    "@vue/babel-helper-vue-jsx-merge-props": "^1.0.0",
-    "typescript": "4.0.2",
-    "vue": "^2.6.10",
-    "vue-template-compiler": "^2.6.10",
-    "webpack": "^5.4.0",
-    "webpack-dev-server": "^3.11.0"
+    "@babel/core": "^7.15.0",
+    "@vue/babel-preset-jsx": "^1.2.4",
+    "@vue/babel-helper-vue-jsx-merge-props": "^1.2.1",
+    "typescript": "4.3.5",
+    "vue": "^2.6.14",
+    "vue-template-compiler": "^2.6.14",
+    "webpack": "^5.50.0",
+    "webpack-dev-server": "^3.11.2"
   }
 }

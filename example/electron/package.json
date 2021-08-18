@@ -7,8 +7,8 @@
     "pack": "ty pack"
   },
   "devDependencies": {
-    "electron": "8.2.0",
-    "webpack": "^5.4.0",
-    "webpack-dev-server": "^3.11.0"
+    "electron": "13.1.7",
+    "webpack": "^5.50.0",
+    "webpack-dev-server": "^3.11.2"
   }
 }

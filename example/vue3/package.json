@@ -6,18 +6,16 @@
     "build": "ty build"
   },
   "devDependencies": {
-    "@babel/core": "^7.13.1",
-    "@tybys/ty": "^0.16.3",
-    "@vue/babel-plugin-jsx": "^1.0.3",
-    "@vue/compiler-sfc": "3.0.6",
-    "html-webpack-plugin": "^5.2.0",
-    "terser-webpack-plugin": "^5.1.1",
+    "@babel/core": "^7.15.0",
+    "@tybys/ty": "^1.0.0-alpha.1",
+    "@vue/babel-plugin-jsx": "^1.0.6",
+    "@vue/compiler-sfc": "3.2.4",
     "ts-node": "^9.1.1",
-    "tslib": "^2.1.0",
-    "typescript": "4.1.3",
-    "vue": "3.0.6",
-    "vue-loader": "^16.1.2",
-    "webpack": "^5.24.2",
+    "tslib": "^2.3.0",
+    "typescript": "4.3.5",
+    "vue": "3.2.4",
+    "vue-loader": "^16.5.0",
+    "webpack": "^5.50.0",
     "webpack-dev-server": "^3.11.2"
   }
 }
