@@ -3,7 +3,7 @@ const { existsSync, mkdirsSync, readJSONSync } = require('fs-extra')
 const webpackNodeExternals = require('webpack-node-externals')
 const wrapPlugin = require('../util/plugin.js')
 
-const { webpack, getPluginImplementation, isWebpack5plus } = require('../util/webpack.js')
+const { webpack, getPluginImplementation } = require('../util/webpack.js')
 
 const HotModuleReplacementPlugin = wrapPlugin('webpack.HotModuleReplacementPlugin', webpack.HotModuleReplacementPlugin)
 const ProgressPlugin = wrapPlugin('webpack.ProgressPlugin', webpack.ProgressPlugin)
@@ -28,7 +28,7 @@ const { createStyleLoaders, cssExtract } = require('./css.js')
 const { createAssetsLoaders } = require('./asset.js')
 const { createEslintPlugin, createBabelLoader } = require('./javascript.js')
 const { createTypeScriptHelperProvidePlugin, createTSXLoader } = require('./typescript.js')
-const { createNodeLoader, createNodeBaseRules, defaultNodeLib } = require('./node.js')
+const { createNodeLoader, createNodeBaseRules } = require('./node.js')
 const { createHtmlPlugins, watchHtml } = require('./html.js')
 const { createVueLoader, insertVueLoaderPlugin } = require('./vue.js')
 
@@ -56,7 +56,6 @@ class WebpackConfig {
       }
     }
     this.pkg = pkg
-    this._webpack5 = isWebpack5plus(config)
     this._useVue = config.vue !== undefined ? !!config.vue : !!((this.pkg.devDependencies && this.pkg.devDependencies.vue) || (this.pkg.dependencies && this.pkg.dependencies.vue))
     this._useVue3 = this._useVue && !!((this.pkg.devDependencies && this.pkg.devDependencies.vue && semver.gte(semver.clean(this.pkg.devDependencies.vue), '3.0.0')) || (this.pkg.dependencies && this.pkg.dependencies.vue && semver.gte(semver.clean(this.pkg.dependencies.vue), '3.0.0')))
     this._electronTarget = (config.target === 'electron')
@@ -265,7 +264,7 @@ class WebpackConfig {
       output: {
         filename: config.out.js,
         path: this.pathUtil.getPath(config.output.node),
-        ...getCjsLibraryTarget(this)
+        ...getCjsLibraryTarget()
       },
       node: false,
       module: {
@@ -287,7 +286,6 @@ class WebpackConfig {
   }
 
   _initWeb (config) {
-    const webpack5plus = this._webpack5
     this.webConfig = {
       mode: config.mode,
       context: this.pathUtil.getPath(),
@@ -296,9 +294,9 @@ class WebpackConfig {
       output: {
         filename: config.out.js,
         path: this.pathUtil.getPath(config.output.web),
-        ...(webpack5plus ? { environment: defaultEs5OutputEnvironment() } : {})
+        environment: defaultEs5OutputEnvironment()
       },
-      node: webpack5plus ? false : defaultNodeLib(),
+      node: false,
       module: {
         rules: [
           ...(this._useBabel ? [createBabelLoader(config, /\.jsx?$/)] : []),
@@ -311,7 +309,7 @@ class WebpackConfig {
       resolve: {
         alias: config.alias,
         extensions: [...(this._useTypeScript ? ['.tsx', '.ts'] : []), '.mjs', '.cjs', '.js', ...(this._useBabel ? ['.jsx'] : []), ...(this._useVue ? ['.vue'] : []), ...(this._useStylus ? ['.styl', '.stylus'] : []), ...(this._useLess ? ['.less'] : []), ...(this._useSass ? ['.scss', '.sass'] : []), '.css', '.json', '.wasm'],
-        ...(webpack5plus ? { fallback: defaultResolveFallback() } : {})
+        fallback: defaultResolveFallback()
       },
       plugins: [
         ...(this._useESLint ? [createEslintPlugin(config, ['js', 'jsx', 'mjs', ...(this._useTypeScript ? ['tsx', 'ts'] : []), ...(this._useVue ? ['vue'] : [])])] : []),
@@ -339,7 +337,7 @@ class WebpackConfig {
       output: {
         filename: config.out.js,
         path: this.pathUtil.getPath(config.output.main),
-        ...getCjsLibraryTarget(this)
+        ...getCjsLibraryTarget()
       },
       node: false,
       module: {
@@ -377,7 +375,6 @@ class WebpackConfig {
   }
 
   _initRenderer (config) {
-    const webpack5plus = this._webpack5
     this.rendererConfig = {
       mode: config.mode,
       context: this.pathUtil.getPath(),
@@ -385,10 +382,9 @@ class WebpackConfig {
       entry: config.entry.renderer,
       output: {
         filename: config.out.js,
-        path: this.pathUtil.getPath(config.output.renderer),
-        ...((config.entry.preload && webpack5plus) ? { environment: defaultEs5OutputEnvironment() } : {})
+        path: this.pathUtil.getPath(config.output.renderer)
       },
-      node: config.entry.preload ? (webpack5plus ? false : defaultNodeLib()) : false,
+      node: false,
       module: {
         rules: [
           ...(this._useBabel ? [createBabelLoader(config, /\.jsx?$/)] : []),
@@ -403,7 +399,7 @@ class WebpackConfig {
       resolve: {
         alias: config.alias,
         extensions: [...(this._useTypeScript ? ['.tsx', '.ts'] : []), '.mjs', '.cjs', '.js', ...(this._useBabel ? ['.jsx'] : []), ...(config.entry.preload ? [] : ['.node']), ...(this._useVue ? ['.vue'] : []), ...(this._useStylus ? ['.styl', '.stylus'] : []), ...(this._useLess ? ['.less'] : []), ...(this._useSass ? ['.scss', '.sass'] : []), '.css', '.json', '.wasm'],
-        ...((config.entry.preload && webpack5plus) ? { fallback: defaultResolveFallback() } : {})
+        ...(config.entry.preload ? { fallback: defaultResolveFallback() } : {})
       },
       plugins: [
         ...(this._useESLint ? [createEslintPlugin(config, ['js', 'jsx', 'mjs', ...(this._useTypeScript ? ['tsx', 'ts'] : []), ...(this._useVue ? ['vue'] : [])])] : []),
@@ -434,7 +430,7 @@ class WebpackConfig {
       output: {
         filename: config.out.js,
         path: this.pathUtil.getPath(config.output.preload),
-        ...getCjsLibraryTarget(this)
+        ...getCjsLibraryTarget()
       },
       node: false,
       externals: [webpackNodeExternals(config.nodeExternals.preload)],

@@ -4,7 +4,6 @@ try {
 } catch (_) {
   throw new Error('webpack is not found, try to run `npm install -D webpack` first')
 }
-const webpackVersion = Number(webpack.version.charAt(0))
 
 const camelcase = require('camelcase')
 const uppercamelcase = require('uppercamelcase')
@@ -102,18 +101,12 @@ function getPluginImplementation (config, name) {
   return require(name)
 }
 
-function isWebpack5plus (config) {
-  return typeof config.webpack === 'number' ? (config.webpack > 4) : (webpackVersion > 4)
-}
-
 module.exports = {
   webpack,
-  webpackVersion,
   compile,
   watch,
   startDevServer,
   copyExtraResources,
   getLoaderPath,
-  getPluginImplementation,
-  isWebpack5plus
+  getPluginImplementation
 }

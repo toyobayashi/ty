@@ -105,16 +105,12 @@ function computePublicPath (wc, config) {
   return typeof config.publicPath === 'string' ? config.publicPath : (wc._electronTarget ? '/app/renderer/' : '/')
 }
 
-function getCjsLibraryTarget (wc) {
-  return (wc._webpack5
-    ? {
-        library: {
-          type: 'commonjs2'
-        }
-      }
-    : {
-        libraryTarget: 'commonjs2'
-      })
+function getCjsLibraryTarget () {
+  return {
+    library: {
+      type: 'commonjs2'
+    }
+  }
 }
 
 exports.createBaseOptimization = createBaseOptimization

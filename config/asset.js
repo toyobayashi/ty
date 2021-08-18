@@ -1,52 +1,36 @@
 const path = require('path')
-const { getLoaderPath } = require('../util/webpack.js')
 
 function createAssetsLoaders (config) {
   return [
     {
       test: /\.(png|jpe?g|gif|webp)(\?.*)?$/,
-      use: [
-        createUrlLoader('img', config)
-      ]
+      type: 'asset',
+      generator: {
+        filename: path.posix.join(config.assetsPath || '', 'img', config.out.assets)
+      }
     },
     {
       test: /\.(svg)(\?.*)?$/,
-      use: [
-        createFileLoader('img', config)
-      ]
+      type: 'asset/resource',
+      generator: {
+        filename: path.posix.join(config.assetsPath || '', 'img', config.out.assets)
+      }
     },
     {
       test: /\.(mp4|webm|ogg|mp3|wav|flac|aac)(\?.*)?$/,
-      use: [
-        createUrlLoader('media', config)
-      ]
+      type: 'asset',
+      generator: {
+        filename: path.posix.join(config.assetsPath || '', 'media', config.out.assets)
+      }
     },
     {
       test: /\.(woff2?|eot|ttf|otf)(\?.*)?$/i,
-      use: [
-        createUrlLoader('fonts', config)
-      ]
+      type: 'asset',
+      generator: {
+        filename: path.posix.join(config.assetsPath || '', 'fonts', config.out.assets)
+      }
     }
   ]
-}
-
-function createUrlLoader (dir, config) {
-  return {
-    loader: getLoaderPath(config, 'url-loader'),
-    options: {
-      limit: 4096,
-      fallback: createFileLoader(dir, config)
-    }
-  }
-}
-
-function createFileLoader (dir, config) {
-  return {
-    loader: getLoaderPath(config, 'file-loader'),
-    options: {
-      name: path.posix.join(config.assetsPath || '', dir, config.out.assets)
-    }
-  }
 }
 
 exports.createAssetsLoaders = createAssetsLoaders

@@ -24,24 +24,5 @@ function createNodeBaseRules (wc, tsconfig, config) {
   ]
 }
 
-function defaultNodeLib () {
-  return {
-    global: false,
-    __dirname: false,
-    __filename: false,
-    Buffer: false,
-    process: false,
-    console: false,
-    setImmediate: false,
-
-    dgram: 'empty',
-    fs: 'empty',
-    net: 'empty',
-    tls: 'empty',
-    child_process: 'empty'
-  }
-}
-
 exports.createNodeLoader = createNodeLoader
 exports.createNodeBaseRules = createNodeBaseRules
-exports.defaultNodeLib = defaultNodeLib
