@@ -15,7 +15,6 @@ const merge = require('deepmerge')
 const semver = require('semver')
 
 const {
-  createBaseOptimization,
   createDefinePlugin,
   createCopyPlugin,
   defaultResolveFallback,
@@ -320,8 +319,7 @@ class WebpackConfig {
         createDefinePlugin(this, config),
         ...(config.progress ? [new ProgressPlugin()] : []),
         ...(cssExtract(this, config))
-      ],
-      optimization: createBaseOptimization()
+      ]
     }
 
     if (this._useVue) {
@@ -412,8 +410,7 @@ class WebpackConfig {
         createDefinePlugin(this, config),
         ...(config.progress ? [new ProgressPlugin()] : []),
         ...(cssExtract(this, config))
-      ],
-      optimization: createBaseOptimization()
+      ]
     }
 
     if (this._useVue) {
