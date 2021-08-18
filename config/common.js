@@ -6,12 +6,6 @@ const DefinePlugin = wrapPlugin('webpack.DefinePlugin', webpack.DefinePlugin)
 
 function createDefinePlugin (wc, config) {
   return new DefinePlugin({
-    ...(wc._useTypeScript
-      ? {
-          __classPrivateFieldGet: ['tslib', '__classPrivateFieldGet'],
-          __classPrivateFieldSet: ['tslib', '__classPrivateFieldSet']
-        }
-      : {}),
     ...(config.define || {})
   })
 }
