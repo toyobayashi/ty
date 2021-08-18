@@ -74,7 +74,8 @@ class WindowManager {
         height: 600,
         show: false,
         webPreferences: {
-          nodeIntegration: true
+          nodeIntegration: true,
+          contextIsolation: false
         }
       }
 
