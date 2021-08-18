@@ -9,7 +9,9 @@ function createCommonTSLoader (wc, config, tsconfig) {
     test: /\.tsx?$/,
     exclude: /node_modules/,
     use: [
-      {
+      wc._useBabelToTransformTypescript ? {
+        loader: getLoaderPath(config, 'babel-loader')
+      } : {
         loader: getLoaderPath(config, 'ts-loader'),
         options: {
           transpileOnly: true,
@@ -22,7 +24,7 @@ function createCommonTSLoader (wc, config, tsconfig) {
 
 function createTypeScriptHelperProvidePlugin (wc) {
   const typescript = (wc.pkg.devDependencies && wc.pkg.devDependencies.typescript) || (wc.pkg.dependencies && wc.pkg.dependencies.typescript)
-  if (typeof typescript === 'string' && semver.lt(typescript.replace(/^[~^]/, ''), '4.0.0')) {
+  if (!wc._useBabelToTransformTypescript && typeof typescript === 'string' && semver.lt(typescript.replace(/^[~^]/, ''), '4.0.0')) {
     return [
       new ProvidePlugin({
         __classPrivateFieldGet: ['tslib', '__classPrivateFieldGet'],
@@ -39,7 +41,9 @@ function createTSXLoader (wc, config, tsconfig) {
       test: /\.ts$/,
       exclude: /node_modules/,
       use: [
-        {
+        wc._useBabelToTransformTypescript ? {
+          loader: getLoaderPath(config, 'babel-loader')
+        } : {
           loader: getLoaderPath(config, 'ts-loader'),
           options: {
             ...(wc._useVue ? { appendTsSuffixTo: [/\.vue$/] } : {}),
@@ -52,8 +56,10 @@ function createTSXLoader (wc, config, tsconfig) {
     {
       test: /\.tsx$/,
       exclude: /node_modules/,
-      use: [
-        ...((wc._useBabel && wc._useVue) ? [{ loader: getLoaderPath(config, 'babel-loader') }] : []),
+      use: wc._useBabelToTransformTypescript ? [{
+        loader: getLoaderPath(config, 'babel-loader')
+      }] : [
+        ...((wc._useVueJsx) ? [{ loader: getLoaderPath(config, 'babel-loader') }] : []),
         {
           loader: getLoaderPath(config, 'ts-loader'),
           options: {

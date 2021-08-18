@@ -15,7 +15,6 @@ const merge = require('deepmerge')
 const semver = require('semver')
 
 const {
-  createBaseOptimization,
   createDefinePlugin,
   createCopyPlugin,
   defaultResolveFallback,
@@ -76,6 +75,22 @@ class WebpackConfig {
       webTSConfig: false
     }
 
+    this._useBabel = !!((this.pkg.devDependencies && this.pkg.devDependencies['@babel/core']) || (
+      existsSync(this.pathUtil.getPath('babel.config.js')) ||
+      existsSync(this.pathUtil.getPath('.babelrc'))
+    ))
+
+    this._useVueJsx = !!(this._useBabel && this.pkg.devDependencies && (
+      this.pkg.devDependencies['@vue/babel-preset-jsx'] ||
+      this.pkg.devDependencies['@vue/babel-plugin-jsx']
+    ))
+
+    this._useBabelToTransformTypescript = !!(this._useBabel && this.pkg.devDependencies && (
+      this.pkg.devDependencies['@babel/preset-typescript'] ||
+      this.pkg.devDependencies['@babel/plugin-transform-typescript'] ||
+      this.pkg.devDependencies['@babel/plugin-syntax-typescript']
+    ))
+
     if (this._electronTarget) {
       tsconfigFileExists.rendererTSConfig = existsSync(this.pathUtil.getPath(config.tsconfig.renderer))
       tsconfigFileExists.mainTSConfig = existsSync(this.pathUtil.getPath(config.tsconfig.main))
@@ -86,14 +101,15 @@ class WebpackConfig {
             existsTypeScriptInPackageJson ||
             tsconfigFileExists.rendererTSConfig ||
             tsconfigFileExists.mainTSConfig ||
-            tsconfigFileExists.preloadTSConfig
+            tsconfigFileExists.preloadTSConfig ||
+            this._useBabelToTransformTypescript
           )
     } else if (this._nodeTarget) {
       tsconfigFileExists.nodeTSConfig = existsSync(this.pathUtil.getPath(config.tsconfig.node))
-      this._useTypeScript = config.ts !== undefined ? !!config.ts : !!(existsTypeScriptInPackageJson || tsconfigFileExists.nodeTSConfig)
+      this._useTypeScript = config.ts !== undefined ? !!config.ts : !!(existsTypeScriptInPackageJson || tsconfigFileExists.nodeTSConfig || this._useBabelToTransformTypescript)
     } else {
       tsconfigFileExists.webTSConfig = existsSync(this.pathUtil.getPath(config.tsconfig.web))
-      this._useTypeScript = config.ts !== undefined ? !!config.ts : !!(existsTypeScriptInPackageJson || tsconfigFileExists.webTSConfig)
+      this._useTypeScript = config.ts !== undefined ? !!config.ts : !!(existsTypeScriptInPackageJson || tsconfigFileExists.webTSConfig || this._useBabelToTransformTypescript)
     }
 
     this._useESLint = config.eslint !== undefined
@@ -106,10 +122,7 @@ class WebpackConfig {
           existsSync(this.pathUtil.getPath('.eslintrc')) ||
           (this.pkg.eslintConfig !== undefined)
         ))
-    this._useBabel = !!((this.pkg.devDependencies && this.pkg.devDependencies['@babel/core']) || (
-      existsSync(this.pathUtil.getPath('babel.config.js')) ||
-      existsSync(this.pathUtil.getPath('.babelrc'))
-    ))
+
     this._usePostCss = existsSync(this.pathUtil.getPath('postcss.config.js')) || existsSync(this.pathUtil.getPath('.postcssrc.js'))
 
     if (config.generate !== undefined ? !!config.generate : generate) {
@@ -318,8 +331,7 @@ class WebpackConfig {
         createDefinePlugin(this, config),
         ...(config.progress ? [new ProgressPlugin()] : []),
         ...(cssExtract(this, config))
-      ],
-      optimization: createBaseOptimization()
+      ]
     }
 
     if (this._useVue) {
@@ -408,8 +420,7 @@ class WebpackConfig {
         createDefinePlugin(this, config),
         ...(config.progress ? [new ProgressPlugin()] : []),
         ...(cssExtract(this, config))
-      ],
-      optimization: createBaseOptimization()
+      ]
     }
 
     if (this._useVue) {

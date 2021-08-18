@@ -4,31 +4,8 @@ const { webpack, getPluginImplementation } = require('../util/webpack.js')
 
 const DefinePlugin = wrapPlugin('webpack.DefinePlugin', webpack.DefinePlugin)
 
-function createBaseOptimization () {
-  return {
-    splitChunks: {
-      chunks: 'all',
-      name: false,
-      cacheGroups: {
-        node_modules: {
-          name: 'node-modules',
-          test: /[\\/]node_modules[\\/]/,
-          priority: -9,
-          chunks: 'all'
-        }
-      }
-    }
-  }
-}
-
 function createDefinePlugin (wc, config) {
   return new DefinePlugin({
-    ...(wc._useTypeScript
-      ? {
-          __classPrivateFieldGet: ['tslib', '__classPrivateFieldGet'],
-          __classPrivateFieldSet: ['tslib', '__classPrivateFieldSet']
-        }
-      : {}),
     ...(config.define || {})
   })
 }
@@ -113,7 +90,6 @@ function getCjsLibraryTarget () {
   }
 }
 
-exports.createBaseOptimization = createBaseOptimization
 exports.createDefinePlugin = createDefinePlugin
 exports.createCopyPlugin = createCopyPlugin
 exports.defaultResolveFallback = defaultResolveFallback
