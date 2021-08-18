@@ -57,7 +57,7 @@ class WebpackConfig {
     this.pkg = pkg
     this._webpack5 = isWebpack5plus(config)
     this._useVue = config.vue !== undefined ? !!config.vue : !!((this.pkg.devDependencies && this.pkg.devDependencies.vue) || (this.pkg.dependencies && this.pkg.dependencies.vue))
-    this._useVue3 = this._useVue && !!((this.pkg.devDependencies && this.pkg.devDependencies.vue && semver.gte(semver.clean(this.pkg.devDependencies.vue), '3.0.0')) || (this.pkg.dependencies && this.pkg.dependencies.vue && semver.gte(semver.clean(this.pkg.dependencies.vue), '3.0.0')))
+    this._useVue3 = this._useVue && !!((this.pkg.devDependencies && this.pkg.devDependencies.vue && semver.gte(semver.coerce(this.pkg.devDependencies.vue), '3.0.0')) || (this.pkg.dependencies && this.pkg.dependencies.vue && semver.gte(semver.coerce(this.pkg.dependencies.vue), '3.0.0')))
     this._electronTarget = (config.target === 'electron')
     this._webTarget = (config.target === 'web')
     this._nodeTarget = (config.target === 'node')
