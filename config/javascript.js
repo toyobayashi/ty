@@ -11,15 +11,27 @@ function createEslintPlugin (config, extensions) {
   })
 }
 
-function createBabelLoader (config, test) {
-  return {
-    test,
-    exclude: /node_modules/,
-    use: [
-      { loader: getLoaderPath(config, 'babel-loader') }
-    ]
-  }
+function createJavaScriptLoader (wc, config, typescriptAllowJS, tsconfigType, vue) {
+  return (wc._useBabel || typescriptAllowJS) ? [
+    {
+      test: /\.(m|c)?jsx?$/,
+      exclude: /node_modules/,
+      use: [
+        ...(wc._useBabel ? [{
+          loader: getLoaderPath(config, 'babel-loader')
+        }] : []),
+        ...(typescriptAllowJS ? [{
+          loader: getLoaderPath(config, 'ts-loader'),
+          options: {
+            ...(vue && wc._useVue ? { appendTsSuffixTo: [/\.vue$/] } : {}),
+            transpileOnly: true,
+            configFile: wc.pathUtil.getPath(config.tsconfig[tsconfigType])
+          }
+        }] : [])
+      ]
+    }
+  ] : []
 }
 
 exports.createEslintPlugin = createEslintPlugin
-exports.createBabelLoader = createBabelLoader
+exports.createJavaScriptLoader = createJavaScriptLoader

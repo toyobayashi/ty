@@ -1,4 +1,5 @@
 const semver = require('semver')
+const { existsSync, readJSONSync } = require('fs-extra')
 const wrapPlugin = require('../util/plugin.js')
 const { webpack, getLoaderPath } = require('../util/webpack.js')
 
@@ -8,10 +9,11 @@ function createCommonTSLoader (wc, config, tsconfig) {
   return {
     test: /\.tsx?$/,
     exclude: /node_modules/,
-    use: [
-      wc._useBabelToTransformTypescript ? {
-        loader: getLoaderPath(config, 'babel-loader')
-      } : {
+    use: wc._useBabelToTransformTypescript ? [{
+      loader: getLoaderPath(config, 'babel-loader')
+    }] : [
+      ...((wc._useBabel) ? [{ loader: getLoaderPath(config, 'babel-loader') }] : []),
+      {
         loader: getLoaderPath(config, 'ts-loader'),
         options: {
           transpileOnly: true,
@@ -73,6 +75,27 @@ function createTSXLoader (wc, config, tsconfig) {
   ]
 }
 
+function tryReadTSConfig (absPath) {
+  const ex = existsSync(absPath)
+  let tsconfig
+  if (ex) {
+    try {
+      tsconfig = readJSONSync(absPath)
+    } catch (_) {
+      return ex
+    }
+    return tsconfig
+  } else {
+    return ex
+  }
+}
+
+function isAllowJs (wc, tsconfig) {
+  return !!(wc._useTypeScript && tsconfig && tsconfig.compilerOptions && tsconfig.compilerOptions.allowJs)
+}
+
 exports.createCommonTSLoader = createCommonTSLoader
 exports.createTypeScriptHelperProvidePlugin = createTypeScriptHelperProvidePlugin
 exports.createTSXLoader = createTSXLoader
+exports.tryReadTSConfig = tryReadTSConfig
+exports.isAllowJs = isAllowJs
