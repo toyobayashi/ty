@@ -25,8 +25,8 @@ const {
 } = require('./common.js')
 const { createStyleLoaders, cssExtract } = require('./css.js')
 const { createAssetsLoaders } = require('./asset.js')
-const { createEslintPlugin, createBabelLoader } = require('./javascript.js')
-const { createTypeScriptHelperProvidePlugin, createTSXLoader } = require('./typescript.js')
+const { createEslintPlugin, createJavaScriptLoader } = require('./javascript.js')
+const { createTypeScriptHelperProvidePlugin, createTSXLoader, tryReadTSConfig, isAllowJs } = require('./typescript.js')
 const { createNodeLoader, createNodeBaseRules, defaultNodeLib } = require('./node.js')
 const { createHtmlPlugins, watchHtml } = require('./html.js')
 const { createVueLoader, insertVueLoaderPlugin } = require('./vue.js')
@@ -68,7 +68,7 @@ class WebpackConfig {
     this._useLess = config.less !== undefined ? !!config.less : !!(this.pkg.devDependencies && this.pkg.devDependencies.less)
 
     const existsTypeScriptInPackageJson = !!(this.pkg.devDependencies && this.pkg.devDependencies.typescript)
-    const tsconfigFileExists = {
+    const tsconfigFileExists = this.tsconfigFileExists = {
       rendererTSConfig: false,
       mainTSConfig: false,
       preloadTSConfig: false,
@@ -93,9 +93,9 @@ class WebpackConfig {
     ))
 
     if (this._electronTarget) {
-      tsconfigFileExists.rendererTSConfig = existsSync(this.pathUtil.getPath(config.tsconfig.renderer))
-      tsconfigFileExists.mainTSConfig = existsSync(this.pathUtil.getPath(config.tsconfig.main))
-      tsconfigFileExists.preloadTSConfig = existsSync(this.pathUtil.getPath(config.tsconfig.preload))
+      tsconfigFileExists.rendererTSConfig = tryReadTSConfig(this.pathUtil.getPath(config.tsconfig.renderer))
+      tsconfigFileExists.mainTSConfig = tryReadTSConfig(this.pathUtil.getPath(config.tsconfig.main))
+      tsconfigFileExists.preloadTSConfig = tryReadTSConfig(this.pathUtil.getPath(config.tsconfig.preload))
       this._useTypeScript = config.ts !== undefined
         ? !!config.ts
         : !!(
@@ -106,10 +106,10 @@ class WebpackConfig {
             this._useBabelToTransformTypescript
           )
     } else if (this._nodeTarget) {
-      tsconfigFileExists.nodeTSConfig = existsSync(this.pathUtil.getPath(config.tsconfig.node))
+      tsconfigFileExists.nodeTSConfig = tryReadTSConfig(this.pathUtil.getPath(config.tsconfig.node))
       this._useTypeScript = config.ts !== undefined ? !!config.ts : !!(existsTypeScriptInPackageJson || tsconfigFileExists.nodeTSConfig || this._useBabelToTransformTypescript)
     } else {
-      tsconfigFileExists.webTSConfig = existsSync(this.pathUtil.getPath(config.tsconfig.web))
+      tsconfigFileExists.webTSConfig = tryReadTSConfig(this.pathUtil.getPath(config.tsconfig.web))
       this._useTypeScript = config.ts !== undefined ? !!config.ts : !!(existsTypeScriptInPackageJson || tsconfigFileExists.webTSConfig || this._useBabelToTransformTypescript)
     }
 
@@ -270,6 +270,7 @@ class WebpackConfig {
   }
 
   _initNode (config) {
+    const allowJS = isAllowJs(this, this.tsconfigFileExists.nodeTSConfig)
     this.nodeConfig = {
       mode: config.mode,
       context: this.pathUtil.getPath(),
@@ -283,13 +284,14 @@ class WebpackConfig {
       node: false,
       module: {
         rules: [
+          ...(createJavaScriptLoader(this, config, allowJS, 'node', false)),
           ...(createNodeBaseRules(this, config.tsconfig.node, config))
         ]
       },
       externals: [webpackNodeExternals(config.nodeExternals.node)],
       resolve: {
         alias: config.alias,
-        extensions: [...(this._useTypeScript ? ['.tsx', '.ts'] : []), '.mjs', '.cjs', '.js', '.json', '.node', '.wasm']
+        extensions: [...(this._useTypeScript ? ['.tsx', '.ts'] : []), '.mjs', '.cjs', '.js', ...(this._useBabel || allowJS ? ['.jsx'] : []), '.json', '.node', '.wasm']
       },
       plugins: [
         ...(this._useESLint ? [createEslintPlugin(config, ['js', 'jsx', 'mjs', ...(this._useTypeScript ? ['tsx', 'ts'] : [])])] : []),
@@ -301,6 +303,7 @@ class WebpackConfig {
 
   _initWeb (config) {
     const webpack5plus = this._webpack5
+    const allowJS = isAllowJs(this, this.tsconfigFileExists.webTSConfig)
     this.webConfig = {
       mode: config.mode,
       context: this.pathUtil.getPath(),
@@ -314,7 +317,7 @@ class WebpackConfig {
       node: webpack5plus ? false : defaultNodeLib(),
       module: {
         rules: [
-          ...(this._useBabel ? [createBabelLoader(config, /\.jsx?$/)] : []),
+          ...(createJavaScriptLoader(this, config, allowJS, 'web', true)),
           ...(this._useTypeScript ? createTSXLoader(this, config, 'web') : []),
           ...(this._useVue ? [createVueLoader(config)] : []),
           ...(createStyleLoaders(this, config)),
@@ -323,7 +326,7 @@ class WebpackConfig {
       },
       resolve: {
         alias: config.alias,
-        extensions: [...(this._useTypeScript ? ['.tsx', '.ts'] : []), '.mjs', '.cjs', '.js', ...(this._useBabel ? ['.jsx'] : []), ...(this._useVue ? ['.vue'] : []), ...(this._useStylus ? ['.styl', '.stylus'] : []), ...(this._useLess ? ['.less'] : []), ...(this._useSass ? ['.scss', '.sass'] : []), '.css', '.json', '.wasm'],
+        extensions: [...(this._useTypeScript ? ['.tsx', '.ts'] : []), '.mjs', '.cjs', '.js', ...(this._useBabel || allowJS ? ['.jsx'] : []), ...(this._useVue ? ['.vue'] : []), ...(this._useStylus ? ['.styl', '.stylus'] : []), ...(this._useLess ? ['.less'] : []), ...(this._useSass ? ['.scss', '.sass'] : []), '.css', '.json', '.wasm'],
         ...(webpack5plus ? { fallback: defaultResolveFallback() } : {})
       },
       plugins: [
@@ -343,6 +346,7 @@ class WebpackConfig {
 
   _initMain (config) {
     const CopyWebpackPlugin = wrapPlugin('CopyWebpackPlugin', getPluginImplementation(config, 'copy-webpack-plugin'))
+    const allowJS = isAllowJs(this, this.tsconfigFileExists.mainTSConfig)
     this.mainConfig = {
       mode: config.mode,
       context: this.pathUtil.getPath(),
@@ -356,13 +360,14 @@ class WebpackConfig {
       node: false,
       module: {
         rules: [
+          ...(createJavaScriptLoader(this, config, allowJS, 'main', false)),
           ...(createNodeBaseRules(this, config.tsconfig.main, config))
         ]
       },
       externals: [webpackNodeExternals(config.nodeExternals.main)],
       resolve: {
         alias: config.alias,
-        extensions: [...(this._useTypeScript ? ['.tsx', '.ts'] : []), '.mjs', '.cjs', '.js', '.json', '.node', '.wasm']
+        extensions: [...(this._useTypeScript ? ['.tsx', '.ts'] : []), '.mjs', '.cjs', '.js', ...(this._useBabel || allowJS ? ['.jsx'] : []), '.json', '.node', '.wasm']
       },
       plugins: [
         ...(this._useESLint ? [createEslintPlugin(config, ['js', 'jsx', 'mjs', ...(this._useTypeScript ? ['tsx', 'ts'] : [])])] : []),
@@ -390,6 +395,7 @@ class WebpackConfig {
 
   _initRenderer (config) {
     const webpack5plus = this._webpack5
+    const allowJS = isAllowJs(this, this.tsconfigFileExists.rendererTSConfig)
     this.rendererConfig = {
       mode: config.mode,
       context: this.pathUtil.getPath(),
@@ -403,7 +409,7 @@ class WebpackConfig {
       node: config.entry.preload ? (webpack5plus ? false : defaultNodeLib()) : false,
       module: {
         rules: [
-          ...(this._useBabel ? [createBabelLoader(config, /\.jsx?$/)] : []),
+          ...(createJavaScriptLoader(this, config, allowJS, 'renderer', true)),
           ...(this._useTypeScript ? createTSXLoader(this, config, 'renderer') : []),
           ...(this._useVue ? [createVueLoader(config)] : []),
           ...(createStyleLoaders(this, config)),
@@ -414,7 +420,7 @@ class WebpackConfig {
       ...(config.entry.preload ? {} : { externals: [webpackNodeExternals(config.nodeExternals.renderer)] }),
       resolve: {
         alias: config.alias,
-        extensions: [...(this._useTypeScript ? ['.tsx', '.ts'] : []), '.mjs', '.cjs', '.js', ...(this._useBabel ? ['.jsx'] : []), ...(config.entry.preload ? [] : ['.node']), ...(this._useVue ? ['.vue'] : []), ...(this._useStylus ? ['.styl', '.stylus'] : []), ...(this._useLess ? ['.less'] : []), ...(this._useSass ? ['.scss', '.sass'] : []), '.css', '.json', '.wasm'],
+        extensions: [...(this._useTypeScript ? ['.tsx', '.ts'] : []), '.mjs', '.cjs', '.js', ...(this._useBabel || allowJS ? ['.jsx'] : []), ...(config.entry.preload ? [] : ['.node']), ...(this._useVue ? ['.vue'] : []), ...(this._useStylus ? ['.styl', '.stylus'] : []), ...(this._useLess ? ['.less'] : []), ...(this._useSass ? ['.scss', '.sass'] : []), '.css', '.json', '.wasm'],
         ...((config.entry.preload && webpack5plus) ? { fallback: defaultResolveFallback() } : {})
       },
       plugins: [
@@ -437,6 +443,7 @@ class WebpackConfig {
       this.preloadConfig = null
       return
     }
+    const allowJS = isAllowJs(this, this.tsconfigFileExists.preloadTSConfig)
     this.preloadConfig = {
       mode: config.mode,
       context: this.pathUtil.getPath(),
@@ -451,7 +458,7 @@ class WebpackConfig {
       externals: [webpackNodeExternals(config.nodeExternals.preload)],
       module: {
         rules: [
-          ...(this._useBabel ? [createBabelLoader(config, /\.jsx?$/)] : []),
+          ...(createJavaScriptLoader(this, config, allowJS, 'preload', true)),
           ...(this._useTypeScript ? createTSXLoader(this, config, 'preload') : []),
           ...(this._useVue ? [createVueLoader(config)] : []),
           ...(createStyleLoaders(this, config)),
@@ -461,7 +468,7 @@ class WebpackConfig {
       },
       resolve: {
         alias: config.alias,
-        extensions: [...(this._useTypeScript ? ['.tsx', '.ts'] : []), '.mjs', '.cjs', '.js', ...(this._useBabel ? ['.jsx'] : []), '.node', ...(this._useVue ? ['.vue'] : []), ...(this._useStylus ? ['.styl', '.stylus'] : []), ...(this._useLess ? ['.less'] : []), ...(this._useSass ? ['.scss', '.sass'] : []), '.css', '.json', '.wasm']
+        extensions: [...(this._useTypeScript ? ['.tsx', '.ts'] : []), '.mjs', '.cjs', '.js', ...(this._useBabel || allowJS ? ['.jsx'] : []), '.node', ...(this._useVue ? ['.vue'] : []), ...(this._useStylus ? ['.styl', '.stylus'] : []), ...(this._useLess ? ['.less'] : []), ...(this._useSass ? ['.scss', '.sass'] : []), '.css', '.json', '.wasm']
       },
       plugins: [
         ...(this._useESLint ? [createEslintPlugin(config, ['js', 'jsx', 'mjs', ...(this._useTypeScript ? ['tsx', 'ts'] : []), ...(this._useVue ? ['vue'] : [])])] : []),
