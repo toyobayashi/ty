@@ -5,7 +5,6 @@ const wrapPlugin = require('../util/plugin.js')
 
 const { webpack, getPluginImplementation } = require('../util/webpack.js')
 
-const HotModuleReplacementPlugin = wrapPlugin('webpack.HotModuleReplacementPlugin', webpack.HotModuleReplacementPlugin)
 const ProgressPlugin = wrapPlugin('webpack.ProgressPlugin', webpack.ProgressPlugin)
 
 const PathUtil = require('../util/path.js')
@@ -559,8 +558,7 @@ class WebpackConfig {
 
       this.rendererConfig.devtool = this.mainConfig.devtool = config.devtool.development
       this.rendererConfig.plugins = [
-        ...(this.rendererConfig.plugins || []),
-        new HotModuleReplacementPlugin()
+        ...(this.rendererConfig.plugins || [])
       ]
 
       this.rendererConfig.output = this.rendererConfig.output || {}
@@ -633,8 +631,7 @@ class WebpackConfig {
 
       this.webConfig.devtool = config.devtool.development
       this.webConfig.plugins = [
-        ...(this.webConfig.plugins || []),
-        new HotModuleReplacementPlugin()
+        ...(this.webConfig.plugins || [])
       ]
 
       this.webConfig.output = this.webConfig.output || {}
