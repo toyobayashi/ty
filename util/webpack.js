@@ -30,7 +30,7 @@ function watch (config, handler) {
   return compiler
 }
 
-function startDevServer (configuration, port, host, callback) {
+function startDevServer (configuration, callback) {
   let WebpackDevServer
   try {
     WebpackDevServer = require('webpack-dev-server')
@@ -38,11 +38,25 @@ function startDevServer (configuration, port, host, callback) {
     throw new Error('webpack-dev-server is not found, try to run `npm install -D webpack-dev-server` first')
   }
 
-  const devServerOptions = configuration.devServer || {}
-  WebpackDevServer.addDevServerEntrypoints(configuration, devServerOptions)
-  const server = new WebpackDevServer(webpack(configuration), devServerOptions)
+  const compiler = webpack(configuration)
 
-  return server.listen(port, host, callback)
+  const devServerOptions = configuration.devServer || {}
+  const server = new WebpackDevServer(devServerOptions, compiler)
+
+  return typeof callback === 'function'
+    ? new Promise((resolve, reject) => {
+      server.startCallback((err) => {
+        if (err) return reject(err)
+        try {
+          callback()
+        } catch (err) {
+          reject(err)
+          return
+        }
+        resolve()
+      })
+    })
+    : server.start()
 }
 
 function copyExtraResources (config, webpackConfig, needWatch, watchCallback) {

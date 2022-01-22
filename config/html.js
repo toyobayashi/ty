@@ -30,11 +30,13 @@ function createHtmlPlugins (wc, config) {
 }
 
 function watchHtml (wc, config, server) {
+  const files = []
   for (let i = 0; i < config.indexHtml.length; i++) {
     const item = config.indexHtml[i]
     const tpl = typeof item === 'string' ? item : item.template
-    server._watch(wc.pathUtil.getPath(tpl))
+    files.push(wc.pathUtil.getPath(tpl))
   }
+  server.watchFiles(files)
 }
 
 exports.createHtmlPlugins = createHtmlPlugins

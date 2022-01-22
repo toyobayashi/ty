@@ -296,7 +296,8 @@ class WebpackConfig {
         ...(this._useESLint ? [createEslintPlugin(config, ['js', 'jsx', 'mjs', ...(this._useTypeScript ? ['tsx', 'ts'] : [])])] : []),
         createDefinePlugin(this, config),
         ...(config.progress ? [new ProgressPlugin()] : [])
-      ]
+      ],
+      stats: config.statsOptions
     }
   }
 
@@ -334,7 +335,8 @@ class WebpackConfig {
         createDefinePlugin(this, config),
         ...(config.progress ? [new ProgressPlugin()] : []),
         ...(cssExtract(this, config))
-      ]
+      ],
+      stats: config.statsOptions
     }
 
     if (this._useVue) {
@@ -376,7 +378,8 @@ class WebpackConfig {
         }),
         createDefinePlugin(this, config),
         ...(config.progress ? [new ProgressPlugin()] : [])
-      ]
+      ],
+      stats: config.statsOptions
     }
 
     if (process.platform === 'linux') {
@@ -426,7 +429,8 @@ class WebpackConfig {
         createDefinePlugin(this, config),
         ...(config.progress ? [new ProgressPlugin()] : []),
         ...(cssExtract(this, config))
-      ]
+      ],
+      stats: config.statsOptions
     }
 
     if (this._useVue) {
@@ -471,7 +475,8 @@ class WebpackConfig {
         createDefinePlugin(this, config),
         ...(config.progress ? [new ProgressPlugin()] : []),
         ...(cssExtract(this, config))
-      ]
+      ],
+      stats: config.statsOptions
     }
 
     if (this._useVue) {
@@ -546,9 +551,10 @@ class WebpackConfig {
   _mergeDevelopment (config) {
     const ForkTsCheckerWebpackPlugin = wrapPlugin('ForkTsCheckerWebpackPlugin', getPluginImplementation(config, 'fork-ts-checker-webpack-plugin'))
     if (this._electronTarget) {
-      this.rendererConfig.devServer = createDevServerConfig(this, config, (app, server) => {
-        app.use(require('express-serve-asar')(this.pathUtil.getPath(config.contentBase)))
+      this.rendererConfig.devServer = createDevServerConfig(this, config, (middlewares, server) => {
+        server.app.use(require('express-serve-asar')(this.pathUtil.getPath(config.contentBase)))
         watchHtml(this, config, server)
+        return middlewares
       })
 
       this.rendererConfig.devtool = this.mainConfig.devtool = config.devtool.development
@@ -620,8 +626,9 @@ class WebpackConfig {
         ]
       }
     } else {
-      this.webConfig.devServer = createDevServerConfig(this, config, (_app, server) => {
+      this.webConfig.devServer = createDevServerConfig(this, config, (middlewares, server) => {
         watchHtml(this, config, server)
+        return middlewares
       })
 
       this.webConfig.devtool = config.devtool.development

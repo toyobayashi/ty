@@ -64,17 +64,17 @@ function defaultEs5OutputEnvironment () {
   }
 }
 
-function createDevServerConfig (wc, config, before) {
+function createDevServerConfig (wc, config, setupMiddlewares) {
   return {
-    stats: config.statsOptions,
-    hot: true,
     host: config.devServerHost,
-    inline: true,
+    port: config.devServerPort,
     ...(wc._webTarget ? { open: config.devServerOpenBrowser } : {}),
-    contentBase: [wc.pathUtil.getPath(config.contentBase)],
-    publicPath: computePublicPath(wc, config),
+    static: wc.pathUtil.getPath(config.contentBase),
+    devMiddleware: {
+      publicPath: computePublicPath(wc, config)
+    },
     ...(config.proxy ? { proxy: config.proxy } : {}),
-    ...(typeof before === 'function' ? { before } : {})
+    ...(typeof setupMiddlewares === 'function' ? { setupMiddlewares } : {})
   }
 }
 

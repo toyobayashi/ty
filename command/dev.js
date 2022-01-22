@@ -80,7 +80,7 @@ function dev (config) {
     })
   }
 
-  startDevServer(webpackConfig.rendererConfig, config.devServerPort, config.devServerHost, function (err) {
+  startDevServer(webpackConfig.rendererConfig, function (err) {
     if (err) {
       console.log(err)
       return
