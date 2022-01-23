@@ -24,7 +24,7 @@ const {
 } = require('./common.js')
 const { createStyleLoaders, cssExtract } = require('./css.js')
 const { createAssetsLoaders } = require('./asset.js')
-const { createEslintPlugin, createJavaScriptLoader } = require('./javascript.js')
+const { createJavaScriptLoader } = require('./javascript.js')
 const { createTypeScriptHelperProvidePlugin, createTSXLoader, tryReadTSConfig, isAllowJs } = require('./typescript.js')
 const { createNodeLoader, createNodeBaseRules } = require('./node.js')
 const { createHtmlPlugins, watchHtml } = require('./html.js')
@@ -110,17 +110,6 @@ class WebpackConfig {
       tsconfigFileExists.webTSConfig = tryReadTSConfig(this.pathUtil.getPath(config.tsconfig.web))
       this._useTypeScript = config.ts !== undefined ? !!config.ts : !!(existsTypeScriptInPackageJson || tsconfigFileExists.webTSConfig || this._useBabelToTransformTypescript)
     }
-
-    this._useESLint = config.eslint !== undefined
-      ? !!config.eslint
-      : !!((this.pkg.devDependencies && this.pkg.devDependencies.eslint) || (
-          existsSync(this.pathUtil.getPath('.eslintrc.js')) ||
-          existsSync(this.pathUtil.getPath('.eslintrc.yml')) ||
-          existsSync(this.pathUtil.getPath('.eslintrc.yaml')) ||
-          existsSync(this.pathUtil.getPath('.eslintrc.json')) ||
-          existsSync(this.pathUtil.getPath('.eslintrc')) ||
-          (this.pkg.eslintConfig !== undefined)
-        ))
 
     this._usePostCss = existsSync(this.pathUtil.getPath('postcss.config.js')) || existsSync(this.pathUtil.getPath('.postcssrc.js'))
 
@@ -292,7 +281,6 @@ class WebpackConfig {
         extensions: [...(this._useTypeScript ? ['.tsx', '.ts'] : []), '.mjs', '.cjs', '.js', ...(this._useBabel || allowJS ? ['.jsx'] : []), '.json', '.node', '.wasm']
       },
       plugins: [
-        ...(this._useESLint ? [createEslintPlugin(config, ['js', 'jsx', 'mjs', ...(this._useTypeScript ? ['tsx', 'ts'] : [])])] : []),
         createDefinePlugin(this, config),
         ...(config.progress ? [new ProgressPlugin()] : [])
       ],
@@ -328,7 +316,6 @@ class WebpackConfig {
         fallback: defaultResolveFallback()
       },
       plugins: [
-        ...(this._useESLint ? [createEslintPlugin(config, ['js', 'jsx', 'mjs', ...(this._useTypeScript ? ['tsx', 'ts'] : []), ...(this._useVue ? ['vue'] : [])])] : []),
         ...(createHtmlPlugins(this, config)),
         ...(createCopyPlugin(this, config, 'web')),
         createDefinePlugin(this, config),
@@ -369,7 +356,6 @@ class WebpackConfig {
         extensions: [...(this._useTypeScript ? ['.tsx', '.ts'] : []), '.mjs', '.cjs', '.js', ...(this._useBabel || allowJS ? ['.jsx'] : []), '.json', '.node', '.wasm']
       },
       plugins: [
-        ...(this._useESLint ? [createEslintPlugin(config, ['js', 'jsx', 'mjs', ...(this._useTypeScript ? ['tsx', 'ts'] : [])])] : []),
         new CopyWebpackPlugin({
           patterns: [
             { from: this.pathUtil.getPath('package.json'), to: this.pathUtil.getPath(config.localResourcesPath, 'app/package.json') }
@@ -422,7 +408,6 @@ class WebpackConfig {
         ...(config.entry.preload ? { fallback: defaultResolveFallback() } : {})
       },
       plugins: [
-        ...(this._useESLint ? [createEslintPlugin(config, ['js', 'jsx', 'mjs', ...(this._useTypeScript ? ['tsx', 'ts'] : []), ...(this._useVue ? ['vue'] : [])])] : []),
         ...(createHtmlPlugins(this, config)),
         ...(createCopyPlugin(this, config, 'renderer')),
         createDefinePlugin(this, config),
@@ -470,7 +455,6 @@ class WebpackConfig {
         extensions: [...(this._useTypeScript ? ['.tsx', '.ts'] : []), '.mjs', '.cjs', '.js', ...(this._useBabel || allowJS ? ['.jsx'] : []), '.node', ...(this._useVue ? ['.vue'] : []), ...(this._useStylus ? ['.styl', '.stylus'] : []), ...(this._useLess ? ['.less'] : []), ...(this._useSass ? ['.scss', '.sass'] : []), '.css', '.json', '.wasm']
       },
       plugins: [
-        ...(this._useESLint ? [createEslintPlugin(config, ['js', 'jsx', 'mjs', ...(this._useTypeScript ? ['tsx', 'ts'] : []), ...(this._useVue ? ['vue'] : [])])] : []),
         createDefinePlugin(this, config),
         ...(config.progress ? [new ProgressPlugin()] : []),
         ...(cssExtract(this, config))
