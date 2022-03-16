@@ -51,6 +51,17 @@ const context = args.context
 const childProcess = require('child_process')
 const oldFork = childProcess.fork
 childProcess.fork = function (modulePath, args, options) {
+  if (Array.isArray(args)) {
+    options = options || {}
+  } else {
+    if (typeof args === 'object' && args !== null) {
+      options = args
+      args = []
+    } else {
+      options = options || {}
+      args = args || []
+    }
+  }
   return oldFork.call(this, require('path').join(__dirname, 'fork.js'), [context || '', modulePath, ...args], options)
 }
 
