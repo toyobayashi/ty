@@ -556,7 +556,14 @@ class WebpackConfig {
             typescript: {
               configFile: this.pathUtil.getPath(config.tsconfig.renderer),
               extensions: {
-                vue: this._useVue && !this._useVue3
+                vue: this._useVue
+                  ? {
+                      enabled: true,
+                      compiler: this._useVue3
+                        ? require.resolve('@vue/compiler-sfc')
+                        : require.resolve('vue-template-compiler')
+                    }
+                  : false
               }
             }
           })
@@ -587,7 +594,14 @@ class WebpackConfig {
               typescript: {
                 configFile: this.pathUtil.getPath(config.tsconfig.preload),
                 extensions: {
-                  vue: this._useVue && !this._useVue3
+                  vue: this._useVue
+                    ? {
+                        enabled: true,
+                        compiler: this._useVue3
+                          ? require.resolve('@vue/compiler-sfc')
+                          : require.resolve('vue-template-compiler')
+                      }
+                    : false
                 }
               }
             })
@@ -629,7 +643,14 @@ class WebpackConfig {
             typescript: {
               configFile: this.pathUtil.getPath(config.tsconfig.web),
               extensions: {
-                vue: this._useVue && !this._useVue3
+                vue: this._useVue
+                  ? {
+                      enabled: true,
+                      compiler: this._useVue3
+                        ? require.resolve('@vue/compiler-sfc')
+                        : require.resolve('vue-template-compiler')
+                    }
+                  : false
               }
             }
           })
@@ -696,7 +717,14 @@ class WebpackConfig {
               memoryLimit: 4096,
               configFile: this.pathUtil.getPath(config.tsconfig.renderer),
               extensions: {
-                vue: this._useVue && !this._useVue3
+                vue: this._useVue
+                  ? {
+                      enabled: true,
+                      compiler: this._useVue3
+                        ? require.resolve('@vue/compiler-sfc')
+                        : require.resolve('vue-template-compiler')
+                    }
+                  : false
               }
             }
           })
@@ -739,7 +767,14 @@ class WebpackConfig {
                 memoryLimit: 4096,
                 configFile: this.pathUtil.getPath(config.tsconfig.preload),
                 extensions: {
-                  vue: this._useVue && !this._useVue3
+                  vue: this._useVue
+                    ? {
+                        enabled: true,
+                        compiler: this._useVue3
+                          ? require.resolve('@vue/compiler-sfc')
+                          : require.resolve('vue-template-compiler')
+                      }
+                    : false
                 }
               }
             })
@@ -793,7 +828,14 @@ class WebpackConfig {
               memoryLimit: 4096,
               configFile: this.pathUtil.getPath(config.tsconfig.web),
               extensions: {
-                vue: this._useVue && !this._useVue3
+                vue: this._useVue
+                  ? {
+                      enabled: true,
+                      compiler: this._useVue3
+                        ? require.resolve('@vue/compiler-sfc')
+                        : require.resolve('vue-template-compiler')
+                    }
+                  : false
               }
             }
           })
