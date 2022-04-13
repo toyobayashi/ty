@@ -68,7 +68,7 @@ childProcess.fork = function (modulePath, args, options) {
 require('../util/ts.js')
 main(process.argv[2], args)
 
-function main (command, args = { _: [] }, userConfig = {}) {
+async function main (command, args = { _: [] }, userConfig = {}) {
   const defaultProduction = ['build', 'pack']
   if (args.mode === 'production' || defaultProduction.indexOf(command) !== -1) {
     process.env.NODE_ENV = 'production'
@@ -78,7 +78,7 @@ function main (command, args = { _: [] }, userConfig = {}) {
   const merge = require('deepmerge')
   const PathUtil = require('../util/path.js')
   const pu = new PathUtil(args.context || userConfig.context)
-  let config = readTyConfig(args.config, pu.getPath.bind(pu))
+  let config = await readTyConfig(args.config, pu.getPath.bind(pu))
 
   const cliConfig = require('../util/validate.js').cliSupportOption
   cliConfig.forEach((key) => {
