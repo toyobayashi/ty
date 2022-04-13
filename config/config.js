@@ -309,7 +309,7 @@ function readTypeScriptConfigFile (fullPath) {
   return requireDefault(fullPath)
 }
 
-function readTyConfig (configPath, getPath) {
+async function readTyConfig (configPath, getPath) {
   let tyconfig = {}
   if (typeof configPath === 'string' && configPath !== '') {
     configPath = getPath(configPath)
@@ -327,7 +327,7 @@ function readTyConfig (configPath, getPath) {
       process.exit(1)
     }
     if (typeof tyconfig === 'function') {
-      tyconfig = tyconfig(defaultConfig.mode)
+      tyconfig = await Promise.resolve(tyconfig(defaultConfig.mode))
     }
     checkObject(tyconfig, `${configPath} should export an object.`)
   } else {
@@ -340,7 +340,7 @@ function readTyConfig (configPath, getPath) {
       tyconfig = readTypeScriptConfigFile(tyconfigTsPath)
     }
     if (typeof tyconfig === 'function') {
-      tyconfig = tyconfig(defaultConfig.mode)
+      tyconfig = await Promise.resolve(tyconfig(defaultConfig.mode))
     }
     checkObject(tyconfig, `tyconfig.${tyconfigTsPath ? 't' : 'j'}s should export an object.`)
   }
