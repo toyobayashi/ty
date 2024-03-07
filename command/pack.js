@@ -1,7 +1,8 @@
 const packager = require('electron-packager')
 const path = require('path')
 const fs = require('fs-extra')
-const { execSync, spawn } = require('child_process')
+const semver = require('semver')
+const { execSync, spawnSync, spawn } = require('child_process')
 const crossZip = require('@tybys/cross-zip')
 const { pnm } = require('@tybys/prune-node-modules')
 const { createPackageWithOptions } = require('asar')
@@ -80,7 +81,7 @@ Categories=Utility;
   }
   fs.copySync(appPath, path.join(distRoot, `.tmp/usr/share/${webpackConfig.pkg.name}`))
 
-  execSync(`dpkg -b ./.tmp ./${webpackConfig.pkg.name}-v${webpackConfig.pkg.version}-linux-${config.arch}.deb`, { cwd: distRoot, stdio: 'inherit' })
+  spawnSync('dpkg', ['-b', './.tmp', `./${webpackConfig.pkg.name}-v${webpackConfig.pkg.version}-linux-${config.arch}.deb`], { cwd: distRoot, stdio: 'inherit' })
   fs.removeSync(path.join(distRoot, '.tmp'))
 }
 
@@ -221,6 +222,24 @@ async function pack (config) {
 
   if (webpackConfig.productionPackage.dependencies && Object.keys(webpackConfig.productionPackage.dependencies).length) {
     Log.info('Install production dependencies...')
+    const npmVersion = execSync('npm -v').toString().trim()
+    const npmIsGte7 = semver.gte(npmVersion, '7.0.0')
+    spawnSync(
+      process.platform === 'win32' ? 'npm.cmd' : 'npm',
+      [
+        'install',
+        '--no-save',
+        '--no-package-lock',
+        ...(npmIsGte7 ? ['--omit=dev', '--omit=optional'] : ['--production']),
+        `--arch=${config.arch}`,
+        `--target_arch=${config.arch}`,
+        '--build-from-source',
+        '--runtime=electron',
+        `--target=${webpackConfig.pkg.devDependencies.electron.replace(/[~^]/g, '')}`,
+        '--disturl=https://electronjs.org/headers'
+      ],
+      { cwd: packTempAppDir, stdio: 'inherit' }
+    )
     execSync(`npm install --no-save --no-package-lock --production --arch=${config.arch} --target_arch=${config.arch} --build-from-source --runtime=electron --target=${webpackConfig.pkg.devDependencies.electron.replace(/[~^]/g, '')} --disturl=https://electronjs.org/headers`, { cwd: packTempAppDir, stdio: 'inherit' })
     fs.writeFileSync(path.join(packTempAppDir, 'package.json'), JSON.stringify(webpackConfig.productionPackage), 'utf8')
   }
